@@ -1,0 +1,33 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "/writ/passage",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "faker": "random.uuid"
+        },
+        "title": {
+            "type": "string",
+            "faker": "lorem.sentence"
+        },
+        "desc": {
+            "type": "string",
+            "faker": "lorem.paragraph"
+        },
+        "from": {
+            "$ref": "/writ/room/id"
+        },
+        "to": {
+            "$ref": "/writ/room/id"
+        }
+    },
+    "required": [
+        "id",
+        "from",
+        "to",
+        "title",
+        "desc"
+    ]
+}

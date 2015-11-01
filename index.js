@@ -7,18 +7,15 @@ var bodyParser = require('body-parser');
 var uuid = require('node-uuid');
 var PouchDB = require('pouchdb');
 var _ = require('lodash');
-var validate = require('validate');
+
+var jsf = require('json-schema-faker');
+
+var userSchema = require('./models/user.schema.json');
+var passageSchema = require('./models/passage.schema.json');
+var roomSchema = require('./models/room.schema.json');
 
 PouchDB.debug.enable('*');
 
 var UserDB = new PouchDB('./db/Users');
 
-var UserModel = {
-  name: {
-    required: true
-  },
-  email: {
-    required: true,
-    email: true
-  }
-};
+console.log(jsf(passageSchema, [roomSchema]));

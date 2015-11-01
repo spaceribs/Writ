@@ -1,0 +1,38 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "/writ/room",
+    "type": "object",
+    "description": "The room definition",
+    "properties": {
+        "id": {
+            "id": "/writ/room/id",
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "faker": "random.uuid"
+        },
+        "pos": {
+            "description": "Position of the room in the world.",
+            "type": "object",
+            "properties": {
+                "x": {
+                    "type": "integer"
+                },
+                "y": {
+                    "type": "integer"
+                },
+                "z": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ]
+        }
+    },
+    "required": [
+        "id",
+        "pos"
+    ]
+}
