@@ -2,5 +2,6 @@ extern
 node_modules
 tmp
 vendor
+.DS_Store
 .idea/workspace.xml
 .idea/misc.xml
