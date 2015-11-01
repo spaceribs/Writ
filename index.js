@@ -9,6 +9,9 @@ var PouchDB = require('pouchdb');
 var _ = require('lodash');
 
 var jsf = require('json-schema-faker');
+var prettyjson = require('prettyjson');
+
+var models = require('./models');
 
 var userSchema = require('./models/user.schema.json');
 var passageSchema = require('./models/passage.schema.json');
@@ -18,4 +21,4 @@ PouchDB.debug.enable('*');
 
 var UserDB = new PouchDB('./db/Users');
 
-console.log(jsf(passageSchema, [roomSchema]));
+console.log(prettyjson.render(jsf(models, [models])));

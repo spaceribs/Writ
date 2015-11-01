@@ -17,7 +17,7 @@
             "faker": "lorem.paragraph"
         },
         "from": {
-            "$ref": "/writ/room/id"
+            "$ref": "/writ/place/id"
         },
         "to": {
             "$ref": "/writ/room/id"
