@@ -1,0 +1,607 @@
+FORMAT: 1A
+
+# Writ API
+The server side of the game, the client should save known users and rooms locally.
+
+# Editing System Goals
+1. Users are incentivized to improve the world
+2. Users are incentivized to find and remove vandalism
+3. Creating new rooms is a result of exploration.
+4. Improving rooms becomes more expensive with more edits.
+5. Budget for editing is determined by edit tokens.
+
+# Group Auth
+The API for user management
+
+## User [/user]
+The user's private profile information:
+
+* `email` email address.
+* `name` the users public label.
+* `history` the users history of adding new rooms and editings rooms.
+* `room` a random spawn point chosen by the server.
+
++ Model (application/json)
+        
+        {
+            "user_id": "8f349e34-b503-428a-b092-24411ec35651",
+            "email": "john@doe.com",
+            "name": "John",
+            "history": {
+                "edited": 122,
+                "added": 12
+            },
+            "room": "8f349e34-b503-428a-b092-24411ec35651"
+        }
+
+### Get Profile [GET]
+Get my personal profile, passing my session ID in the header.
+
++ Request (application/json)
+
+    + Headers
+            
+            Cookie: sid=DQAAAPsAAAAhsDZwv_cFuEEdsskQXBxJ70Bq1U0yQyNyDEISoIuBtIoYfla8
+
++ Response 200
+    [User][]
+
+### Register [POST]
+Register myself with an email/username/password, and send an email to me to verify.
+The Users UUID is determined **after** verification.
+
++ Request (application/json)
+        
+        {
+            "email": "john@doe.com",
+            "password": "somepass",
+            "name": "John"
+        }
+
++ Response 200 (application/json)
+        
+        {
+            "success": {
+                "feedback": "You have successfully registered, check your email to get started."
+            },
+            "data": {
+                "email": "john@doe.com",
+                "name": "John"
+            }
+        }
+
+### Edit Profile [PUT]
+Replace the email/username/password on my profile. Whichever is passed overrides the current setting.
+
++ Request (application/json)
+
+    + Headers
+        
+            Cookie: sid=DQAAAPsAAAAhsDZwv_cFuEEdsskQXBxJ70Bq1U0yQyNyDEISoIuBtIoYfla8
+            
+    + Body
+
+            {
+                "email": "john@doe.com",
+                "password": "somepass",
+                "name": "John"
+            }
+
++ Response 200 (application/json)
+        
+        {
+            "user_id": "8f349e34-b503-428a-b092-24411ec35651",
+            "email": "john@doe.com",
+            "name": "John",
+            "history": {
+                "edited": 122,
+                "added": 12
+            },
+            "room": {
+                "room_id": "8f349e34-b503-428a-b092-24411ec35651",
+                "pos": {
+                    "x": 12,
+                    "y": -22,
+                    "z": 0
+                }
+            }
+        }
+        
+## Verify [/verify{?token}]
+After a user is registered, this endpoint is used to verify the email submitted for the user.
+
+### Verify a user account by email [GET]
+Submit a token to verify the email submitted is correct.
+
++ Parameters
+    + token ... Token sent to user in an email for verification.
+    
++ Response 200
+        
+        {
+            "success": {
+                "feedback": "You're email has been verified. You may now login."
+            },
+            "data": {
+                "email": "john@doe.com",
+                "name": "John"
+            }
+        }
+
++ Response 400 (application/json)
+        
+        {
+            "status": "BAD_REQUEST",
+            "error": {
+                "feedback": "The token was invalid."
+            }
+        }
+    
+## Login [/login]
+Login to a verified user account
+
+### Login a user [POST]
+When users are logged in, they are given a session cookie used for all future calls.
+
++ Request (application/json)
+    
+        {
+            "email": "john@doe.com",
+            "password": "somepass"
+        }
+    
++ Response 200 (application/json)
+            
++ Response 400 (application/json)
+        
+        {
+            "status": "BAD_REQUEST",
+            "error": {
+                "feedback": "The email/password was incorrect."
+            }
+        }
+        
+        {
+            "status": "UNVERIFIED",
+            "error": {
+                "feedback": "The user's email is still unverified."
+            }
+        }
+
+## Users [/user/{user_id}]
+Query things like the number of edits they've made and their name:
+
+* `user_id` Their post-verification UUID
+* `name` the users public label.
+* `history` the users history of adding new rooms and editings rooms.
+
++ Model (application/json)
+        
+        {
+            "user_id": "8f349e34-b503-428a-b092-24411ec35651",
+            "name": "John",
+            "history": {
+                "edited": 122,
+                "added": 12
+            }
+        }
+        
+### Get a user [GET]
+Gets the specified user and their publically accessible information such as their ID, name and history.
+
++ Parameters
+    + user_id ... UUID of the User
+    
++ Response 200
+    [Users][]
+
++ Response 404 (application/json)
+        
+        {
+            "user_id": "some-invalid-id",
+            "status": "BAD_USER",
+            "error": {
+                "feedback": "The user couldn't be found."
+            }
+        }
+
+# Group World
+The API for any world objects
+
+## Spawn [/room]
+Endpoint for adding new rooms and associated doors.
+
+### Create a new room and door [POST]
+The server validates that the submitted room and door is in a valid location and that the user is authorized.
+Things that are checked before a new room is considered valid:
+
+* The user is authenticated.
+* There isn't already a room at that position.
+* There is a room below if the room is somewhere above a z-position of 1 (no floating rooms).
+* A room is adjacent.
+* The room and door has a name and description.
+* The door submitted has a valid room ID.
+
+If all of the validation passes, the room and door are added and the user gets 100 edit points.
+
++ Request Create Room and Door (application/json)
+
+    + Headers
+            
+            Cookie: sid=DQAAAPsAAAAhsDZwv_cFuEEdsskQXBxJ70Bq1U0yQyNyDEISoIuBtIoYfla8
+            
+    + Body
+
+            {
+                "room": {
+                    "name": "Bedroom",
+                    "desc": "This is a bedroom",
+                    "pos": {
+                        "x": 12,
+                        "y": -22,
+                        "z": 0
+                    }
+                },
+                "door": {
+                    "name": "Double Doors",
+                    "desc": "Two huge iron doors",
+                    "from": "8f349e34-b503-428a-b092-24411ec35651"
+                }
+            }
+
++ Response 200 (application/json)
+        
+        {
+            "user_id": "8f349e34-b503-428a-b092-24411ec35651",
+            "name": "Bedroom",
+            "desc": "This is a bedroom",
+            "pos": {
+                "x": 12,
+                "y": -22,
+                "z": 0
+            },
+            "doors": {
+                "north": "bfc65fe3-84bc-46c1-8a39-232227107dd8"
+            }
+        }
+
++ Response 409 (application/json)
+        
+        {
+            "status": "ROOM_EXISTS",
+            "error": {
+                "pos": {
+                    "x": 12,
+                    "y": -22,
+                    "z": 0
+                },
+                "feedback": "A room already exists at that location."
+            }
+        }
+
++ Response 400 (application/json)
+        
+        {
+            "status": "BAD_REQUEST",
+            "error": {
+                "feedback": "A request containing both a new room and door are required."
+            }
+        }
+
++ Response 400 (application/json)
+        
+        {
+            "status": "BAD_ROOM_POSITION",
+            "error": {
+                "pos": {
+                    "x": 12,
+                    "y": -22,
+                    "z": 2
+                },
+                "feedback": "A room above one story needs a room below it."
+            }
+        }
+        
+        {
+            "status": "BAD_ROOM_NAME",
+            "error": {
+                "ref": "room.name",
+                "pos": {
+                    "x": 12,
+                    "y": -22,
+                    "z": 2
+                },
+                "feedback": "A new room needs a name."
+            }
+        }
+        
+        {
+            "status": "BAD_ROOM_DESC",
+            "error": {
+                "ref": "room.desc",
+                "pos": {
+                    "x": 12,
+                    "y": -22,
+                    "z": 2
+                },
+                "feedback": "A new room needs a good description."
+            }
+        }
+
++ Response 400 (application/json)
+        
+        {
+            "status": "BAD_DOOR_POSITION",
+            "error": {
+                "pos": {
+                    "x": 12,
+                    "y": -22.5,
+                    "z": 2
+                },
+                "feedback": "A new door needs a valid adjacent room."
+            }
+        }
+        
+        {
+            "status": "BAD_DOOR_NAME",
+            "error": {
+                "ref": "door.name",
+                "pos": {
+                    "x": 12,
+                    "y": -22.5,
+                    "z": 2
+                },
+                "feedback": "A new door needs a name."
+            }
+        }
+        
+        {
+            "status": "BAD_DOOR_DESC",
+            "error": {
+                "ref": "door.desc",
+                "pos": {
+                    "x": 12,
+                    "y": -22.5,
+                    "z": 2
+                },
+                "feedback": "A new door needs a good description."
+            }
+        }
+
+## Room [/room/{room_id}]
+A room contained in the world, this could be an traditional room or a hallway or even an area outside.
+A room usually contains these attributes:
+
+* `room_id` The UUID for the room, generated by the server.
+* `name` The displayed label of the room.
+* `creator` The UUID of the user who first created the room.
+* `desc` The description displayed when you first arrive at the room.
+* `pos` The X/Y/Z world coordinates of the room. While a room can technically be as large as you describe it,
+one rule is that it can't hover in the air above nothing, it needs to be connected to some other room,
+and it cannot overwrite another room in position. These coordinates are integers but we may want to turn them
+into floats in the future for secret rooms of some sort.
+* `doors` a representation of the directions in which you can exit this room, along with a descrition/name/aliases
+to refer to and query the door.
+* `spawn` a flag to allow this room to be entered when people first play the game.
+* `items` an object of items inside of this room that are visible.
+  * `item_id` The UUID of the item,
+  * `name` The displayed label of the item
+  * `desc` The description attached to the room.
+  * `aliases` alternate names associated with this item.
+
++ Model (application/json)
+
+    + Body
+
+            {
+                "room_id": "8f349e34-b503-428a-b092-24411ec35651",
+                "name": "Lobby",
+                "desc": "This is the main lobby",
+                "creator": "66fadfc4-fa4f-4e44-b5de-5e6511c1f5b8",
+                "spawn": true,
+                "pos": {"x": 12, "y": -22, "z": 0},
+                "doors": {
+                    "up": "c7d6baa6-733e-4246-8185-598fe84367c3",
+                    "north": "bfc65fe3-84bc-46c1-8a39-232227107dd8",
+                    "east": "66fadfc4-fa4f-4e44-b5de-5e6511c1f5b8"
+                },
+                "items": {
+                    "key": {
+                        "item_id": "bfc65fe3-84bc-46c1-8a39-232227107dd8",
+                        "name": "Blue Key",
+                        "desc": "A shiny blue key, appears to be cast in iron."
+                        "aliases": ["iron key"]
+                    }
+                }
+            }
+
+### Get a room by the UUID [GET]
+Return a room to the client if it exists.
+
++ Parameters
+    + room_id ... UUID of the room
+    
++ Response 200
+    [Room][]
+        
++ Response 404 (application/json)
+        
+        {
+            "room_id": "some-invalid-id",
+            "status": "BAD_ROOM",
+            "error": {
+                feedback: "The room couldn't be found."
+            }
+        }
+
+### Edit a room or item in a room [PUT]
+Make a change to the room object by reference, valid references could be dot notation or
+bracket notation, like `doors.up` or `doors['up']`.
+
++ Parameters
+    + room_id ... UUID of the room
+        
++ Request Update Room name (application/json)
+
+    + Headers
+        
+            Cookie: sid=DQAAAPsAAAAhsDZwv_cFuEEdsskQXBxJ70Bq1U0yQyNyDEISoIuBtIoYfla8
+            
+    + Body
+
+            {
+                "ref": "name",
+                "data": "The Kitchen"
+            }
+        
++ Request Edit Key Item Name (application/json)
+
+    + Headers
+        
+            Cookie: sid=DQAAAPsAAAAhsDZwv_cFuEEdsskQXBxJ70Bq1U0yQyNyDEISoIuBtIoYfla8
+            
+    + Body
+
+            {
+                "ref": "items.key.name",
+                "data": "Iron Key"
+            }
+
++ Response 200
+    [Room][]
+
++ Response 400 (application/json)
+        
+        {
+            "status": "BAD_REQUEST",
+            "error": {
+                "feedback": "The object reference didn't match anything in the room."
+            }
+        }
+
++ Response 404 (application/json)
+        
+        {
+            "room_id": "some-invalid-id",
+            "status": "BAD_ROOM",
+            "error": {
+                "feedback": "The room couldn't be found."
+            }
+        }
+
+### Add an item to a room [POST]
+Create a new item and add it to the room. Needs a name and description at the very least.
+
++ Parameters
+    + room_id ... UUID of the room
+    
++ Request Add an item (application/json)
+
+    + Headers
+        
+            Cookie: sid=DQAAAPsAAAAhsDZwv_cFuEEdsskQXBxJ70Bq1U0yQyNyDEISoIuBtIoYfla8
+            
+    + Body
+
+            {
+                "ref": "items.key",
+                "data": {
+                    "name": "Blue Key",
+                    "desc": "A shiny blue key, appears to be cast in iron."
+                    "aliases": ["iron key"]
+                }
+            }
+
++ Response 200
+        
+        {
+            "items": {
+                "key": {
+                    "item_id": bfc65fe3-84bc-46c1-8a39-232227107dd8",
+                    "name": "Blue Key",
+                    "desc": "A shiny blue key, appears to be cast in iron."
+                    "aliases": ["iron key"]
+                }
+            }
+        }
+
++ Response 400 (application/json)
+        
+        {
+            "status": "BAD_REQUEST",
+            "error": {
+                "feedback": "The item requires a name and description."
+            }
+        }
+
+## Door [/door/{door_id}]
+Endpoint for querying doors.
+
+### Get a door by the UUID [GET]
+This returns a 200 if the door isn't locked, or a 403 if it is.
+A locked door returns a `lock` instead of a from/to which is an AES encrypted JSON object,
+this object extends into the root of the object.
+The password for the lock could be either an `item` id (such as a key) or a password which
+could be picked (brute forced).
+
+[Example of Clientside Encryption](http://plnkr.co/edit/VFQXP0JrG9EwdftduC9Q?p=preview)
+
++ Parameters
+    + door_id ... UUID of the door
+    
++ Response 200 (application/json)
+        
+        {
+            "door_id": "bfc65fe3-84bc-46c1-8a39-232227107dd8",
+            "name": "Double Doors",
+            "desc": "Two huge iron doors",
+            "pos": {
+                "x": 12,
+                "y": -22.5,
+                "z": 0
+            },
+            "from": "b166f8aa-fbe3-4526-9816-15bf660d1467",
+            "to": "8f349e34-b503-428a-b092-24411ec35651"
+        }
+
++ Response 403 (application/json)
+        
+        {
+            "door_id": "bfc65fe3-84bc-46c1-8a39-232227107dd8",
+            "error": "The door is locked with a key.",
+            "name": "Double Doors",
+            "desc": "Two huge iron doors",
+            "pos": {
+                "x": 12,
+                "y": -22.5,
+                "z": 0
+            },
+            "pickable": false,
+            "lock": "U2FsdGVkX18NWcol2ubNZ3hl3ez8lhdvyhlD8aHcviS7rxtApVofu2kWgSC/R6hvMPgfpy1SXbi7oKiiyLlmCJz87aC6a2gwn8uMJsSi49NEfNJe2MN6qd14MfwB49i2kJr4bvR18/PhMPjSkTI2CQ=="
+        }
+
++ Response 403 (application/json)
+        
+        {
+            "door_id": "bfc65fe3-84bc-46c1-8a39-232227107dd8",
+            "error": "There is a combination lock on the door",
+            "name": "Double Doors",
+            "desc": "Two huge iron doors",
+            "pos": {
+                "x": 12,
+                "y": -22.5,
+                "z": 0
+            },
+            "pickable": true,
+            "lock": "U2FsdGVkX18NWcol2ubNZ3hl3ez8lhdvyhlD8aHcviS7rxtApVofu2kWgSC/R6hvMPgfpy1SXbi7oKiiyLlmCJz87aC6a2gwn8uMJsSi49NEfNJe2MN6qd14MfwB49i2kJr4bvR18/PhMPjSkTI2CQ=="
+        }
+
++ Response 404 (application/json)
+        
+        {
+            "door_id": "some-invalid-id",
+            "status": "BAD_DOOR",
+            "error": {
+                "feedback": "The door couldn't be found."
+            }
+        }
