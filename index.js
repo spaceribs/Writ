@@ -13,12 +13,8 @@ var prettyjson = require('prettyjson');
 
 var models = require('./models');
 
-var userSchema = require('./models/user.schema.json');
-var passageSchema = require('./models/passage.schema.json');
-var roomSchema = require('./models/room.schema.json');
-
 PouchDB.debug.enable('*');
 
 var UserDB = new PouchDB('./db/Users');
 
-console.log(prettyjson.render(jsf(models, [models])));
+console.log(prettyjson.render(jsf(models.item, [models])));

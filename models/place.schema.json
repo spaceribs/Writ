@@ -10,6 +10,9 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "faker": "random.uuid"
         },
+        "creator": {
+            "$ref": "/writ/user/id"
+        },
         "pos": {
             "description": "Position of the place in the world.",
             "type": "object",
@@ -30,12 +33,49 @@
                 "z"
             ]
         },
+        "title": {
+            "type": "string",
+            "faker": "lorem.sentence"
+        },
         "items": {
-            "type": "object"
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "$ref": "/writ/item/id"
+            }
+        },
+        "passages": {
+            "description": "Position of the place in the world.",
+            "type": "object",
+            "minProperties": 2,
+            "properties": {
+                "north": {
+                    "$ref": "/writ/passage/id"
+                },
+                "east": {
+                    "$ref": "/writ/passage/id"
+                },
+                "south": {
+                    "$ref": "/writ/passage/id"
+                },
+                "west": {
+                    "$ref": "/writ/passage/id"
+                },
+                "up": {
+                    "$ref": "/writ/passage/id"
+                },
+                "down": {
+                    "$ref": "/writ/passage/id"
+                }
+            }
         }
     },
     "required": [
+        "creator",
         "id",
-        "pos"
+        "pos",
+        "title",
+        "items",
+        "passages"
     ]
 }

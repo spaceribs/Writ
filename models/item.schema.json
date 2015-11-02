@@ -1,10 +1,10 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "/writ/passage",
+    "id": "/writ/item",
     "type": "object",
     "properties": {
         "id": {
-            "id": "/writ/passage/id",
+            "id": "/writ/item/id",
             "type": "string",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "faker": "random.uuid"
@@ -14,24 +14,33 @@
         },
         "title": {
             "type": "string",
-            "faker": "lorem.sentence"
+            "faker": "commerce.productName"
         },
         "desc": {
             "type": "string",
             "faker": "lorem.paragraph"
         },
-        "from": {
-            "$ref": "/writ/place/id"
-        },
-        "to": {
-            "$ref": "/writ/place/id"
+        "inventory": {
+            "type": "object",
+            "properties": {
+                "take": {
+                    "type": "boolean"
+                },
+                "apply": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "carry",
+                "burn"
+            ]
         }
     },
     "required": [
         "id",
-        "from",
-        "to",
+        "email",
         "title",
-        "desc"
+        "desc",
+        "users"
     ]
 }
