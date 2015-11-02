@@ -20,20 +20,27 @@
             "type": "string",
             "faker": "lorem.paragraph"
         },
-        "inventory": {
+        "hints": {
             "type": "object",
             "properties": {
                 "take": {
+                    "description": "Is it useful to add this to my inventory?",
                     "type": "boolean"
                 },
                 "apply": {
+                    "description": "Is it useful to apply to other items?",
                     "type": "boolean"
                 }
             },
             "required": [
-                "carry",
-                "burn"
+                "take",
+                "apply"
             ]
+        },
+        "actions": {
+            "type": "object",
+            "properties": {
+            }
         }
     },
     "required": [
