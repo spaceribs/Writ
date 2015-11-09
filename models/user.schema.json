@@ -17,11 +17,19 @@
         "name": {
             "type": "string",
             "chance": "name"
+        },
+        "inventory": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "$ref": "/writ/item/id"
+            }
         }
     },
     "required": [
         "id",
         "email",
-        "name"
+        "name",
+        "inventory"
     ]
 }
