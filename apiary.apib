@@ -202,22 +202,22 @@ Gets the specified user and their publically accessible information such as thei
 The API for any world objects
 
 ## Spawn [/place]
-Endpoint for adding new places and associated doors.
+Endpoint for adding new places and associated passages.
 
-### Create a new place and door [POST]
-The server validates that the submitted place and door is in a valid location and that the user is authorized.
+### Create a new place and passage [POST]
+The server validates that the submitted place and passage is in a valid location and that the user is authorized.
 Things that are checked before a new place is considered valid:
 
 * The user is authenticated.
 * There isn't already a place at that position.
 * There is a place below if the place is somewhere above a z-position of 1 (no floating places).
 * A place is adjacent.
-* The place and door has a name and description.
-* The door submitted has a valid place ID.
+* The place and passage has a name and description.
+* The passage submitted has a valid place ID.
 
-If all of the validation passes, the place and door are added and the user gets 100 edit points.
+If all of the validation passes, the place and passage are added and the user gets 100 edit points.
 
-+ Request Create Place and Door (application/json)
++ Request Create Place and Passage (application/json)
 
     + Headers
             
@@ -235,7 +235,7 @@ If all of the validation passes, the place and door are added and the user gets 
                         "z": 0
                     }
                 },
-                "door": {
+                "passage": {
                     "name": "Double Doors",
                     "desc": "Two huge iron doors",
                     "to": "8f349e34-b503-428a-b092-24411ec35651"
@@ -253,7 +253,7 @@ If all of the validation passes, the place and door are added and the user gets 
                 "y": -22,
                 "z": 0
             },
-            "doors": {
+            "passages": {
                 "north": "bfc65fe3-84bc-46c1-8a39-232227107dd8"
             }
         }
@@ -277,7 +277,7 @@ If all of the validation passes, the place and door are added and the user gets 
         {
             "status": "BAD_REQUEST",
             "error": {
-                "feedback": "A request containing both a new place and door are required."
+                "feedback": "A request containing both a new place and passage are required."
             }
         }
 
@@ -324,40 +324,40 @@ If all of the validation passes, the place and door are added and the user gets 
 + Response 400 (application/json)
         
         {
-            "status": "BAD_DOOR_POSITION",
+            "status": "BAD_PASSAGE_POSITION",
             "error": {
                 "pos": {
                     "x": 12,
                     "y": -22.5,
                     "z": 2
                 },
-                "feedback": "A new door needs a valid adjacent place."
+                "feedback": "A new passage needs a valid adjacent place."
             }
         }
         
         {
-            "status": "BAD_DOOR_NAME",
+            "status": "BAD_PASSAGE_NAME",
             "error": {
-                "ref": "door.name",
+                "ref": "passage.name",
                 "pos": {
                     "x": 12,
                     "y": -22.5,
                     "z": 2
                 },
-                "feedback": "A new door needs a name."
+                "feedback": "A new passage needs a name."
             }
         }
         
         {
-            "status": "BAD_DOOR_DESC",
+            "status": "BAD_PASSAGE_DESC",
             "error": {
-                "ref": "door.desc",
+                "ref": "passage.desc",
                 "pos": {
                     "x": 12,
                     "y": -22.5,
                     "z": 2
                 },
-                "feedback": "A new door needs a good description."
+                "feedback": "A new passage needs a good description."
             }
         }
 
@@ -373,8 +373,8 @@ A place usually contains these attributes:
 one rule is that it can't hover in the air above nothing, it needs to be connected to some other place,
 and it cannot overwrite another place in position. These coordinates are integers but we may want to turn them
 into floats in the future for secret places of some sort.
-* `doors` a representation of the directions in which you can exit this place, along with a description/name/aliases
-to refer to and query the door.
+* `passages` a representation of the directions in which you can exit this place, along with a description/name/aliases
+to refer to and query the passage.
 * `spawn` a flag to allow this place to be entered when people first play the game.
 * `items` an array of items inside of this place that are visible.
 
@@ -389,7 +389,7 @@ to refer to and query the door.
                 "creator": "66fadfc4-fa4f-4e44-b5de-5e6511c1f5b8",
                 "spawn": true,
                 "pos": {"x": 12, "y": -22, "z": 0},
-                "doors": {
+                "passages": {
                     "up": "c7d6baa6-733e-4246-8185-598fe84367c3",
                     "north": "bfc65fe3-84bc-46c1-8a39-232227107dd8",
                     "east": "66fadfc4-fa4f-4e44-b5de-5e6511c1f5b8"
@@ -420,7 +420,7 @@ Return a place to the client if it exists.
 
 ### Edit a place or item in a place [PUT]
 Make a change to the place object by reference, valid references could be dot notation or
-bracket notation, like `doors.up` or `doors['up']`.
+bracket notation, like `passages.up` or `passages['up']`.
 
 + Parameters
     + id ... UUID of the place
@@ -571,9 +571,9 @@ could be picked (brute forced).
         
         {
             "id": "some-invalid-id",
-            "status": "DOOR_NOT_FOUND",
+            "status": "PASSAGE_NOT_FOUND",
             "error": {
-                "feedback": "The door couldn't be found."
+                "feedback": "The passage couldn't be found."
             }
         }
         
