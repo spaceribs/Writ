@@ -1,5 +1,5 @@
 {
-  "name": "writ-electron",
+  "name": "writ-game",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,13 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.14.1",
-    "express": "^4.13.3",
-    "express-json-response": "^1.0.0",
-    "jsonschema": "^1.0.2",
-    "lodash": "^3.10.1",
-    "node-uuid": "^1.4.3",
-    "pouchdb": "^5.0.0"
+    "jsonschema": "^1.0.2"
   },
   "devDependencies": {
     "debug": "^2.2.0",

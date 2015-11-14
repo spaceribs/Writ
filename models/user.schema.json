@@ -2,6 +2,7 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "id": "/writ/user",
     "type": "object",
+    "description": "A writ user",
     "properties": {
         "id": {
             "id": "/writ/user/id",
@@ -12,24 +13,22 @@
         "email": {
             "type": "string",
             "format": "email",
-            "chance": "email"
+            "chance": "email",
+            "private": true
+        },
+        "password": {
+            "type": "string",
+            "private": true
         },
         "name": {
             "type": "string",
             "chance": "name"
-        },
-        "inventory": {
-            "type": "array",
-            "uniqueItems": true,
-            "items": {
-                "$ref": "/writ/item/id"
-            }
         }
     },
+    "additionalProperties": false,
     "required": [
-        "id",
         "email",
-        "name",
-        "inventory"
+        "password",
+        "name"
     ]
 }
