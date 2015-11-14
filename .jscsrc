@@ -1,0 +1,28 @@
+{
+    "excludeFiles": ["node_modules/**"],
+    "preset": "google",
+    "esnext": true,
+    "validateIndentation": 4,
+    "maximumLineLength": 120,
+    "jsDoc": {
+        "checkAnnotations": {
+            "preset": "jsdoc3",
+            "extra": {
+                "ngdoc": true
+            }
+        },
+        "checkParamExistence": true,
+        "checkParamNames": true,
+        "requireParamTypes": true,
+        "checkRedundantParams": true,
+        "checkReturnTypes": true,
+        "checkRedundantReturns": true,
+        "requireReturnTypes": true,
+        "checkTypes": true,
+        "enforceExistence": {
+            "allExcept": ["exports", "paramless-procedures"]
+        },
+        "requireNewlineAfterDescription": true,
+        "requireParamDescription": true
+    }
+}
