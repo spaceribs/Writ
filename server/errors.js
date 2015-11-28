@@ -7,15 +7,33 @@ var JsonSchemaCustomPropertyError = require('express-jsonschema').JsonSchemaCust
  * A custom error to handle duplicate email errors
  *
  * @param {string} message - Custom user error message.
+ * @param {string} email - The email which already exists.
  * @constructor
  */
 function EmailUsedError(message, email) {
-    this.status = 400;
+    this.status = 409;
     this.email = email;
     this.name = 'EmailUsedError';
-    this.message = (message || 'Invalid user.');
+    this.message = (message || 'Invalid email.');
 }
-EmailUsedError.prototype = Error.prototype;
+EmailUsedError.prototype = Object.create(Error.prototype);
+EmailUsedError.prototype.constructor = EmailUsedError;
+
+/**
+ * A custom error to handle any tokens which cannot be found.
+ *
+ * @param {string} message - Custom user error message.
+ * @param {string} token - Token that was searched.
+ * @constructor
+ */
+function EmailTokenNotFoundError(message, token) {
+    this.status = 404;
+    this.token = token;
+    this.name = 'EmailTokenNotFoundError';
+    this.message = (message || 'Invalid email token.');
+}
+EmailTokenNotFoundError.prototype = Object.create(Error.prototype);
+EmailTokenNotFoundError.prototype.constructor = EmailTokenNotFoundError;
 
 /**
  * A custom error to handle login issues.
@@ -28,11 +46,13 @@ function LoginError(message) {
     this.name = 'LoginError';
     this.message = (message || 'Invalid login.');
 }
-LoginError.prototype = Error.prototype;
+LoginError.prototype = Object.create(Error.prototype);
+LoginError.prototype.constructor = LoginError;
 
 module.exports = {
     JsonSchemaValidation: JsonSchemaValidation,
     JsonSchemaCustomPropertyError: JsonSchemaCustomPropertyError,
     SyntaxError: SyntaxError,
-    EmailUsedError: EmailUsedError
+    EmailUsedError: EmailUsedError,
+    EmailTokenNotFoundError: EmailTokenNotFoundError
 };

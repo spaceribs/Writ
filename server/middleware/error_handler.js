@@ -54,6 +54,19 @@ module.exports = function(err, req, res, next) {
         };
         res.status(err.status).json(responseData);
 
+    } else if (err instanceof errors.EmailTokenNotFoundError) {
+        responseData = {
+            status: 'EMAIL_TOKEN_NOT_FOUND',
+            errors: {
+                'params': [{
+                    'value': err.token,
+                    'property': 'request.params.token',
+                    'messages': [err.message]
+                }]
+            }
+        };
+        res.status(err.status).json(responseData);
+
     } else {
         // pass error to next error middleware handler
         next(err);

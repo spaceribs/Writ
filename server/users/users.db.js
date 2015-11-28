@@ -11,7 +11,12 @@ Users.createIndex({
         fields: ['email']
     }
 }).then(function(result) {
-    console.warn(result);
+    return Users.createIndex({
+        index: {
+            fields: ['emailToken']
+        }
+    });
+
 }).catch(function(err) {
     console.warn(err);
 });
