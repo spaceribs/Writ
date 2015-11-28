@@ -10,13 +10,20 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.14.1",
+    "crypto": "0.0.3",
     "express": "^4.13.3",
     "express-json-response": "^1.0.0",
     "express-jsonschema": "^1.1.0",
     "express-pouchdb": "^1.0.1",
     "jsonschema": "^1.0.2",
     "lodash": "^3.10.1",
-    "node-uuid": "^1.4.3",
-    "pouchdb": "^5.0.0"
+    "node-uuid": "^1.4.7",
+    "passport": "^0.3.2",
+    "passport-http": "^0.3.0",
+    "pouchdb": "^5.0.0",
+    "secure-random": "^1.1.1"
+  },
+  "devDependencies": {
+    "pouchdb-find": "^0.7.0"
   }
 }

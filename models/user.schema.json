@@ -8,27 +8,40 @@
             "id": "/writ/user/id",
             "type": "string",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
-            "faker": "random.uuid"
+            "faker": "random.uuid",
+            "unique": true
         },
         "email": {
             "type": "string",
             "format": "email",
             "chance": "email",
-            "private": true
+            "private": true,
+            "unique": true
+        },
+        "name": {
+            "type": "string",
+            "chance": "name"
         },
         "password": {
             "type": "string",
             "private": true
         },
-        "name": {
+        "salt": {
             "type": "string",
-            "chance": "name"
+            "private": true
+        },
+        "hash": {
+            "type": "string",
+            "private": true
         }
     },
+    "oneOf": [
+        { "required": [ "password" ] },
+        { "required": [ "salt", "hash", "id" ] }
+    ],
     "additionalProperties": false,
     "required": [
         "email",
-        "password",
         "name"
     ]
 }

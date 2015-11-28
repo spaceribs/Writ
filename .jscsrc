@@ -8,7 +8,8 @@
         "checkAnnotations": {
             "preset": "jsdoc3",
             "extra": {
-                "ngdoc": true
+                "ngdoc": "some",
+                "methodOf": "some"
             }
         },
         "checkParamExistence": true,
