@@ -197,7 +197,7 @@ router.route('/user/:userId')
                 next(err);
             });
         })
-        .delete(function(req, res) {
+        .delete(function(req, res, next) {
             // Delete a profile.
 
             var userId = req.params.userId;
