@@ -10,7 +10,7 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "faker": "random.uuid",
             "permission": {
-                "read": 20,
+                "read": 30,
                 "write": 0
             },
             "unique": true
@@ -20,8 +20,8 @@
             "format": "email",
             "chance": "email",
             "permission": {
-                "read": 9,
-                "write": 9
+                "read": 19,
+                "write": 29
             },
             "unique": true
         },
@@ -30,7 +30,7 @@
             "chance": "name",
             "permission": {
                 "read": 100,
-                "write": 9
+                "write": 29
             }
         },
         "permission": {
@@ -38,16 +38,17 @@
             "minimum": 0,
             "maximum": 100,
             "exclusiveMinimum": true,
+            "default": 30,
             "permission": {
                 "read": 100,
-                "write": 1
+                "write": 10
             }
         },
         "password": {
             "type": "string",
             "permission": {
                 "read": -1,
-                "write": 9
+                "write": 29
             }
         },
         "salt": {
@@ -68,22 +69,32 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "faker": "random.uuid",
             "permission": {
-                "read": 9,
-                "write": 9
+                "read": 19,
+                "write": 19
+            }
+        },
+        "created": {
+            "type": "string",
+            "pattern": "^([\\+-]?\\d{4}(?!\\d{2}\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?$",
+            "faker": "date.recent",
+            "permission": {
+                "read": 100,
+                "write": 0
             }
         }
     },
     "oneOf": [
         {
+            "name": "User Input",
             "required": [
                 "password"
             ]
         },
         {
+            "name": "Hashed Password",
             "required": [
                 "salt",
-                "hash",
-                "permission"
+                "hash"
             ]
         }
     ],
