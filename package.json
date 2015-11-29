@@ -1,5 +1,5 @@
 {
-  "name": "writ-electron",
+  "name": "writ-game",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,16 +9,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.14.1",
-    "express": "^4.13.3",
-    "express-json-response": "^1.0.0",
-    "jsonschema": "^1.0.2",
-    "lodash": "^3.10.1",
-    "node-uuid": "^1.4.3",
-    "pouchdb": "^5.0.0"
+    "crypto-js": "^3.1.5",
+    "jsonschema": "^1.0.2"
   },
   "devDependencies": {
     "debug": "^2.2.0",
+    "gulp-jasmine": "^2.2.1",
+    "jasmine": "^2.3.2",
+    "jasmine-node": "^1.14.5",
+    "jasmine-reporters": "^2.0.7",
+    "jscs": "^2.6.0",
+    "jscs-jsdoc": "^1.2.0",
     "json-schema-faker": "^0.2.2",
     "prettyjson": "^1.1.3"
   }

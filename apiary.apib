@@ -1,13 +1,13 @@
 FORMAT: 1A
 
 # Writ API
-The server side of the game, the client should save known users and rooms locally.
+The server side of the game, the client should save known users and places locally.
 
 # Editing System Goals
 1. Users are incentivized to improve the world
 2. Users are incentivized to find and remove vandalism
-3. Creating new rooms is a result of exploration.
-4. Improving rooms becomes more expensive with more edits.
+3. Creating new places is a result of exploration.
+4. Improving places becomes more expensive with more edits.
 5. Budget for editing is determined by edit tokens.
 
 # Group Auth
@@ -18,8 +18,8 @@ The user's private profile information:
 
 * `email` email address.
 * `name` the users public label.
-* `history` the users history of adding new rooms and editings rooms.
-* `room` last room accessed by the user.
+* `history` the users history of adding new places and editings places.
+* `place` last place accessed by the user.
 
 + Model (application/json)
         
@@ -31,7 +31,7 @@ The user's private profile information:
                 "edited": 122,
                 "added": 12
             },
-            "room": "8f349e34-b503-428a-b092-24411ec35651"
+            "place": "8f349e34-b503-428a-b092-24411ec35651"
         }
 
 ### Get Profile [GET]
@@ -97,7 +97,7 @@ Replace the email/username/password on my profile. Whichever is passed overrides
                 "edited": 122,
                 "added": 12
             },
-            "room": "8f349e34-b503-428a-b092-24411ec35651"
+            "place": "8f349e34-b503-428a-b092-24411ec35651"
         }
         
 ## Verify [/verify{?token}]
@@ -166,7 +166,7 @@ Query things like the number of edits they've made and their name:
 
 * `id` Their post-verification UUID
 * `name` the users public label.
-* `history` the users history of adding new rooms and editings rooms.
+* `history` the users history of adding new places and editings places.
 
 + Model (application/json)
         
@@ -201,23 +201,23 @@ Gets the specified user and their publically accessible information such as thei
 # Group World
 The API for any world objects
 
-## Spawn [/room]
-Endpoint for adding new rooms and associated doors.
+## Spawn [/place]
+Endpoint for adding new places and associated passages.
 
-### Create a new room and door [POST]
-The server validates that the submitted room and door is in a valid location and that the user is authorized.
-Things that are checked before a new room is considered valid:
+### Create a new place and passage [POST]
+The server validates that the submitted place and passage is in a valid location and that the user is authorized.
+Things that are checked before a new place is considered valid:
 
 * The user is authenticated.
-* There isn't already a room at that position.
-* There is a room below if the room is somewhere above a z-position of 1 (no floating rooms).
-* A room is adjacent.
-* The room and door has a name and description.
-* The door submitted has a valid room ID.
+* There isn't already a place at that position.
+* There is a place below if the place is somewhere above a z-position of 1 (no floating places).
+* A place is adjacent.
+* The place and passage has a name and description.
+* The passage submitted has a valid place ID.
 
-If all of the validation passes, the room and door are added and the user gets 100 edit points.
+If all of the validation passes, the place and passage are added and the user gets 100 edit points.
 
-+ Request Create Room and Door (application/json)
++ Request Create Place and Passage (application/json)
 
     + Headers
             
@@ -226,7 +226,7 @@ If all of the validation passes, the room and door are added and the user gets 1
     + Body
 
             {
-                "room": {
+                "place": {
                     "name": "Bedroom",
                     "desc": "This is a bedroom",
                     "pos": {
@@ -235,7 +235,7 @@ If all of the validation passes, the room and door are added and the user gets 1
                         "z": 0
                     }
                 },
-                "door": {
+                "passage": {
                     "name": "Double Doors",
                     "desc": "Two huge iron doors",
                     "to": "8f349e34-b503-428a-b092-24411ec35651"
@@ -253,7 +253,7 @@ If all of the validation passes, the room and door are added and the user gets 1
                 "y": -22,
                 "z": 0
             },
-            "doors": {
+            "passages": {
                 "north": "bfc65fe3-84bc-46c1-8a39-232227107dd8"
             }
         }
@@ -261,14 +261,14 @@ If all of the validation passes, the room and door are added and the user gets 1
 + Response 409 (application/json)
         
         {
-            "status": "ROOM_EXISTS",
+            "status": "PLACE_EXISTS",
             "error": {
                 "pos": {
                     "x": 12,
                     "y": -22,
                     "z": 0
                 },
-                "feedback": "A room already exists at that location."
+                "feedback": "A place already exists at that location."
             }
         }
 
@@ -277,106 +277,106 @@ If all of the validation passes, the room and door are added and the user gets 1
         {
             "status": "BAD_REQUEST",
             "error": {
-                "feedback": "A request containing both a new room and door are required."
+                "feedback": "A request containing both a new place and passage are required."
             }
         }
 
 + Response 400 (application/json)
         
         {
-            "status": "BAD_ROOM_POSITION",
+            "status": "BAD_PLACE_POSITION",
             "error": {
                 "pos": {
                     "x": 12,
                     "y": -22,
                     "z": 2
                 },
-                "feedback": "A room above one story needs a room below it."
+                "feedback": "A place above one story needs a place below it."
             }
         }
         
         {
-            "status": "BAD_ROOM_NAME",
+            "status": "BAD_PLACE_NAME",
             "error": {
-                "ref": "room.name",
+                "ref": "place.name",
                 "pos": {
                     "x": 12,
                     "y": -22,
                     "z": 2
                 },
-                "feedback": "A new room needs a name."
+                "feedback": "A new place needs a name."
             }
         }
         
         {
-            "status": "BAD_ROOM_DESC",
+            "status": "BAD_PLACE_DESC",
             "error": {
-                "ref": "room.desc",
+                "ref": "place.desc",
                 "pos": {
                     "x": 12,
                     "y": -22,
                     "z": 2
                 },
-                "feedback": "A new room needs a good description."
+                "feedback": "A new place needs a good description."
             }
         }
 
 + Response 400 (application/json)
         
         {
-            "status": "BAD_DOOR_POSITION",
+            "status": "BAD_PASSAGE_POSITION",
             "error": {
                 "pos": {
                     "x": 12,
                     "y": -22.5,
                     "z": 2
                 },
-                "feedback": "A new door needs a valid adjacent room."
+                "feedback": "A new passage needs a valid adjacent place."
             }
         }
         
         {
-            "status": "BAD_DOOR_NAME",
+            "status": "BAD_PASSAGE_NAME",
             "error": {
-                "ref": "door.name",
+                "ref": "passage.name",
                 "pos": {
                     "x": 12,
                     "y": -22.5,
                     "z": 2
                 },
-                "feedback": "A new door needs a name."
+                "feedback": "A new passage needs a name."
             }
         }
         
         {
-            "status": "BAD_DOOR_DESC",
+            "status": "BAD_PASSAGE_DESC",
             "error": {
-                "ref": "door.desc",
+                "ref": "passage.desc",
                 "pos": {
                     "x": 12,
                     "y": -22.5,
                     "z": 2
                 },
-                "feedback": "A new door needs a good description."
+                "feedback": "A new passage needs a good description."
             }
         }
 
-## Room [/room/{id}]
-A room contained in the world, this could be an traditional room or a hallway or even an area outside.
-A room usually contains these attributes:
+## Place [/place/{id}]
+A place contained in the world, this could be an traditional place or a hallway or even an area outside.
+A place usually contains these attributes:
 
-* `id` The UUID for the room, generated by the server.
-* `name` The displayed label of the room.
-* `creator` The UUID of the user who first created the room.
-* `desc` The description displayed when you first arrive at the room.
-* `pos` The X/Y/Z world coordinates of the room. While a room can technically be as large as you describe it,
-one rule is that it can't hover in the air above nothing, it needs to be connected to some other room,
-and it cannot overwrite another room in position. These coordinates are integers but we may want to turn them
-into floats in the future for secret rooms of some sort.
-* `doors` a representation of the directions in which you can exit this room, along with a description/name/aliases
-to refer to and query the door.
-* `spawn` a flag to allow this room to be entered when people first play the game.
-* `items` an array of items inside of this room that are visible.
+* `id` The UUID for the place, generated by the server.
+* `name` The displayed label of the place.
+* `creator` The UUID of the user who first created the place.
+* `desc` The description displayed when you first arrive at the place.
+* `pos` The X/Y/Z world coordinates of the place. While a place can technically be as large as you describe it,
+one rule is that it can't hover in the air above nothing, it needs to be connected to some other place,
+and it cannot overwrite another place in position. These coordinates are integers but we may want to turn them
+into floats in the future for secret places of some sort.
+* `passages` a representation of the directions in which you can exit this place, along with a description/name/aliases
+to refer to and query the passage.
+* `spawn` a flag to allow this place to be entered when people first play the game.
+* `items` an array of items inside of this place that are visible.
 
 + Model (application/json)
 
@@ -389,7 +389,7 @@ to refer to and query the door.
                 "creator": "66fadfc4-fa4f-4e44-b5de-5e6511c1f5b8",
                 "spawn": true,
                 "pos": {"x": 12, "y": -22, "z": 0},
-                "doors": {
+                "passages": {
                     "up": "c7d6baa6-733e-4246-8185-598fe84367c3",
                     "north": "bfc65fe3-84bc-46c1-8a39-232227107dd8",
                     "east": "66fadfc4-fa4f-4e44-b5de-5e6511c1f5b8"
@@ -399,33 +399,33 @@ to refer to and query the door.
                 ]
             }
 
-### Get a room by the UUID [GET]
-Return a room to the client if it exists.
+### Get a place by the UUID [GET]
+Return a place to the client if it exists.
 
 + Parameters
-    + id ... UUID of the room
+    + id ... UUID of the place
     
 + Response 200
-    [Room][]
+    [Place][]
         
 + Response 404 (application/json)
         
         {
             "id": "some-invalid-id",
-            "status": "BAD_ROOM",
+            "status": "PLACE_NOT_FOUND",
             "error": {
-                feedback: "The room couldn't be found."
+                feedback: "The place couldn't be found."
             }
         }
 
-### Edit a room or item in a room [PUT]
-Make a change to the room object by reference, valid references could be dot notation or
-bracket notation, like `doors.up` or `doors['up']`.
+### Edit a place or item in a place [PUT]
+Make a change to the place object by reference, valid references could be dot notation or
+bracket notation, like `passages.up` or `passages['up']`.
 
 + Parameters
-    + id ... UUID of the room
+    + id ... UUID of the place
         
-+ Request Update Room name (application/json)
++ Request Update Place name (application/json)
 
     + Headers
         
@@ -439,14 +439,14 @@ bracket notation, like `doors.up` or `doors['up']`.
             }
 
 + Response 200
-    [Room][]
+    [Place][]
 
 + Response 400 (application/json)
         
         {
             "status": "BAD_REQUEST",
             "error": {
-                "feedback": "The object reference didn't match anything in the room."
+                "feedback": "The object reference didn't match anything in the place."
             }
         }
 
@@ -454,17 +454,17 @@ bracket notation, like `doors.up` or `doors['up']`.
         
         {
             "id": "some-invalid-id",
-            "status": "BAD_ROOM",
+            "status": "PLACE_NOT_FOUND",
             "error": {
-                "feedback": "The room couldn't be found."
+                "feedback": "The place couldn't be found."
             }
         }
 
-### Add an item to a room [POST]
-Create a new item and add it to the room. Needs a name and description at the very least.
+### Add an item to a place [POST]
+Create a new item and add it to the place. Needs a name and description at the very least.
 
 + Parameters
-    + id ... UUID of the room
+    + id ... UUID of the place
     
 + Request Add an item (application/json)
 
@@ -571,9 +571,9 @@ could be picked (brute forced).
         
         {
             "id": "some-invalid-id",
-            "status": "DOOR_NOT_FOUND",
+            "status": "PASSAGE_NOT_FOUND",
             "error": {
-                "feedback": "The door couldn't be found."
+                "feedback": "The passage couldn't be found."
             }
         }
         
