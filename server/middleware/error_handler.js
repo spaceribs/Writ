@@ -54,7 +54,7 @@ module.exports = function(err, req, res, next) {
         };
         res.status(err.status).json(responseData);
 
-    } else if (err instanceof errors.EmailTokenNotFoundError) {
+    } else if (err instanceof errors.SecretNotFoundError) {
         responseData = {
             status: 'EMAIL_TOKEN_NOT_FOUND',
             errors: {

@@ -26,14 +26,14 @@ EmailUsedError.prototype.constructor = EmailUsedError;
  * @param {string} token - Token that was searched.
  * @constructor
  */
-function EmailTokenNotFoundError(message, token) {
+function SecretNotFoundError(message, token) {
     this.status = 404;
     this.token = token;
-    this.name = 'EmailTokenNotFoundError';
+    this.name = 'SecretNotFoundError';
     this.message = (message || 'Invalid email token.');
 }
-EmailTokenNotFoundError.prototype = Object.create(Error.prototype);
-EmailTokenNotFoundError.prototype.constructor = EmailTokenNotFoundError;
+SecretNotFoundError.prototype = Object.create(Error.prototype);
+SecretNotFoundError.prototype.constructor = SecretNotFoundError;
 
 /**
  * A custom error to handle login issues.
@@ -54,5 +54,5 @@ module.exports = {
     JsonSchemaCustomPropertyError: JsonSchemaCustomPropertyError,
     SyntaxError: SyntaxError,
     EmailUsedError: EmailUsedError,
-    EmailTokenNotFoundError: EmailTokenNotFoundError
+    SecretNotFoundError: SecretNotFoundError
 };

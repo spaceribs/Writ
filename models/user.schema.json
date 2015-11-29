@@ -4,49 +4,88 @@
     "type": "object",
     "description": "A writ user",
     "properties": {
-        "id": {
+        "_id": {
             "id": "/writ/user/id",
             "type": "string",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "faker": "random.uuid",
-            "permission": { "read": 10, "write": 0 },
+            "permission": {
+                "read": 20,
+                "write": 0
+            },
             "unique": true
         },
         "email": {
             "type": "string",
             "format": "email",
             "chance": "email",
-            "permission": { "read": 1, "write": 10 },
+            "permission": {
+                "read": 9,
+                "write": 9
+            },
             "unique": true
         },
         "name": {
             "type": "string",
             "chance": "name",
-            "permission": { "read": 100, "write": 10 }
+            "permission": {
+                "read": 100,
+                "write": 9
+            }
         },
         "permission": {
             "type": "integer",
             "minimum": 0,
             "maximum": 100,
             "exclusiveMinimum": true,
-            "permission": { "read": 100, "write": 1 }
+            "permission": {
+                "read": 100,
+                "write": 1
+            }
         },
         "password": {
             "type": "string",
-            "permission": { "read": -1, "write": 10 }
+            "permission": {
+                "read": -1,
+                "write": 9
+            }
         },
         "salt": {
             "type": "string",
-            "permission": { "read": 0, "write": 0 }
+            "permission": {
+                "read": 0,
+                "write": 0
+            }
         },
         "hash": {
             "type": "string",
-            "permission": { "read": 0, "write": 0 }
+            "permission": {
+                "read": 0,
+                "write": 0
+            }
+        },
+        "secret": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "faker": "random.uuid",
+            "permission": {
+                "read": 9,
+                "write": 9
+            }
         }
     },
     "oneOf": [
-        { "required": [ "password" ] },
-        { "required": [ "salt", "hash", "id" ] }
+        {
+            "required": [
+                "password"
+            ]
+        },
+        {
+            "required": [
+                "salt",
+                "hash",
+                "permission"
+            ]
+        }
     ],
     "additionalProperties": false,
     "required": [

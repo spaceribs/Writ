@@ -13,7 +13,7 @@ Users.createIndex({
 }).then(function(result) {
     return Users.createIndex({
         index: {
-            fields: ['emailToken']
+            fields: ['secret']
         }
     });
 
