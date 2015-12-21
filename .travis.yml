@@ -2,11 +2,12 @@ language: node_js
 node_js:
   - "5.0"
   - "4.1"
+before_install:
+  - "npm install -g jasmine"
+  - "npm install node-gyp -g"
+  - "npm install jshint -g"
+  - "npm install jsonlint -g"
 install:
   - "npm install"
   - "cd server/ && npm install"
-before_script:
-  - "npm install -g jasmine"
-  - "npm install node-gyp -g"
-  - "sudo npm install jshint -g"
 script: "npm test"
