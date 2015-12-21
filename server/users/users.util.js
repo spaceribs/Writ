@@ -10,7 +10,7 @@ var hmac = require('crypto-js/hmac-sha512');
  */
 function processPassword(params) {
     if (params.password) {
-        params.salt = secureRandom.randomBuffer(256).toString();
+        params.salt = secureRandom.randomBuffer(256).toString('hex');
         params.hash = getHash(params.password, params.salt);
         delete params.password;
     }

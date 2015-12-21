@@ -3,7 +3,10 @@ node_js:
   - "5.0"
   - "4.1"
 install:
-  - npm install
+  - "npm install"
+  - "cd server/ && npm install"
 before_script:
-  - npm install -g gulp
-script: gulp test
+  - "npm install -g jasmine"
+  - "npm install node-gyp -g"
+  - "sudo npm install jshint -g"
+script: "npm test"
