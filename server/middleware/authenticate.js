@@ -2,7 +2,6 @@
 
 var passport = require('passport');
 var BasicStrategy = require('passport-http').BasicStrategy;
-var SHA256 = require('crypto-js/sha256');
 var Users = require('../users/').database;
 
 passport.use(new BasicStrategy(

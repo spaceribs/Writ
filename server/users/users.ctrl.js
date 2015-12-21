@@ -7,27 +7,24 @@ var express = require('express');
 var nodemailer = require('nodemailer');
 var router = express.Router();
 var validate = require('express-jsonschema').validate;
-var hmac = require('crypto-js/hmac-sha512');
-var secureRandom = require('secure-random');
 var uuid = require('node-uuid');
-var errors = require('../errors');
+var errors = require('../app/errors');
 var Users = require('./users.db');
+var userUtil = require('./users.util');
+var passport = require('./users.auth');
 
 router.use(function(req, res, next) {
-
-    var params = req.body;
-
-    // If there is a password set, generate a salt and hash.
-    if (params.password) {
-        params.salt = secureRandom.randomBuffer(256).toString();
-        params.hash = hmac(params.password, params.salt).toString();
-        delete params.password;
-    }
-
-    req.body = params;
-
+    userUtil.processPassword(req.body);
     next();
 });
+
+router.route('/login/')
+        .get(passport.authenticate('basic', {session: false}), function(req, res) {
+            res.json({
+                status : 'SUCCESS',
+                data   : req.user
+            });
+        });
 
 router.route('/user/')
         .options(function(req, res) {
@@ -37,7 +34,7 @@ router.route('/user/')
                 res.json(models.user);
             }
         })
-        .get(function(req, res) {
+        .get(passport.authenticate('basic', {session: false}), function(req, res) {
             // Get my own profile if logged in.
 
             res.json({
@@ -45,18 +42,18 @@ router.route('/user/')
                 data   : require('../mocks/user.json')
             });
         })
-        .post(validate({body : models.user}), function(req, res, next) {
+        .post(validate({body: models.user}), function(req, res, next) {
 
             var defaultPerm = models.user.properties.permission.default;
             var params = permissions.permFilter(defaultPerm, 'user', req.body, true, true);
 
             Users.find({
-                selector : {email : req.body.email}
+                selector : {email: req.body.email}
             }).then(function(result) {
                 if (result.docs.length) {
                     throw new errors.EmailUsedError(
-                            'This email address is already in use by another account.',
-                            req.body.email
+                        'This email address is already in use by another account.',
+                        req.body.email
                     );
                 }
 
@@ -77,12 +74,14 @@ router.route('/user/')
                     }
                 });
 
+                var verifyUrl = config.hostname + '/verify/' + params.secret;
+
                 transporter.sendMail({
                     from    : config.sysop + ' <' + config.emailUsername + '>',
                     to   : params.email,
                     subject : 'Please verify your email address',
-                    text    : 'Secret Token: ' + params.secret +
-                    '\nUser ID: ' + params._id
+                    html    : 'Go to this URL to verify your email: <a href="' + verifyUrl + '">' +
+                        verifyUrl + '</a>'
                 }, function(err) {
                     if (err) {
                         next(err);
@@ -104,7 +103,7 @@ router.route('/user/')
         });
 
 router.route('/user/list')
-        .get(function(req, res, next) {
+        .get(passport.authenticate('basic', {session: false}), function(req, res, next) {
             // Admin only list of users
 
             Users.allDocs({
@@ -131,15 +130,15 @@ router.route('/user/:userId')
 
             var userId = req.params.userId;
             Users.get('user/' + userId)
-                    .then(function(result) {
-                        var filtered = permissions.permFilter(100,
-                                'user', result);
-                        res.json(filtered);
-                    }).catch(function(err) {
-                next(err);
-            });
+                .then(function(result) {
+                    var filtered = permissions.permFilter(100,
+                            'user', result);
+                    res.json(filtered);
+                }).catch(function(err) {
+                    next(err);
+                });
         })
-        .post(function(req, res, next) {
+        .post(passport.authenticate('basic', {session: false}), function(req, res, next) {
             // Update a profile.
 
             var userId = req.params.userId;
@@ -185,7 +184,8 @@ router.route('/user/:userId')
                                 } else {
                                     res.json({
                                         status  : 'SUCCESS',
-                                        message : 'User has been updated, and an email has been sent to the new address.',
+                                        message : 'User has been updated, and an email ' +
+                                        'has been sent to the new address.',
                                         data    : params
                                     });
                                 }
@@ -197,14 +197,14 @@ router.route('/user/:userId')
                 next(err);
             });
         })
-        .delete(function(req, res, next) {
+        .delete(passport.authenticate('basic', {session: false}), function(req, res, next) {
             // Delete a profile.
 
             var userId = req.params.userId;
 
             Users.get('user/' + userId).then(function(doc) {
                 return Users.remove(doc);
-            }).then(function(doc) {
+            }).then(function() {
                 res.json({
                     status  : 'SUCCESS',
                     message : 'User has been deleted.'
@@ -218,12 +218,12 @@ router.route('/verify/:token')
         .get(function(req, res, next) {
 
             Users.find({
-                selector : {secret : req.params.token}
+                selector : {secret: req.params.token}
             }).then(function(results) {
                 if (!results.docs.length) {
                     throw new errors.SecretNotFoundError(
-                            'This token was not found.',
-                            req.params.token
+                        'This token was not found.',
+                        req.params.token
                     );
                 } else {
                     return results.docs[0];

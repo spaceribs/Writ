@@ -1,0 +1,8 @@
+{
+    "spec_dir": "./",
+    "spec_files": [
+        "server/users/*.e2e.js"
+    ],
+    "stopSpecOnExpectationFailure": false,
+    "random": false
+}
