@@ -9,5 +9,5 @@ before_install:
   - "npm install jsonlint -g"
 install:
   - "npm install"
-  - "cd server/ && npm install"
+  - "(cd server/ && npm install)"
 script: "npm test"
