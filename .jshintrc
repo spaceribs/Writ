@@ -14,6 +14,7 @@
     "jquery"        : true,
     "node"          : true,
     "browser"       : true,
+    "jasmine"       : true,
     "globals"       : {
         "angular": false
     }

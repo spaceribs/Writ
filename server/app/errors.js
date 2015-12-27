@@ -6,7 +6,7 @@ var JsonSchemaCustomPropertyError = require('express-jsonschema').JsonSchemaCust
 /**
  * A custom error to handle duplicate email errors
  *
- * @param {string} message - Custom user error message.
+ * @param {string} [message] - Custom user error message.
  * @param {string} email - The email which already exists.
  * @constructor
  */
@@ -22,7 +22,7 @@ EmailUsedError.prototype.constructor = EmailUsedError;
 /**
  * A custom error to handle any tokens which cannot be found.
  *
- * @param {string} message - Custom user error message.
+ * @param {string} [message] - Custom user error message.
  * @param {string} token - Token that was searched.
  * @constructor
  */
@@ -38,7 +38,7 @@ SecretNotFoundError.prototype.constructor = SecretNotFoundError;
 /**
  * A custom error to handle login issues.
  *
- * @param {string} message - Custom login error message.
+ * @param {string} [message] - Custom login error message.
  * @constructor
  */
 function LoginError(message) {
@@ -54,5 +54,6 @@ module.exports = {
     JsonSchemaCustomPropertyError: JsonSchemaCustomPropertyError,
     SyntaxError: SyntaxError,
     EmailUsedError: EmailUsedError,
-    SecretNotFoundError: SecretNotFoundError
+    SecretNotFoundError: SecretNotFoundError,
+    LoginError: LoginError
 };

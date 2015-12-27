@@ -1,6 +1,6 @@
 'use strict';
 
-var errors = require('../errors');
+var errors = require('../app/errors');
 
 module.exports = function(err, req, res, next) {
     var responseData;

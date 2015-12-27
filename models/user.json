@@ -1,0 +1,39 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "/writ/user",
+    "type": "object",
+    "description": "A writ user validated from the server",
+    "properties": {
+        "email": {
+            "type": "string",
+            "format": "email",
+            "chance": "email",
+            "permission": {
+                "read": 19,
+                "write": 29
+            },
+            "unique": true
+        },
+        "name": {
+            "type": "string",
+            "chance": "name",
+            "permission": {
+                "read": 100,
+                "write": 29
+            }
+        },
+        "password": {
+            "type": "string",
+            "permission": {
+                "read": -1,
+                "write": 29
+            }
+        }
+    },
+    "additionalProperties": false,
+    "required": [
+        "email",
+        "name",
+        "password"
+    ]
+}

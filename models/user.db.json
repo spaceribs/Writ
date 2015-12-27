@@ -1,6 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "/writ/user",
+    "$ref": "/writ/user",
+    "id": "/writ/user.db",
     "type": "object",
     "description": "A writ user",
     "properties": {
@@ -9,29 +10,7 @@
             "type": "string",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "faker": "random.uuid",
-            "permission": {
-                "read": 30,
-                "write": 0
-            },
             "unique": true
-        },
-        "email": {
-            "type": "string",
-            "format": "email",
-            "chance": "email",
-            "permission": {
-                "read": 19,
-                "write": 29
-            },
-            "unique": true
-        },
-        "name": {
-            "type": "string",
-            "chance": "name",
-            "permission": {
-                "read": 100,
-                "write": 29
-            }
         },
         "permission": {
             "type": "integer",
@@ -42,13 +21,6 @@
             "permission": {
                 "read": 100,
                 "write": 10
-            }
-        },
-        "password": {
-            "type": "string",
-            "permission": {
-                "read": -1,
-                "write": 29
             }
         },
         "salt": {
@@ -63,14 +35,6 @@
             "permission": {
                 "read": 0,
                 "write": 0
-            }
-        },
-        "secret": {
-            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
-            "faker": "random.uuid",
-            "permission": {
-                "read": 19,
-                "write": 19
             }
         },
         "created": {
@@ -100,7 +64,10 @@
     ],
     "additionalProperties": false,
     "required": [
-        "email",
-        "name"
+        "_id",
+        "permission",
+        "salt",
+        "hash",
+        "created"
     ]
 }

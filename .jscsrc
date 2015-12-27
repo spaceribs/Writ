@@ -4,6 +4,8 @@
     "esnext": true,
     "validateIndentation": 4,
     "maximumLineLength": 120,
+    "disallowSpaceAfterObjectKeys": "ignoreMultiLine",
+    "requireCamelCaseOrUpperCaseIdentifiers": "ignoreProperties",
     "jsDoc": {
         "checkAnnotations": {
             "preset": "jsdoc3",
