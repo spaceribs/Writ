@@ -1,16 +1,29 @@
 'use strict';
 
-var userUtil = require('./users.util');
 var jsf = require('json-schema-faker');
-var userModel = require('../../models').user;
+var userModel = require('../../models').io.user;
 var _ = require('lodash');
+var mockery = require('mockery');
 
-describe('users', function() {
+describe('Users Unit Tests', function() {
 
     var userOne = jsf(userModel);
     var userTwo = jsf(userModel);
 
+    beforeAll(function() {
+        mockery.enable({
+            warnOnReplace: false,
+            warnOnUnregistered: false
+        });
+    });
+
+    afterAll(function() {
+        mockery.disable();
+    });
+
     describe('users.util', function() {
+
+        var util = require('./users.util');
 
         var processedUserOne = _.clone(userOne);
         var processedUserOneAlt = _.clone(userOne);
@@ -18,7 +31,7 @@ describe('users', function() {
 
         describe('getHash', function() {
 
-            var hash = userUtil.getHash(userOne.password, 'Some Salt');
+            var hash = util.getHash(userOne.password, 'Some Salt');
 
             it('generates a valid sha512 hash string from a password and a salt.', function() {
                 expect(hash).toEqual(jasmine.any(String));
@@ -28,9 +41,9 @@ describe('users', function() {
 
         describe('processPassword', function() {
 
-            userUtil.processPassword(processedUserOne);
-            userUtil.processPassword(processedUserOneAlt);
-            userUtil.processPassword(processedUserTwo);
+            util.processPassword(processedUserOne);
+            util.processPassword(processedUserOneAlt);
+            util.processPassword(processedUserTwo);
 
             it('removes a password and generates a salt/hash.', function() {
                 expect(processedUserOne.password).toBeUndefined();
@@ -57,27 +70,135 @@ describe('users', function() {
         describe('checkPassword', function() {
 
             it('validates a matching password correctly.', function() {
-                var userOneCheck = userUtil
+                var userOneCheck = util
                         .checkPassword(userOne.password, processedUserOne.salt, processedUserOne.hash);
                 expect(userOneCheck).toEqual(jasmine.any(Boolean));
                 expect(userOneCheck).toBe(true);
             });
 
             it('validates a different salt/hash correctly.', function() {
-                var userOneAltCheck = userUtil
+                var userOneAltCheck = util
                         .checkPassword(userOne.password, processedUserOneAlt.salt, processedUserOneAlt.hash);
                 expect(userOneAltCheck).toEqual(jasmine.any(Boolean));
                 expect(userOneAltCheck).toBe(true);
             });
 
             it('validates that incorrect passwords fail to match.', function() {
-                var userOneCheck = userUtil
+                var userOneCheck = util
                         .checkPassword('$$$ THIS IS WRONG $$$', processedUserOne.salt, processedUserOne.hash);
                 expect(userOneCheck).toEqual(jasmine.any(Boolean));
                 expect(userOneCheck).toBe(false);
             });
 
         });
+
+    });
+
+    describe('users.ctrl', function() {
+
+        var ctrl;
+        var req;
+        var res;
+        var callback;
+
+        beforeAll(function() {
+            mockery.registerSubstitute('./users.db', './users.db.mock');
+            mockery.registerSubstitute('nodemailer', './users.db.mock');
+            ctrl = require('./users.ctrl');
+        });
+
+        beforeEach(function() {
+            callback = jasmine.createSpy('callback');
+            res = {json: jasmine.createSpy('json')};
+        });
+
+        describe('login', function() {
+
+            beforeAll(function() {
+                req = {user: userOne};
+            });
+
+            it('returns a successful login.', function() {
+                ctrl.login(req, res);
+
+                expect(res.json).toHaveBeenCalled();
+                expect(res.json.calls.mostRecent().args[0])
+                    .toEqual({
+                        status: 'SUCCESS',
+                        data: userOne
+                    });
+            });
+
+        });
+
+        describe('usersOptions', function() {
+
+            beforeAll(function() {
+                req = {user: userOne};
+            });
+
+            it('returns a json-schema when requesting options.', function() {
+                req.accepts = jasmine.createSpy('accepts').and.returnValue(true);
+                ctrl.users.options(req, res, callback);
+
+                expect(req.accepts).toHaveBeenCalled();
+                expect(req.accepts).toHaveBeenCalledWith('json');
+                expect(res.json).toHaveBeenCalled();
+                expect(res.json.calls.mostRecent().args[0])
+                    .toEqual(userModel);
+            });
+
+            it('passes through if json isn\'t accepted.', function() {
+                req.accepts = jasmine.createSpy('accepts').and.returnValue(false);
+                ctrl.users.options(req, res, callback);
+
+                expect(req.accepts).toHaveBeenCalled();
+                expect(res.json).not.toHaveBeenCalled();
+                expect(callback).toHaveBeenCalled();
+            });
+
+        });
+
+        describe('usersGet', function() {
+
+            beforeAll(function() {
+                req = {user: userOne};
+            });
+
+            it('returns the decorated profile of the current user.', function() {
+                ctrl.users.get(req, res);
+
+                expect(res.json).toHaveBeenCalled();
+                expect(res.json.calls.mostRecent().args[0])
+                    .toEqual({
+                        status: 'SUCCESS',
+                        data: userOne
+                    });
+            });
+
+        });
+
+        describe('usersPost', function() {
+
+            beforeAll(function() {
+                req = {body: userOne};
+            });
+
+            it('creates a new user with the post body', function() {
+                ctrl.users.post(req, res, callback);
+            });
+
+        });
+
+        xdescribe('usersList', function() {});
+
+        xdescribe('userGet', function() {});
+
+        xdescribe('userPost', function() {});
+
+        xdescribe('userDelete', function() {});
+
+        xdescribe('userVerify', function() {});
 
     });
 

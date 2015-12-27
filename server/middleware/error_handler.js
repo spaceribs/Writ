@@ -8,6 +8,7 @@ module.exports = function(err, req, res, next) {
     if (!req.accepts('json')) {
         res.set('Content-Type', 'text/plain')
             .status(406).send('Only JSON Content type is accepted.');
+
     } else if (err instanceof errors.JsonSchemaValidation) {
         responseData = {
             status: 'INVALID_SCHEME',
@@ -68,7 +69,7 @@ module.exports = function(err, req, res, next) {
         res.status(err.status).json(responseData);
 
     } else {
-        // pass error to next error middleware handler
         next(err);
+
     }
 };

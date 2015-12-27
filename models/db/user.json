@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$ref": "/writ/user",
-    "id": "/writ/user.db",
+    "$ref": "/writ/io/user",
+    "id": "/writ/db/user",
     "type": "object",
     "description": "A writ user",
     "properties": {
@@ -10,7 +10,11 @@
             "type": "string",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "faker": "random.uuid",
-            "unique": true
+            "unique": true,
+            "permission": {
+                "read": 100,
+                "write": 0
+            }
         },
         "permission": {
             "type": "integer",

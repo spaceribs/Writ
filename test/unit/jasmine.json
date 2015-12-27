@@ -1,9 +1,0 @@
-{
-    "spec_dir": "./",
-    "spec_files": [
-        "server/app/*.js",
-        "server/users/*.unit.js"
-    ],
-    "stopSpecOnExpectationFailure": false,
-    "random": false
-}

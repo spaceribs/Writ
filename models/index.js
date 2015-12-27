@@ -1,8 +1,13 @@
 'use strict';
 
 module.exports = {
-    user: require('./user.json'),
-    place: require('./place.schema.json'),
-    passage: require('./passage.schema.json'),
-    item: require('./item.schema.json')
+    db: {
+        user: require('./db/user.json')
+    },
+    io: {
+        user: require('./io/user.json'),
+        place: require('./io/place.schema.json'),
+        passage: require('./io/passage.schema.json'),
+        item: require('./io/item.schema.json')
+    }
 };
