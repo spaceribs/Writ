@@ -1,11 +1,13 @@
 'use strict';
 
-var models = require('../../models');
-var config = require('../config');
-var email = require('../email');
 var express = require('express');
 var nodemailer = require('nodemailer');
 var uuid = require('node-uuid');
+var _ = require('lodash');
+
+var models = require('../../models');
+var config = require('../config');
+var emailConfig = require('../email.json');
 var errors = require('../app/errors');
 var Users = require('./users.db');
 var util = require('./users.util');
@@ -63,12 +65,19 @@ function usersGet(req, res) {
  */
 function usersPost(req, res, next) {
 
-    util.processPassword(req.body);
     var defaultPerm = models.db.user.properties.permission.default;
-    var params = util.permFilter(defaultPerm, 'user', req.body, true, true);
+    var params = util.inputFilter(defaultPerm, 'user', req.body, true, true);
+    util.processPassword(params);
 
-    Users.find({
-        selector : {email: req.body.email}
+    Users.createIndex({
+        'index': {
+            'fields': ['email']
+        }
+    }).then(function() {
+        return Users.find({
+            selector : {email: req.body.email}
+        });
+
     }).then(function(result) {
         if (result.docs.length) {
             throw new errors.EmailUsedError(
@@ -79,43 +88,32 @@ function usersPost(req, res, next) {
 
     }).then(function() {
         params.secret = uuid.v4();
-        params._id = 'user/' + uuid.v4();
-        params.salt = req.body.salt;
-        params.hash = req.body.hash;
+        params.id = uuid.v4();
+        params._id = 'user/' + params.id;
         params.created = new Date().toISOString();
+        params.permission = 30;
         return Users.put(params);
 
     }).then(function() {
-        var transporter = nodemailer.createTransport({
-            service : 'Gmail',
-            auth    : {
-                user : config.emailUsername,
-                pass : config.emailPassword
-            }
-        });
-
+        var transporter = nodemailer.createTransport(emailConfig);
         var verifyUrl = config.hostname + '/verify/' + params.secret;
 
-        transporter.sendMail({
-            from    : config.sysop + ' <' + config.emailUsername + '>',
-            to   : params.email,
-            subject : 'Please verify your email address',
-            html    : 'Go to this URL to verify your email: <a href="' + verifyUrl + '">' +
-            verifyUrl + '</a>'
-        }, function(err) {
-            if (err) {
-                next(err);
-            } else {
-                res.json({
-                    status  : 'SUCCESS',
-                    message : 'Please check your email to verify your account.',
-                    data    : {
-                        id    : req.body._id,
-                        email : req.body.email
-                    }
-                });
-            }
-        });
+        transporter.sendMail(
+            util.tokenEmail(config.sysop, params.email, verifyUrl),
+            function(err) {
+                if (err) {
+                    next(err);
+                } else {
+                    res.json({
+                        status  : 'SUCCESS',
+                        message : 'Please check your email to verify your account.',
+                        data    : {
+                            id    : params.id,
+                            email : params.email
+                        }
+                    });
+                }
+            });
 
     }).catch(function(err) {
         next(err);
@@ -139,7 +137,7 @@ function usersList(req, res, next) {
     }).then(function(results) {
         for (var i = 0; i < results.rows.length; i++) {
             var row = results.rows[i];
-            results.rows[i].doc = util.permFilter(10, 'user', row.doc);
+            results.rows[i].doc = util.inputFilter(10, 'user', row.doc);
         }
         return results;
     })
@@ -162,13 +160,14 @@ function userGet(req, res, next) {
 
     var userId = req.params.userId;
     Users.get('user/' + userId)
-            .then(function(result) {
-                var filtered = util.permFilter(100,
-                        'user', result);
-                res.json(filtered);
-            }).catch(function(err) {
-        next(err);
-    });
+        .then(function(result) {
+            var filtered = util.inputFilter(100,
+                    'user', result);
+            res.json(filtered);
+        }).catch(function(err) {
+            //TODO: validate if this needs to be converted to an object?
+            next(JSON.parse(err));
+        });
 }
 
 /**
@@ -180,47 +179,63 @@ function userGet(req, res, next) {
  */
 function userPost(req, res, next) {
 
-    if (req.body.password) {
-        util.processPassword(req.body);
-    }
     var userId = req.params.userId;
-    var params = util.permFilter(19, 'user', req.body, true, true);
+    var params = util.inputFilter(30, 'user', req.body, true, true);
+    var newParams;
+
+    if (params.password) {
+        util.processPassword(params);
+    }
 
     if (params.email) {
         params.secret = uuid.v4();
         params.permission = 30;
     }
 
-    Users.get('user/' + userId)
-            .then(function(result) {
-                return Users.put(params, result._id, result._rev);
-            })
-            .then(function() {
-                if (!params.email) {
+    Users.createIndex({
+            'index': {
+                'fields': ['email']
+            }
+        }).then(function() {
+            if (params.email) {
+                return Users.find({
+                    selector : {email: params.email}
+                }).then(function(result) {
+                    if (result.docs.length && result.docs[0].id !== userId) {
+                        throw new errors.EmailUsedError(
+                                'This email address is already in use by another account.',
+                                req.body.email
+                        );
+                    }
+                });
+            }
 
-                    res.json({
-                        status  : 'SUCCESS',
-                        message : 'User has been successfully updated.',
-                        data    : params
-                    });
+        }).then(function() {
+            return Users.get('user/' + userId);
 
-                } else {
+        }).then(function(result) {
+            newParams = _.extend({}, result, params);
+            delete newParams._id;
+            delete newParams._rev;
+            return Users.put(params, result._id, result._rev);
 
-                    var transporter = nodemailer.createTransport({
-                        service : 'Gmail',
-                        auth    : {
-                            user : config.emailUsername,
-                            pass : config.emailPassword
-                        }
-                    });
+        }).then(function() {
+            if (!params.email) {
 
-                    transporter.sendMail({
-                        from    : config.sysop + ' <' + config.emailUsername + '>',
-                        to   : params.email,
-                        subject : 'Please verify your email address',
-                        text    : 'Secret Token: ' + params.secret +
-                        '\nUser ID: ' + params._id
-                    }, function(err) {
+                res.json({
+                    status  : 'SUCCESS',
+                    message : 'User has been successfully updated.',
+                    data    : util.inputFilter(newParams.permission, 'user', newParams, false, true)
+                });
+
+            } else {
+
+                var transporter = nodemailer.createTransport(emailConfig);
+                var verifyUrl = config.hostname + '/verify/' + params.secret;
+
+                transporter.sendMail(
+                    util.tokenEmail(config.sysop, params.email, verifyUrl),
+                    function(err) {
                         if (err) {
                             next(err);
                         } else {
@@ -228,28 +243,27 @@ function userPost(req, res, next) {
                                 status  : 'SUCCESS',
                                 message : 'User has been updated, and an email ' +
                                 'has been sent to the new address.',
-                                data    : params
+                                data    : util.inputFilter(newParams.permission, 'user', newParams, false, true)
                             });
                         }
                     });
 
-                }
+            }
 
-            }).catch(function(err) {
+        }).catch(function(err) {
         next(err);
     });
 }
 
 /**
  * Called when a user makes a DELETE request to /user/{some-uuid}/.
+ * Deletes a specific user.
  *
  * @param {object} req - Express request object.
  * @param {object} res - Express response object.
  * @param {function} next - Callback for the response.
  */
 function userDelete(req, res, next) {
-    // Delete a profile.
-
     var userId = req.params.userId;
 
     Users.get('user/' + userId).then(function(doc) {
@@ -266,6 +280,7 @@ function userDelete(req, res, next) {
 
 /**
  * Called when a user makes a GET request to /verify/{token}/.
+ * This is used to verify their email address with their account.
  *
  * @param {object} req - Express request object.
  * @param {object} res - Express response object.
@@ -273,8 +288,14 @@ function userDelete(req, res, next) {
  */
 function userVerify(req, res, next) {
 
-    Users.find({
-        selector : {secret: req.params.token}
+    Users.createIndex({
+        'index': {
+            'fields': ['secret']
+        }
+    }).then(function() {
+        return Users.find({
+            selector : {secret: req.params.token}
+        });
     }).then(function(results) {
         if (!results.docs.length) {
             throw new errors.SecretNotFoundError(
@@ -309,8 +330,15 @@ function userVerify(req, res, next) {
  */
 function loginStrategy(email, password, cb) {
 
-    Users.find({
-        selector : {email: email}
+    Users.createIndex({
+        'index': {
+            'fields': ['email']
+        }
+    }).then(function() {
+        return Users.find({
+            selector : {email: email}
+        });
+
     }).then(function(users) {
 
         if (!users.docs.length) {

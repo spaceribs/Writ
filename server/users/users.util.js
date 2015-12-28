@@ -73,17 +73,36 @@ function userCan(permLevel, model, prop, write) {
  * @param {boolean=} owner - If the param is private, is the caller the owner?
  * @returns {object} - Filtered object
  */
-function permFilter(permLevel, modelName, result, write, owner) {
+function inputFilter(permLevel, modelName, result, write, owner) {
     var output = {};
-    var model = _.extend({}, models.io[modelName].properties, models.db[modelName].properties);
+    var model = models.io[modelName].properties;
     var keys = Object.keys(model);
     permLevel -= owner ? 1 : 0;
     for (var i = 0; i < keys.length; i++) {
-        if (userCan(permLevel, model, keys[i], write)) {
+        if (userCan(permLevel, model, keys[i], write) &&
+                typeof result[keys[i]] !== 'undefined') {
             output[keys[i]] = result[keys[i]];
         }
     }
     return output;
+}
+
+/**
+ * Generate an email to send to users when they create/update their email.
+ *
+ * @param {string} from - Email header for who this is from.
+ * @param {string} to - Email to send this email to.
+ * @param {string} tokenUrl - URL to pass
+ * @returns {{from: string, to: string, subject: string, html: string}}
+ */
+function tokenEmail(from, to, tokenUrl) {
+    return {
+        from    : from,
+        to   : to,
+        subject : 'Writ - Verify your email address',
+        html    : 'Go to this URL to verify your email: <a href="' + tokenUrl + '">' +
+            tokenUrl + '</a>'
+    };
 }
 
 module.exports = {
@@ -91,5 +110,6 @@ module.exports = {
     checkPassword: checkPassword,
     getHash: getHash,
     userCan: userCan,
-    permFilter: permFilter
+    inputFilter: inputFilter,
+    tokenEmail: tokenEmail
 };

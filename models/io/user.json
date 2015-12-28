@@ -9,7 +9,7 @@
             "format": "email",
             "chance": "email",
             "permission": {
-                "read": 19,
+                "read": 29,
                 "write": 29
             },
             "unique": true

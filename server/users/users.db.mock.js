@@ -7,4 +7,4 @@ console.log('--> Mocking User Database');
 
 module.exports = new Database('Mock-Users', {
     db: memdown
-}, require('./users.db.indexes'));
+});
