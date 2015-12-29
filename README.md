@@ -6,5 +6,5 @@
 [![Test Coverage](https://codeclimate.com/github/spaceribs/Writ/badges/coverage.svg)](https://codeclimate.com/github/spaceribs/Writ/coverage)
 
 ### Develop Branch
-[![Floobits Status](https://floobits.com/spaceribs/writ_game.svg)](https://floobits.com/spaceribs/writ_game/redirect)
 [![Build Status](https://travis-ci.org/spaceribs/Writ.svg?branch=develop)](https://travis-ci.org/spaceribs/Writ)
+[![Floobits Status](https://floobits.com/spaceribs/writ_game.svg)](https://floobits.com/spaceribs/writ_game/redirect)
