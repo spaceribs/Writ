@@ -132,7 +132,7 @@ describe('Users Unit Tests', function() {
                  * Mock method for sending an email.
                  *
                  * @param {object} content - content to send.
-                 * @param {function} callback - function called once an email is sent.
+                 * @param {function} callback - Callback function.
                  */
                 sendMail: function(content, callback) {
                     callback();
@@ -491,7 +491,7 @@ describe('Users Unit Tests', function() {
                     /**
                      * Temporary callback for login response.
                      *
-                     * @param {object} response - Response object from the userPost
+                     * @param {object} response - Response object
                      */
                     json: function(response) {
                         expect(response).toEqual({
@@ -588,11 +588,14 @@ describe('Users Unit Tests', function() {
                 }, postRes, callback);
             });
 
-            xit('deletes a user if they are the owner of an account.', function() {});
+            xit('deletes a user if they are the owner of an account.',
+                function() {});
 
-            xit('deletes a user if they are an admin.', function() {});
+            xit('deletes a user if they are an admin.',
+                function() {});
 
-            xit('doesn\'t delete a user if you aren\'t an owner/admin.', function() {});
+            xit('doesn\'t delete a user if you aren\'t an owner/admin.',
+                function() {});
 
         });
 
@@ -650,10 +653,11 @@ describe('Users Unit Tests', function() {
             });
 
             it('doesn\'t log in an invalid user.', function(done) {
-                ctrl.strategy(userOne.email, userOne.password, function(err) {
-                    expect(err).toEqual(jasmine.any(errors.LoginError));
-                    done();
-                });
+                ctrl.strategy(userOne.email, userOne.password,
+                    function(err) {
+                        expect(err).toEqual(jasmine.any(errors.LoginError));
+                        done();
+                    });
             });
 
             it('logs in a valid user.', function(done) {
@@ -662,22 +666,23 @@ describe('Users Unit Tests', function() {
                     expect(response.data).toBeDefined();
                     expect(response.data.id).toBeDefined();
 
-                    ctrl.strategy(userOne.email, userOne.password, function(err, user) {
-                        expect(err).toBeNull();
-                        expect(user).toEqual({
-                            email: userOne.email,
-                            name: userOne.name,
-                            salt: jasmine.any(String),
-                            hash: jasmine.any(String),
-                            secret: jasmine.any(String),
-                            id: response.data.id,
-                            created: jasmine.any(String),
-                            permission: 30,
-                            _id: jasmine.any(String),
-                            _rev: jasmine.any(String)
+                    ctrl.strategy(userOne.email, userOne.password,
+                        function(err, user) {
+                            expect(err).toBeNull();
+                            expect(user).toEqual({
+                                email: userOne.email,
+                                name: userOne.name,
+                                salt: jasmine.any(String),
+                                hash: jasmine.any(String),
+                                secret: jasmine.any(String),
+                                id: response.data.id,
+                                created: jasmine.any(String),
+                                permission: 30,
+                                _id: jasmine.any(String),
+                                _rev: jasmine.any(String)
+                            });
+                            done();
                         });
-                        done();
-                    });
                 });
 
                 ctrl.users.post({
