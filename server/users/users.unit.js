@@ -179,7 +179,8 @@ describe('Users Unit Tests', function() {
                         status: 'SUCCESS',
                         data  : {
                             email: userOne.email,
-                            name: userOne.name
+                            name: userOne.name,
+                            permission: userOne.permission
                         }
                     });
             });
@@ -409,7 +410,8 @@ describe('Users Unit Tests', function() {
                         message: 'User has been successfully updated.',
                         data: {
                             email: userOne.email,
-                            name: userTwo.name
+                            name: userTwo.name,
+                            permission: 30
                         }
                     });
                     done();
@@ -473,7 +475,8 @@ describe('Users Unit Tests', function() {
                         message: 'User has been updated, and an email has been sent to the new address.',
                         data: {
                             email: userOne.email,
-                            name: userOne.name
+                            name: userOne.name,
+                            permission: 30
                         }
                     });
                     done();
@@ -521,7 +524,8 @@ describe('Users Unit Tests', function() {
                         message: 'User has been successfully updated.',
                         data: {
                             email: userOne.email,
-                            name: userOne.name
+                            name: userOne.name,
+                            permission: 30
                         }
                     });
 

@@ -66,7 +66,7 @@ function usersGet(req, res) {
 function usersPost(req, res, next) {
 
     //TODO: Move to the configuration file.
-    var defaultPerm = models.db.user.properties.permission.default;
+    var defaultPerm = models.io.user.properties.permission.default;
     var params = util.permFilter(defaultPerm, 'user', req.body, true, true);
     util.processPassword(params);
 
