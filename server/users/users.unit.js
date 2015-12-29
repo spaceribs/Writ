@@ -10,8 +10,9 @@ var config = require('../config');
 
 describe('Users Unit Tests', function() {
 
-    var userOne = jsf(userModel);
-    var userTwo = jsf(userModel);
+    var userOne;
+    var userTwo;
+    var userThree;
 
     beforeAll(function() {
         mockery.enable({
@@ -24,19 +25,21 @@ describe('Users Unit Tests', function() {
         mockery.disable();
     });
 
+    beforeEach(function() {
+        userOne = jsf(userModel);
+        userTwo = jsf(userModel);
+        userThree = jsf(userModel);
+    });
+
     describe('users.util', function() {
 
         var util = require('./users.util');
 
-        var processedUserOne = _.clone(userOne);
-        var processedUserOneAlt = _.clone(userOne);
-        var processedUserTwo = _.clone(userTwo);
-
         describe('getHash', function() {
 
-            var hash = util.getHash(userOne.password, 'Some Salt');
-
             it('generates a valid sha512 hash string from a password and a salt.', function() {
+                var hash = util.getHash(userOne.password, 'Some Salt');
+
                 expect(hash).toEqual(jasmine.any(String));
                 expect(hash).toMatch(/^[a-f0-9]{128}$/);
             });
@@ -44,26 +47,41 @@ describe('Users Unit Tests', function() {
 
         describe('processPassword', function() {
 
-            util.processPassword(processedUserOne);
-            util.processPassword(processedUserOneAlt);
-            util.processPassword(processedUserTwo);
-
             it('removes a password and generates a salt/hash.', function() {
+                var processedUserOne = _.clone(userOne);
+
+                util.processPassword(processedUserOne);
+
                 expect(processedUserOne.password).toBeUndefined();
                 expect(processedUserOne.salt).toEqual(jasmine.any(String));
                 expect(processedUserOne.hash).toEqual(jasmine.any(String));
             });
 
             it('checks the hash is valid.', function() {
+                var processedUserOne = _.clone(userOne);
+                util.processPassword(processedUserOne);
+
                 expect(processedUserOne.hash).toMatch(/^[a-f0-9]{128}$/);
             });
 
             it('checks that no collisions exist between users.', function() {
+                var processedUserOne = _.clone(userOne);
+                var processedUserTwo = _.clone(userTwo);
+
+                util.processPassword(processedUserOne);
+                util.processPassword(processedUserTwo);
+
                 expect(processedUserOne.salt).not.toEqual(processedUserTwo.salt);
                 expect(processedUserOne.hash).not.toEqual(processedUserTwo.hash);
             });
 
             it('checks that no collisions exist even if users have the same password.', function() {
+                var processedUserOne = _.clone(userOne);
+                var processedUserOneAlt = _.clone(userOne);
+
+                util.processPassword(processedUserOne);
+                util.processPassword(processedUserOneAlt);
+
                 expect(processedUserOne.salt).not.toEqual(processedUserOneAlt.salt);
                 expect(processedUserOne.hash).not.toEqual(processedUserOneAlt.hash);
             });
@@ -73,22 +91,23 @@ describe('Users Unit Tests', function() {
         describe('checkPassword', function() {
 
             it('validates a matching password correctly.', function() {
+                var processedUserOne = _.clone(userOne);
+                util.processPassword(processedUserOne);
+
                 var userOneCheck = util
                         .checkPassword(userOne.password, processedUserOne.salt, processedUserOne.hash);
+
                 expect(userOneCheck).toEqual(jasmine.any(Boolean));
                 expect(userOneCheck).toBe(true);
             });
 
-            it('validates a different salt/hash correctly.', function() {
-                var userOneAltCheck = util
-                        .checkPassword(userOne.password, processedUserOneAlt.salt, processedUserOneAlt.hash);
-                expect(userOneAltCheck).toEqual(jasmine.any(Boolean));
-                expect(userOneAltCheck).toBe(true);
-            });
-
             it('validates that incorrect passwords fail to match.', function() {
+                var processedUserOne = _.clone(userOne);
+                util.processPassword(processedUserOne);
+
                 var userOneCheck = util
                         .checkPassword('$$$ THIS IS WRONG $$$', processedUserOne.salt, processedUserOne.hash);
+
                 expect(userOneCheck).toEqual(jasmine.any(Boolean));
                 expect(userOneCheck).toBe(false);
             });
@@ -132,21 +151,26 @@ describe('Users Unit Tests', function() {
             res = {json: jasmine.createSpy('json')};
         });
 
+        afterEach(function() {
+            mailerMethods.sendMail.and.stub();
+            mailerMethods.sendMail.and.callThrough();
+        });
+
         describe('login', function() {
 
-            beforeAll(function() {
-                req = {user: userOne};
-            });
-
             it('returns a successful login.', function() {
+                req = {user: userOne};
                 ctrl.login(req, res);
 
                 expect(res.json).toHaveBeenCalled();
                 expect(res.json.calls.mostRecent().args[0])
-                        .toEqual({
-                            status: 'SUCCESS',
-                            data  : userOne
-                        });
+                    .toEqual({
+                        status: 'SUCCESS',
+                        data  : {
+                            email: userOne.email,
+                            name: userOne.name
+                        }
+                    });
             });
 
         });
@@ -181,11 +205,8 @@ describe('Users Unit Tests', function() {
 
         describe('usersGet', function() {
 
-            beforeAll(function() {
-                req = {user: userOne};
-            });
-
             it('returns the decorated profile of the current user.', function() {
+                req = {user: userOne};
                 ctrl.users.get(req, res);
 
                 expect(res.json).toHaveBeenCalled();
@@ -200,16 +221,8 @@ describe('Users Unit Tests', function() {
 
         describe('usersPost', function() {
 
-            var userThree;
-
             beforeEach(function() {
-                userThree = jsf(userModel);
                 req = {body: userThree};
-            });
-
-            afterEach(function() {
-                mailerMethods.sendMail.and.stub();
-                mailerMethods.sendMail.and.callThrough();
             });
 
             it('creates a new user with the post body.', function(done) {
@@ -232,10 +245,8 @@ describe('Users Unit Tests', function() {
             });
 
             it('checks if the email already exists before creating a new user.', function(done) {
-                callback.and.callFake(function() {
-                    expect(callback).toHaveBeenCalled();
-                    expect(callback.calls.mostRecent().args[0])
-                            .toEqual(jasmine.any(errors.EmailUsedError));
+                callback.and.callFake(function(err) {
+                    expect(err).toEqual(jasmine.any(errors.EmailUsedError));
                     done();
                 });
 
@@ -284,6 +295,8 @@ describe('Users Unit Tests', function() {
                 ctrl.users.list(req, res, callback);
                 expect(callback).not.toHaveBeenCalled();
             });
+
+            xit('returns an error if you aren\'t an admin.', function() {});
 
         });
 
@@ -342,16 +355,14 @@ describe('Users Unit Tests', function() {
 
         describe('userPost', function() {
 
-            var userThree;
             var postRes;
 
             beforeEach(function() {
-                userThree = jsf(userModel);
                 req = {body: userThree, params: {userId: uuid.v4()}};
                 postRes = {json: jasmine.createSpy('post-json')};
             });
 
-            xit('returns a 404 error if no user exists.', function(done) {
+            it('returns a 404 error if no user exists.', function(done) {
 
                 callback.and.callFake(function() {
                     expect(callback).toHaveBeenCalled();
@@ -375,7 +386,7 @@ describe('Users Unit Tests', function() {
                     expect(response.data.id).toBeDefined();
                     req.params.userId = response.data.id;
 
-                    req.body = {name: userThree.name};
+                    req.body = {name: userTwo.name};
 
                     ctrl.user.post(req, res, callback);
                 });
@@ -386,20 +397,50 @@ describe('Users Unit Tests', function() {
                         status : 'SUCCESS',
                         message: 'User has been successfully updated.',
                         data: {
-                            email: userThree.email,
-                            name: userThree.name
+                            email: userOne.email,
+                            name: userTwo.name
                         }
                     });
                     done();
                 });
 
                 ctrl.users.post({
-                    body: userThree
+                    body: userOne
                 }, postRes, callback);
 
             });
 
-            xit('doesn\'t update a user if their email is already associated with another account.', function() {});
+            it('doesn\'t update a user if their email is already associated with another account.', function(done) {
+
+                postRes.json.and.callFake(function(response) {
+                    expect(response.data).toBeDefined();
+                    expect(response.data.id).toBeDefined();
+                    req.params.userId = response.data.id;
+
+                    req.body = {email: userOne.email};
+
+                    ctrl.user.post(req, res, callback);
+                });
+
+                callback.and.callFake(function() {
+                    expect(callback).toHaveBeenCalled();
+                    expect(callback.calls.mostRecent().args[0])
+                            .toEqual(jasmine.any(errors.EmailUsedError));
+                    done();
+                });
+
+                var userOneRes = {
+                    json: function(response) {
+                        ctrl.users.post({
+                            body: userTwo
+                        }, postRes, callback);
+                    }
+                };
+
+                ctrl.users.post({
+                    body: userOne
+                }, userOneRes, callback);
+            });
 
             it('updates a users email.', function(done) {
 
@@ -408,7 +449,7 @@ describe('Users Unit Tests', function() {
                     expect(response.data.id).toBeDefined();
                     req.params.userId = response.data.id;
 
-                    req.body = {email: userThree.email};
+                    req.body = {email: userOne.email};
 
                     ctrl.user.post(req, res, callback);
                 });
@@ -419,28 +460,215 @@ describe('Users Unit Tests', function() {
                         status : 'SUCCESS',
                         message: 'User has been updated, and an email has been sent to the new address.',
                         data: {
-                            email: userThree.email,
-                            name: userThree.name
+                            email: userOne.email,
+                            name: userOne.name
                         }
                     });
                     done();
                 });
 
                 ctrl.users.post({
-                    body: userThree
+                    body: userOne
                 }, postRes, callback);
 
             });
 
-            xit('updates a users password.', function() {});
+            it('updates a users password.', function(done) {
 
-            xit('updates permissions for a user.', function() {});
+                var loginRes = {
+                    json: function(response) {
+                        console.log(response);
+                        expect(response).toEqual({
+                            status: 'SUCCESS',
+                            data  : {
+                                email: userOne.email
+                            }
+                        });
+                        done();
+                    }
+                };
+
+                postRes.json.and.callFake(function(response) {
+                    expect(response.data).toBeDefined();
+                    expect(response.data.id).toBeDefined();
+                    req.params.userId = response.data.id;
+
+                    req.body = {password: userTwo.password};
+
+                    ctrl.user.post(req, res, callback);
+                });
+
+                res.json.and.callFake(function(response) {
+                    expect(callback).not.toHaveBeenCalled();
+                    expect(response).toEqual({
+                        status : 'SUCCESS',
+                        message: 'User has been successfully updated.',
+                        data: {
+                            email: userOne.email,
+                            name: userOne.name
+                        }
+                    });
+
+                    var loginReq = {user: {
+                        email: userOne.email,
+                        password: userTwo.password
+                    }};
+
+                    ctrl.login(loginReq, loginRes);
+                });
+
+                ctrl.users.post({
+                    body: userOne
+                }, postRes, callback);
+
+            });
+
+            xit('admin can update permissions for a user.', function() {});
 
         });
 
-        xdescribe('userDelete', function() {});
+        describe('userDelete', function() {
 
-        xdescribe('userVerify', function() {});
+            var postRes;
+
+            beforeEach(function() {
+                req = {body: userOne, params: {userId: uuid.v4()}};
+                postRes = {json: jasmine.createSpy('post-json')};
+            });
+
+            it('returns an error if the user doesn\'t exist.', function(done) {
+                callback.and.callFake(function(response) {
+                    expect(response).toEqual({
+                            status: 404,
+                            name: 'not_found',
+                            message: 'missing',
+                            reason: 'missing'
+                        });
+                    done();
+                });
+
+                ctrl.user.delete(req, postRes, callback);
+            });
+
+            it('deletes a user.', function(done) {
+                res.json.and.callFake(function(response) {
+                    expect(response).toEqual({
+                        status: 'SUCCESS',
+                        message: 'User has been deleted.'
+                    });
+                    done();
+                });
+
+                postRes.json.and.callFake(function(response) {
+                    expect(response.data).toBeDefined();
+                    expect(response.data.id).toBeDefined();
+                    req.params.userId = response.data.id;
+
+                    ctrl.user.delete(req, res, callback);
+                });
+
+                ctrl.users.post({
+                    body: userOne
+                }, postRes, callback);
+            });
+
+            xit('deletes a user if they are the owner of an account.', function() {});
+
+            xit('deletes a user if they are an admin.', function() {});
+
+            xit('doesn\'t delete a user if you aren\'t an owner/admin.', function() {});
+
+        });
+
+        describe('userVerify', function() {
+
+            var postRes;
+
+            beforeEach(function() {
+                req = {params: {token: uuid.v4()}};
+                postRes = {json: jasmine.createSpy('post-json')};
+            });
+
+            it('returns an error if no user matches the token', function(done) {
+                callback.and.callFake(function(err) {
+                    expect(err).toEqual(jasmine.any(errors.SecretNotFoundError));
+                    done();
+                });
+
+                ctrl.user.verify(req, res, callback);
+
+            });
+
+            it('verifies a user via email sent.', function(done) {
+                res.json.and.callFake(function(response) {
+                    expect(response).toEqual({
+                        status: 'SUCCESS',
+                        message: 'Your email has been verified.'
+                    });
+
+                    done();
+                });
+
+                mailerMethods.sendMail.and.callFake(function(options) {
+                    expect(options.html).toEqual(jasmine.any(String));
+                    var tokenRegex = /\/verify\/([a-f0-9-]*)/ig;
+                    req.params.token = tokenRegex.exec(options.html)[1];
+
+                    ctrl.user.verify(req, res, callback);
+                });
+
+                ctrl.users.post({
+                    body: userOne
+                }, postRes, callback);
+            });
+
+        });
+
+        describe('loginStrategy', function() {
+
+            var postRes;
+
+            beforeEach(function() {
+                req = {params: {token: uuid.v4()}};
+                postRes = {json: jasmine.createSpy('post-json')};
+            });
+
+            it('doesn\'t log in an invalid user.', function(done) {
+                ctrl.strategy(userOne.email, userOne.password, function(err) {
+                    expect(err).toEqual(jasmine.any(errors.LoginError));
+                    done();
+                });
+            });
+
+            it('logs in a valid user.', function(done) {
+
+                postRes.json.and.callFake(function(response) {
+                    expect(response.data).toBeDefined();
+                    expect(response.data.id).toBeDefined();
+
+                    ctrl.strategy(userOne.email, userOne.password, function(err, user) {
+                        expect(err).toBeNull();
+                        expect(user).toEqual({
+                            email: userOne.email,
+                            name: userOne.name,
+                            salt: jasmine.any(String),
+                            hash: jasmine.any(String),
+                            secret: jasmine.any(String),
+                            id: response.data.id,
+                            created: jasmine.any(String),
+                            permission: 30,
+                            _id: jasmine.any(String),
+                            _rev: jasmine.any(String)
+                        });
+                        done();
+                    });
+                });
+
+                ctrl.users.post({
+                    body: userOne
+                }, postRes, callback);
+            });
+        });
 
     });
 

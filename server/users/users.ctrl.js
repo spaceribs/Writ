@@ -21,7 +21,7 @@ var util = require('./users.util');
 function login(req, res) {
     res.json({
         status : 'SUCCESS',
-        data   : req.user
+        data   : util.permFilter(30, 'user', req.user, false, true)
     });
 }
 
@@ -279,7 +279,7 @@ function userDelete(req, res, next) {
             message : 'User has been deleted.'
         });
     }).catch(function(err) {
-        next(err);
+        next(JSON.parse(err));
     });
 }
 
