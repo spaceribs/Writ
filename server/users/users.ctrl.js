@@ -65,8 +65,9 @@ function usersGet(req, res) {
  */
 function usersPost(req, res, next) {
 
+    //TODO: Move to the configuration file.
     var defaultPerm = models.db.user.properties.permission.default;
-    var params = util.inputFilter(defaultPerm, 'user', req.body, true, true);
+    var params = util.permFilter(defaultPerm, 'user', req.body, true, true);
     util.processPassword(params);
 
     Users.createIndex({
@@ -130,6 +131,7 @@ function usersPost(req, res, next) {
  */
 function usersList(req, res, next) {
 
+    //TODO: Limit this call to only admins.
     Users.allDocs({
         startkey     : 'user/',
         endkey   : 'user/\uffff',
@@ -137,7 +139,8 @@ function usersList(req, res, next) {
     }).then(function(results) {
         for (var i = 0; i < results.rows.length; i++) {
             var row = results.rows[i];
-            results.rows[i].doc = util.inputFilter(10, 'user', row.doc);
+            //TODO: Hook up permission level to user.
+            results.rows[i].doc = util.permFilter(10, 'user', row.doc);
         }
         return results;
     })
@@ -161,7 +164,8 @@ function userGet(req, res, next) {
     var userId = req.params.userId;
     Users.get('user/' + userId)
         .then(function(result) {
-            var filtered = util.inputFilter(100,
+            //TODO: Hook this up to user's permission level.
+            var filtered = util.permFilter(100,
                     'user', result);
             res.json(filtered);
         }).catch(function(err) {
@@ -180,7 +184,8 @@ function userGet(req, res, next) {
 function userPost(req, res, next) {
 
     var userId = req.params.userId;
-    var params = util.inputFilter(30, 'user', req.body, true, true);
+    //TODO: Hook this up to user's permission level.
+    var params = util.permFilter(30, 'user', req.body, true, true);
     var newParams;
 
     if (params.password) {
@@ -225,7 +230,7 @@ function userPost(req, res, next) {
                 res.json({
                     status  : 'SUCCESS',
                     message : 'User has been successfully updated.',
-                    data    : util.inputFilter(newParams.permission, 'user', newParams, false, true)
+                    data    : util.permFilter(newParams.permission, 'user', newParams, false, true)
                 });
 
             } else {
@@ -243,7 +248,7 @@ function userPost(req, res, next) {
                                 status  : 'SUCCESS',
                                 message : 'User has been updated, and an email ' +
                                 'has been sent to the new address.',
-                                data    : util.inputFilter(newParams.permission, 'user', newParams, false, true)
+                                data    : util.permFilter(newParams.permission, 'user', newParams, false, true)
                             });
                         }
                     });

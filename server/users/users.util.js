@@ -107,9 +107,9 @@ function tokenEmail(from, to, tokenUrl) {
 
 module.exports = {
     processPassword: processPassword,
-    checkPassword: checkPassword,
-    getHash: getHash,
-    userCan: userCan,
-    inputFilter: inputFilter,
-    tokenEmail: tokenEmail
+    checkPassword  : checkPassword,
+    getHash        : getHash,
+    userCan        : userCan,
+    permFilter     : inputFilter,
+    tokenEmail     : tokenEmail
 };
