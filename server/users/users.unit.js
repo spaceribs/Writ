@@ -654,12 +654,31 @@ describe('Users Unit Tests', function() {
                 postRes = {json: jasmine.createSpy('post-json')};
             });
 
-            it('doesn\'t log in an invalid user.', function(done) {
+            it('doesn\'t log in a non existent user.', function(done) {
                 ctrl.strategy(userOne.email, userOne.password,
                     function(err) {
                         expect(err).toEqual(jasmine.any(errors.LoginError));
                         done();
                     });
+            });
+
+            it('doesn\'t log in a user with a bad password.', function(done) {
+
+                postRes.json.and.callFake(function(response) {
+                    expect(response.data).toBeDefined();
+                    expect(response.data.id).toBeDefined();
+
+                    ctrl.strategy(userOne.email, userTwo.password,
+                        function(err) {
+                            expect(err)
+                                .toEqual(jasmine.any(errors.LoginError));
+                            done();
+                        });
+                });
+
+                ctrl.users.post({
+                    body: userOne
+                }, postRes, callback);
             });
 
             it('logs in a valid user.', function(done) {
