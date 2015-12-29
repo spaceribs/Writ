@@ -608,15 +608,17 @@ describe('Users Unit Tests', function() {
                 postRes = {json: jasmine.createSpy('post-json')};
             });
 
-            it('returns an error if no user matches the token', function(done) {
-                callback.and.callFake(function(err) {
-                    expect(err).toEqual(jasmine.any(errors.SecretNotFoundError));
-                    done();
+            it('returns an error if no user matches the token',
+                function(done) {
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.SecretNotFoundError));
+                        done();
+                    });
+
+                    ctrl.user.verify(req, res, callback);
+
                 });
-
-                ctrl.user.verify(req, res, callback);
-
-            });
 
             it('verifies a user via email sent.', function(done) {
                 res.json.and.callFake(function(response) {
