@@ -128,6 +128,12 @@ describe('Users Unit Tests', function() {
         beforeAll(function() {
 
             mailerMethods = {
+                /**
+                 * Mock method for sending an email.
+                 *
+                 * @param {object} content - content to send.
+                 * @param {function} callback - function called once an email is sent.
+                 */
                 sendMail: function(content, callback) {
                     callback();
                 }
@@ -135,6 +141,11 @@ describe('Users Unit Tests', function() {
             spyOn(mailerMethods, 'sendMail').and.callThrough();
 
             mockMailer = {
+                /**
+                 * Mock method for creating a transport.
+                 *
+                 * @returns {{sendMail: mailerMethods.sendMail}}
+                 */
                 createTransport: function() {
                     return mailerMethods;
                 }
@@ -410,7 +421,8 @@ describe('Users Unit Tests', function() {
 
             });
 
-            it('doesn\'t update a user if their email is already associated with another account.', function(done) {
+            it('doesn\'t update a user if their email is already ' +
+            'associated with another account.', function(done) {
 
                 postRes.json.and.callFake(function(response) {
                     expect(response.data).toBeDefined();
@@ -430,7 +442,7 @@ describe('Users Unit Tests', function() {
                 });
 
                 var userOneRes = {
-                    json: function(response) {
+                    json: function() {
                         ctrl.users.post({
                             body: userTwo
                         }, postRes, callback);
@@ -476,8 +488,12 @@ describe('Users Unit Tests', function() {
             it('updates a users password.', function(done) {
 
                 var loginRes = {
+                    /**
+                     * Temporary callback for login response.
+                     *
+                     * @param {object} response - Response object from the userPost
+                     */
                     json: function(response) {
-                        console.log(response);
                         expect(response).toEqual({
                             status: 'SUCCESS',
                             data  : {
