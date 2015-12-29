@@ -673,7 +673,7 @@ describe('Users Unit Tests', function() {
                     expect(response.data).toBeDefined();
                     expect(response.data.id).toBeDefined();
 
-                    ctrl.strategy(userOne.email, userTwo.password,
+                    ctrl.strategy(userOne.email, 'BAD PASSWORD!',
                         function(err) {
                             expect(err)
                                 .toEqual(jasmine.any(errors.LoginError));
