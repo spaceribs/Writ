@@ -437,7 +437,7 @@ describe('Users Unit Tests', function() {
             xit('updates permissions for a user.', function() {});
 
         });
-        
+
         xdescribe('userDelete', function() {});
 
         xdescribe('userVerify', function() {});
