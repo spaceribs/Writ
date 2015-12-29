@@ -336,9 +336,7 @@ describe('Users Unit Tests', function() {
                 ctrl.user.get(req, res, callback);
             });
 
-            /*
             xit('returns more information if you are an admin.', function() {});
-            */
 
         });
 
