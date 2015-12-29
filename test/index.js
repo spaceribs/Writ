@@ -1,16 +1,15 @@
 'use strict';
 
-var unit = require('./unit');
+var Jasmine = require('jasmine');
+var SpecReporter = require('jasmine-spec-reporter');
+var framework = new Jasmine();
 
-unit.onComplete(function(passed) {
-    if (passed) {
-        console.log('All specs have passed');
-    } else {
-        console.log('At least one spec has failed');
-    }
-});
-unit.execute();
+framework.addReporter(new SpecReporter({
+    displayStacktrace: 'all',
+    displayPendingSpec: true,
+    displaySpecDuration: true
+}));
+framework.loadConfigFile('./test/jasmine.json');
+framework.execute();
 
-module.exports = {
-    unit: unit
-};
+module.exports = framework;

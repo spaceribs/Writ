@@ -2,5 +2,6 @@
 node_modules
 .idea
 db/*
-!db/.gittouch
+!db/index.js
 coverage
+email.json

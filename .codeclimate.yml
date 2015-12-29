@@ -1,6 +1,4 @@
 engines:
-  jshint:
-    enabled: true
   fixme:
     enabled: true
 ratings:

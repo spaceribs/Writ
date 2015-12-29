@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "/writ/user",
+    "id": "/writ/io/user",
     "type": "object",
     "description": "A writ user validated from the server",
     "properties": {
@@ -9,7 +9,7 @@
             "format": "email",
             "chance": "email",
             "permission": {
-                "read": 19,
+                "read": 29,
                 "write": 29
             },
             "unique": true

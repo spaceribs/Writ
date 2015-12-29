@@ -6,7 +6,7 @@ var JsonSchemaCustomPropertyError = require('express-jsonschema').JsonSchemaCust
 /**
  * A custom error to handle duplicate email errors
  *
- * @param {string} [message] - Custom user error message.
+ * @param {?string} [message] - Custom user error message.
  * @param {string} email - The email which already exists.
  * @constructor
  */
@@ -22,7 +22,7 @@ EmailUsedError.prototype.constructor = EmailUsedError;
 /**
  * A custom error to handle any tokens which cannot be found.
  *
- * @param {string} [message] - Custom user error message.
+ * @param {?string} [message] - Custom user error message.
  * @param {string} token - Token that was searched.
  * @constructor
  */
