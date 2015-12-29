@@ -9,6 +9,13 @@ framework.addReporter(new SpecReporter({
     displayPendingSpec: true,
     displaySpecDuration: true
 }));
+framework.onComplete(function(passed) {
+    if (passed) {
+        process.exit(0);
+    } else {
+        process.exit(1);
+    }
+});
 framework.loadConfigFile('./test/jasmine.json');
 framework.execute();
 
