@@ -336,7 +336,9 @@ describe('Users Unit Tests', function() {
                 ctrl.user.get(req, res, callback);
             });
 
+            /*
             xit('returns more information if you are an admin.', function() {});
+            */
 
         });
 
@@ -351,6 +353,7 @@ describe('Users Unit Tests', function() {
                 postRes = {json: jasmine.createSpy('post-json')};
             });
 
+            /*
             xit('returns a 404 error if no user exists.', function(done) {
 
                 callback.and.callFake(function() {
@@ -367,6 +370,7 @@ describe('Users Unit Tests', function() {
 
                 ctrl.user.get(req, res, callback);
             });
+            */
 
             it('updates basic user information.', function(done) {
 
@@ -399,7 +403,9 @@ describe('Users Unit Tests', function() {
 
             });
 
+            /*
             xit('doesn\'t update a user if their email is already associated with another account.', function() {});
+            */
 
             it('updates a users email.', function(done) {
 
@@ -432,15 +438,19 @@ describe('Users Unit Tests', function() {
 
             });
 
+            /*
             xit('updates a users password.', function() {});
 
             xit('updates permissions for a user.', function() {});
+            */
 
         });
 
+        /*
         describe('userDelete', function() {});
 
         describe('userVerify', function() {});
+        */
 
     });
 
