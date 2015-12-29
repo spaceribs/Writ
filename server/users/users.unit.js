@@ -170,6 +170,7 @@ describe('Users Unit Tests', function() {
         describe('login', function() {
 
             it('returns a successful login.', function() {
+                userOne.permission = 30;
                 req = {user: userOne};
                 ctrl.login(req, res);
 
