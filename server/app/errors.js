@@ -3,13 +3,20 @@
 /**
  * A custom error for JsonSchema validation issues.
  *
- * @param {Array} validations - An array of schema validations that failed.
+ * @param {Array} errors - An array of schema validations that failed.
  * @param {Array} missing - An array of missing parameters for the validation.
  * @constructor
  */
-function JsonSchemaValidationError(validations, missing) {
+function JsonSchemaValidationError(errors, missing) {
+
+    for (var i = 0; i < errors.length; i++) {
+        // Remove the stack from the error log so clients can't get
+        // information about the environment.
+        delete errors[i].stack;
+    }
+
     this.status = 400;
-    this.validations = validations;
+    this.errors = errors;
     this.missing = missing;
     this.name = 'JsonSchemaValidationError';
     this.message = 'One or more request parameters failed validation.';
