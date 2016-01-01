@@ -36,7 +36,7 @@ describe('Middleware Unit Tests', function() {
 
             var validate = validator(testSchema);
 
-            it('passes validation if the JSON posted in the request is valid.', function() {
+            it('passes validation if the JSON request is valid.', function() {
 
                 var req = {
                     body: {
@@ -61,7 +61,9 @@ describe('Middleware Unit Tests', function() {
                 };
 
                 validate(req, null, function(err) {
-                    expect(err).toEqual(jasmine.any(errors.JsonSchemaValidationError));
+                    expect(err)
+                        .toEqual(
+                            jasmine.any(errors.JsonSchemaValidationError));
                     expect(err.errors.length).toBe(4);
                 });
 

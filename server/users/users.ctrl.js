@@ -239,7 +239,7 @@ function userPost(req, res, next) {
                 throw new errors.JsonSchemaValidation(validate.error);
             }
 
-        }).then(function(result) {
+        }).then(function() {
             if (!params.email) {
 
                 res.json({
