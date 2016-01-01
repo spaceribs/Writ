@@ -10,7 +10,7 @@
             "faker": "random.uuid"
         },
         "creator": {
-            "$ref": "/writ/user/id"
+            "$ref": "/writ/db/user/id"
         },
         "title": {
             "type": "string",

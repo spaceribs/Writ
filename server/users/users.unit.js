@@ -703,8 +703,9 @@ describe('Users Unit Tests', function() {
                                 secret: jasmine.any(String),
                                 id: response.data.id,
                                 created: jasmine.any(String),
+                                updated: jasmine.any(String),
                                 permission: 30,
-                                _id: jasmine.any(String),
+                                _id: 'user/' + response.data.id,
                                 _rev: jasmine.any(String)
                             });
                             done();

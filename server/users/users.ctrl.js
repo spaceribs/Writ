@@ -4,6 +4,7 @@ var express = require('express');
 var nodemailer = require('nodemailer');
 var uuid = require('node-uuid');
 var _ = require('lodash');
+var tv4 = require('tv4');
 
 var models = require('../../models');
 var config = require('../config');
@@ -92,8 +93,16 @@ function usersPost(req, res, next) {
         params.id = uuid.v4();
         params._id = 'user/' + params.id;
         params.created = new Date().toISOString();
+        params.updated = new Date().toISOString();
         params.permission = 30;
-        return Users.put(params);
+
+        var validate = tv4.validateMultiple(params, models.db.user);
+
+        if (validate.valid) {
+            return Users.put(params);
+        } else {
+            throw new errors.JsonSchemaValidation(validate.error);
+        }
 
     }).then(function() {
         var transporter = nodemailer.createTransport(emailConfig);
@@ -220,11 +229,17 @@ function userPost(req, res, next) {
 
         }).then(function(result) {
             newParams = _.extend({}, result, params);
-            delete newParams._id;
-            delete newParams._rev;
-            return Users.put(params, result._id, result._rev);
+            newParams.updated = new Date().toISOString();
 
-        }).then(function() {
+            var validate = tv4.validateMultiple(newParams, models.db.user);
+
+            if (validate.valid) {
+                return Users.put(newParams);
+            } else {
+                throw new errors.JsonSchemaValidation(validate.error);
+            }
+
+        }).then(function(result) {
             if (!params.email) {
 
                 res.json({
@@ -256,8 +271,8 @@ function userPost(req, res, next) {
             }
 
         }).catch(function(err) {
-        next(err);
-    });
+            next(err);
+        });
 }
 
 /**
@@ -313,7 +328,14 @@ function userVerify(req, res, next) {
 
     }).then(function(user) {
         user.permission = Math.min(20, user.permission);
-        return Users.put(user);
+        user.updated = new Date().toISOString();
+        var validate = tv4.validateMultiple(user, models.db.user);
+
+        if (validate.valid) {
+            return Users.put(user);
+        } else {
+            throw new errors.JsonSchemaValidation(validate.error);
+        }
 
     }).then(function() {
         res.json({
