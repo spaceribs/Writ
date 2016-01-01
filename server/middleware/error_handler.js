@@ -9,25 +9,15 @@ module.exports = function(err, req, res, next) {
         res.set('Content-Type', 'text/plain')
             .status(406).send('Only JSON Content type is accepted.');
 
-    } else if (err instanceof errors.JsonSchemaValidation) {
+    } else if (err instanceof errors.JsonSchemaValidationError) {
         responseData = {
             status: 'INVALID_SCHEME',
-            errors: err.validations
-        };
-        res.status(400).json(responseData);
-
-    } else if (err instanceof errors.JsonSchemaCustomPropertyError) {
-        responseData = {
-            status: 'INVALID_PROPERTY',
             errors: {
-                'body': [{
-                    'value': err.body,
-                    'property': 'request.body',
-                    'messages': [err.message]
-                }]
+                validations: err.validations,
+                missing: err.missing
             }
         };
-        res.status(400).json(responseData);
+        res.status(err.status).json(responseData);
 
     } else if (err instanceof errors.SyntaxError) {
         responseData = {

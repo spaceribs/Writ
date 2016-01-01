@@ -4,7 +4,7 @@ var express = require('express');
 var router = express.Router();
 var passport = require('./users.auth');
 var controller = require('./users.ctrl');
-var validate = require('express-jsonschema').validate;
+var validate = require('../middleware/input_validator.js');
 var models = require('../../models');
 
 router.route('/login/')
@@ -13,7 +13,7 @@ router.route('/login/')
 router.route('/user/')
     .options(controller.users.options)
     .get(passport.authenticate('basic', {session: false}), controller.users.get)
-    .post(validate({body: models.user}), controller.users.post);
+    .post(validate(models.io.user), controller.users.post);
 
 router.route('/user/list')
     .get(passport.authenticate('basic', {session: false}), controller.users.list);

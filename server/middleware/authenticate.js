@@ -9,14 +9,11 @@ passport.use(new BasicStrategy(
         Users.get(username, function(err, user) {
             if (err) {
                 return done(err);
-            }
-            if (!user) {
+            } else if (!user || !user.validPassword(password)) {
                 return done(null, false);
+            } else {
+                return done(null, user);
             }
-            if (!user.validPassword(password)) {
-                return done(null, false);
-            }
-            return done(null, user);
         });
     }
 ));
