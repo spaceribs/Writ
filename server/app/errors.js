@@ -1,7 +1,28 @@
 'use strict';
 
-var JsonSchemaValidation = require('express-jsonschema').JsonSchemaValidation;
-var JsonSchemaCustomPropertyError = require('express-jsonschema').JsonSchemaCustomPropertyError;
+/**
+ * A custom error for JsonSchema validation issues.
+ *
+ * @param {Array} errors - An array of schema validations that failed.
+ * @param {Array} missing - An array of missing parameters for the validation.
+ * @constructor
+ */
+function JsonSchemaValidationError(errors, missing) {
+
+    for (var i = 0; i < errors.length; i++) {
+        // Remove the stack from the error log so clients can't get
+        // information about the environment.
+        delete errors[i].stack;
+    }
+
+    this.status = 400;
+    this.errors = errors;
+    this.missing = missing;
+    this.name = 'JsonSchemaValidationError';
+    this.message = 'One or more request parameters failed validation.';
+}
+JsonSchemaValidationError.prototype = Object.create(Error.prototype);
+JsonSchemaValidationError.prototype.constructor = JsonSchemaValidationError;
 
 /**
  * A custom error to handle duplicate email errors
@@ -50,9 +71,8 @@ LoginError.prototype = Object.create(Error.prototype);
 LoginError.prototype.constructor = LoginError;
 
 module.exports = {
-    JsonSchemaValidation: JsonSchemaValidation,
-    JsonSchemaCustomPropertyError: JsonSchemaCustomPropertyError,
     SyntaxError: SyntaxError,
+    JsonSchemaValidationError: JsonSchemaValidationError,
     EmailUsedError: EmailUsedError,
     SecretNotFoundError: SecretNotFoundError,
     LoginError: LoginError

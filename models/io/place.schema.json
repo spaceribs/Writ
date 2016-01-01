@@ -11,7 +11,7 @@
             "faker": "random.uuid"
         },
         "creator": {
-            "$ref": "/writ/user/id"
+            "$ref": "/writ/db/user/id"
         },
         "pos": {
             "description": "Position of the place in the world.",

@@ -4,7 +4,7 @@ describe('Server Unit Tests', function() {
 
     describe('errors', function() {
 
-        var errors = require('./app/errors');
+        var errors = require('./errors');
 
         describe('EmailUsedError', function() {
 

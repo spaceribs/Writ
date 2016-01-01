@@ -12,7 +12,7 @@
         "meta": {
             "properties": {
                 "creator": {
-                    "$ref": "/writ/user/id"
+                    "$ref": "/writ/db/user/id"
                 },
                 "created_at": {
                     "type": "string",

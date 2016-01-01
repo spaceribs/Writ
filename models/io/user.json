@@ -22,6 +22,17 @@
                 "write": 29
             }
         },
+        "permission": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "exclusiveMinimum": true,
+            "default": 30,
+            "permission": {
+                "read": 100,
+                "write": 10
+            }
+        },
         "password": {
             "type": "string",
             "permission": {

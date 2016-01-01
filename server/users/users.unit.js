@@ -170,6 +170,7 @@ describe('Users Unit Tests', function() {
         describe('login', function() {
 
             it('returns a successful login.', function() {
+                userOne.permission = 30;
                 req = {user: userOne};
                 ctrl.login(req, res);
 
@@ -179,7 +180,8 @@ describe('Users Unit Tests', function() {
                         status: 'SUCCESS',
                         data  : {
                             email: userOne.email,
-                            name: userOne.name
+                            name: userOne.name,
+                            permission: userOne.permission
                         }
                     });
             });
@@ -409,7 +411,8 @@ describe('Users Unit Tests', function() {
                         message: 'User has been successfully updated.',
                         data: {
                             email: userOne.email,
-                            name: userTwo.name
+                            name: userTwo.name,
+                            permission: 30
                         }
                     });
                     done();
@@ -473,7 +476,8 @@ describe('Users Unit Tests', function() {
                         message: 'User has been updated, and an email has been sent to the new address.',
                         data: {
                             email: userOne.email,
-                            name: userOne.name
+                            name: userOne.name,
+                            permission: 30
                         }
                     });
                     done();
@@ -521,7 +525,8 @@ describe('Users Unit Tests', function() {
                         message: 'User has been successfully updated.',
                         data: {
                             email: userOne.email,
-                            name: userOne.name
+                            name: userOne.name,
+                            permission: 30
                         }
                     });
 
@@ -668,7 +673,7 @@ describe('Users Unit Tests', function() {
                     expect(response.data).toBeDefined();
                     expect(response.data.id).toBeDefined();
 
-                    ctrl.strategy(userOne.email, userTwo.password,
+                    ctrl.strategy(userOne.email, 'BAD PASSWORD!',
                         function(err) {
                             expect(err)
                                 .toEqual(jasmine.any(errors.LoginError));
@@ -698,8 +703,9 @@ describe('Users Unit Tests', function() {
                                 secret: jasmine.any(String),
                                 id: response.data.id,
                                 created: jasmine.any(String),
+                                updated: jasmine.any(String),
                                 permission: 30,
-                                _id: jasmine.any(String),
+                                _id: 'user/' + response.data.id,
                                 _rev: jasmine.any(String)
                             });
                             done();
