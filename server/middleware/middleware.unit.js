@@ -1,12 +1,12 @@
 'use strict';
 
-var errors = require('../app/errors');
+var errors = require('../app/app.errors');
 
 describe('Middleware Unit Tests', function() {
 
-    describe('input_validator', function() {
+    describe('middleware.validate', function() {
 
-        var validator = require('./input_validator');
+        var validator = require('./middleware.validate');
 
         var testSchema = {
             '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -69,6 +69,136 @@ describe('Middleware Unit Tests', function() {
 
             });
 
+        });
+
+    });
+
+    describe('middleware.errors', function() {
+
+        var errorHandler = require('./middleware.errors');
+        var err;
+        var req;
+        var res;
+        var next;
+
+        beforeAll(function() {
+            err = null;
+            req = {
+                /**
+                 * Mock response that the client doesn't accept JSON.
+                 *
+                 * @returns {boolean}
+                 */
+                accepts: function() { return true; }
+            };
+            res = {};
+            next = function() {};
+        });
+
+        describe('errorHandler', function() {
+
+            it('responds with an error that JSON is only acceptable.',
+                function(done) {
+                    var errorMessage = 'Only JSON Content type is accepted.';
+
+                    /**
+                     * Mock response that the client doesn't accept JSON.
+                     *
+                     * @returns {boolean}
+                     */
+                    req.accepts = function() { return false; };
+
+                    /**
+                     * Mock content type setting.
+                     *
+                     * @param {string} key - Key to set in header
+                     * @param {string} value - Value to set in header
+                     * @returns {{status: status}}
+                     */
+                    res.set = function(key, value) {
+                        expect(key).toBe('Content-Type');
+                        expect(value).toBe('text/plain');
+                        return {
+
+                            /**
+                             * Mock status setting.
+                             *
+                             * @param {number} status - Status Code.
+                             * @returns {{send: send}}
+                             */
+                            status: function(status) {
+                                expect(status).toBe(406);
+                                return {
+                                    /**
+                                     * Mock simple text send.
+                                     *
+                                     * @param {string} message - String to send.
+                                     */
+                                    send: function(message) {
+                                        expect(message).toBe(errorMessage);
+                                        done();
+                                    }
+                                };
+                            }
+                        };
+                    };
+
+                    errorHandler(err, req, res, next);
+                });
+
+            it('responds with an error if there is a json-schema issue.',
+                function(done) {
+
+                    /**
+                     * Mock response that the client doesn't accept JSON.
+                     *
+                     * @returns {boolean}
+                     */
+                    req.accepts = function() { return true; };
+
+                    err = new errors.JsonSchemaValidationError([], []);
+
+                    /**
+                     * Mock status setting.
+                     *
+                     * @param {number} status - Status Code.
+                     * @returns {{send: send}}
+                     */
+                    res.status = function(status) {
+                        expect(status).toBe(400);
+
+                        /**
+                         * Mock simple json send.
+                         *
+                         * @param {string} responseData - Object to send.
+                         */
+                        return {json: function(responseData) {
+                            console.log(responseData);
+                            done();
+                        }};
+                    };
+
+                });
+
+            xit('responds with an error if there is a JSON Parsing issue.',
+                function() {
+
+                });
+
+            xit('responds with an error if an email is already used.',
+                function() {
+
+                });
+
+            xit('responds with an error if an email secret isn\'t found.',
+                function() {
+
+                });
+
+            xit('passes off all other errors down the chain.',
+                function() {
+
+                });
         });
 
     });

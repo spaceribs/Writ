@@ -1,10 +1,10 @@
 'use strict';
 
-describe('Server Unit Tests', function() {
+describe('App Unit Tests', function() {
 
     describe('errors', function() {
 
-        var errors = require('./errors');
+        var errors = require('./app.errors');
 
         describe('EmailUsedError', function() {
 

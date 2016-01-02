@@ -5,7 +5,7 @@ var userModel = require('../../models').io.user;
 var _ = require('lodash');
 var mockery = require('mockery');
 var uuid = require('node-uuid');
-var errors = require('../app/errors');
+var errors = require('../app/app.errors');
 var config = require('../config');
 
 describe('Users Unit Tests', function() {

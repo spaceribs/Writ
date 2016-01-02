@@ -1,7 +1,7 @@
 'use strict';
 
 var tv4 = require('tv4');
-var errors = require('../app/errors');
+var errors = require('../app/app.errors');
 
 /**
  * Middleware to validate database updates from the user.

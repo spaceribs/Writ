@@ -9,7 +9,7 @@ var tv4 = require('tv4');
 var models = require('../../models');
 var config = require('../config');
 var emailConfig = require('../email.json');
-var errors = require('../app/errors');
+var errors = require('../app/app.errors');
 var Users = require('./users.db');
 var util = require('./users.util');
 
