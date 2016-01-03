@@ -9,7 +9,7 @@ var errors = require('../app/app.errors');
  *
  * @param {integer} minimumLevel - Minimum level that a user is required to have
  * @param {object} schema - Schema to check permissions with.
- * @param {array?} schemaDependencies - Array of possible dependencies.
+ * @param {Array=} schemaDependencies - Array of possible dependencies.
  * @returns {Function}
  */
 function restrict(minimumLevel, schema, schemaDependencies) {

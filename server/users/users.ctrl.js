@@ -118,7 +118,8 @@ function usersPost(req, res, next) {
                 } else {
                     res.json({
                         status  : 'SUCCESS',
-                        message : 'Please check your email to verify your account.',
+                        message : 'Please check your email to ' +
+                        'verify your account.',
                         data    : {
                             id    : params.id,
                             email : params.email
@@ -219,7 +220,8 @@ function userPost(req, res, next) {
                 }).then(function(result) {
                     if (result.docs.length && result.docs[0].id !== userId) {
                         throw new errors.EmailUsedError(
-                                'This email address is already in use by another account.',
+                                'This email address is already ' +
+                                'in use by another account.',
                                 req.body.email
                         );
                     }
@@ -247,7 +249,8 @@ function userPost(req, res, next) {
                 res.json({
                     status  : 'SUCCESS',
                     message : 'User has been successfully updated.',
-                    data    : util.permFilter(newParams.permission, 'user', newParams, false, true)
+                    data    : util.permFilter(newParams.permission, 'user',
+                            newParams, false, true)
                 });
 
             } else {
@@ -263,9 +266,10 @@ function userPost(req, res, next) {
                         } else {
                             res.json({
                                 status  : 'SUCCESS',
-                                message : 'User has been updated, and an email ' +
-                                'has been sent to the new address.',
-                                data    : util.permFilter(newParams.permission, 'user', newParams, false, true)
+                                message : 'User has been updated, and an ' +
+                                'email has been sent to the new address.',
+                                data    : util.permFilter(newParams.permission,
+                                        'user', newParams, false, true)
                             });
                         }
                     });

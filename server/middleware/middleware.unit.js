@@ -63,7 +63,8 @@ describe('Middleware Unit Tests', function() {
 
         });
 
-        it('Doesn\'t allow an anonymous user to make admin actions', function() {
+        it('Doesn\'t allow an anonymous user to make admin actions',
+        function() {
 
             var req = {
                 body: {

@@ -22,7 +22,6 @@ function JsonSchemaValidationError(errors, missing) {
     this.message = 'One or more request parameters failed validation.';
 }
 JsonSchemaValidationError.prototype = Object.create(Error.prototype);
-JsonSchemaValidationError.prototype.constructor = JsonSchemaValidationError;
 
 /**
  * A custom error to handle duplicate email errors
@@ -38,7 +37,6 @@ function EmailUsedError(message, email) {
     this.message = (message || 'Invalid email.');
 }
 EmailUsedError.prototype = Object.create(Error.prototype);
-EmailUsedError.prototype.constructor = EmailUsedError;
 
 /**
  * A custom error to handle any tokens which cannot be found.
@@ -54,7 +52,6 @@ function SecretNotFoundError(message, token) {
     this.message = (message || 'Invalid email token.');
 }
 SecretNotFoundError.prototype = Object.create(Error.prototype);
-SecretNotFoundError.prototype.constructor = SecretNotFoundError;
 
 /**
  * A custom error to handle login issues.
@@ -68,7 +65,6 @@ function LoginError(message) {
     this.message = (message || 'Invalid login.');
 }
 LoginError.prototype = Object.create(Error.prototype);
-LoginError.prototype.constructor = LoginError;
 
 /**
  * A custom error to handle unauthorized actions.
@@ -82,13 +78,12 @@ function ForbiddenError(message) {
     this.message = (message || 'Account is forbidden.');
 }
 ForbiddenError.prototype = Object.create(Error.prototype);
-ForbiddenError.prototype.constructor = ForbiddenError;
 
 module.exports = {
-    SyntaxError: SyntaxError,
+    SyntaxError              : SyntaxError,
     JsonSchemaValidationError: JsonSchemaValidationError,
-    EmailUsedError: EmailUsedError,
-    SecretNotFoundError: SecretNotFoundError,
-    LoginError: LoginError,
-    ForbiddenError: ForbiddenError
+    EmailUsedError           : EmailUsedError,
+    SecretNotFoundError      : SecretNotFoundError,
+    LoginError               : LoginError,
+    ForbiddenError           : ForbiddenError
 };

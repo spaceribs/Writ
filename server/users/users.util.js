@@ -3,7 +3,6 @@
 var secureRandom = require('secure-random');
 var hmac = require('crypto-js/hmac-sha512');
 var models = require('../../models');
-var _ = require('lodash');
 
 /**
  * Transforms a request body password to a salt/hash.
@@ -100,8 +99,8 @@ function tokenEmail(from, to, tokenUrl) {
         from    : from,
         to   : to,
         subject : 'Writ - Verify your email address',
-        html    : 'Go to this URL to verify your email: <a href="' + tokenUrl + '">' +
-            tokenUrl + '</a>'
+        html    : 'Go to this URL to verify your email: ' +
+        '<a href="' + tokenUrl + '">' + tokenUrl + '</a>'
     };
 }
 

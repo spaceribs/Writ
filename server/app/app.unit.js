@@ -27,7 +27,8 @@ describe('App Unit Tests', function() {
                 expect(error.message).toBe('test');
             });
 
-            it('returns a default message if no message specified.', function() {
+            it('returns a default message if no message specified.',
+            function() {
                 expect(error2.message).toBe('Invalid email.');
             });
         });
@@ -53,7 +54,8 @@ describe('App Unit Tests', function() {
                 expect(error.message).toBe('test');
             });
 
-            it('returns a default message if no message specified.', function() {
+            it('returns a default message if no message specified.',
+            function() {
                 expect(error2.message).toBe('Invalid email token.');
             });
         });
@@ -75,7 +77,8 @@ describe('App Unit Tests', function() {
                 expect(error.message).toBe('test');
             });
 
-            it('returns a default message if no message specified.', function() {
+            it('returns a default message if no message specified.',
+            function() {
                 expect(error2.message).toBe('Invalid login.');
             });
         });

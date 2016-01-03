@@ -18,7 +18,7 @@ The user's private profile information:
 
 * `email` email address.
 * `name` the users public label.
-* `history` the users history of adding new places and editings places.
+* `history` the users history of adding new places and editing places.
 * `place` last place accessed by the user.
 
 + Model (application/json)
@@ -41,7 +41,7 @@ Get my personal profile, passing my session ID in the header.
 
     + Headers
             
-            Cookie: sid=DQAAAPsAAAAhsDZwv_cFuEEdsskQXBxJ70Bq1U0yQyNyDEISoIuBtIoYfla8
+            Cookie: sid=DQ111PsAAAAhsDZwv_cFuEEd111QXBxJ70Bq1U0yQyNyDEISoIuBtIoY8888
 
 + Response 200
     [User][]
@@ -54,7 +54,7 @@ The Users UUID is determined **after** verification.
         
         {
             "email": "john@doe.com",
-            "password": "somepass",
+            "password": "Some Password",
             "name": "John"
         }
 
@@ -77,13 +77,13 @@ Replace the email/username/password on my profile. Whichever is passed overrides
 
     + Headers
         
-            Cookie: sid=DQAAAPsAAAAhsDZwv_cFuEEdsskQXBxJ70Bq1U0yQyNyDEISoIuBtIoYfla8
+            Cookie: sid=DQ111PsAAAAhsDZwv_cFuEEd111QXBxJ70Bq1U0yQyNyDEISoIuBtIoY8888
             
     + Body
 
             {
                 "email": "john@doe.com",
-                "password": "somepass",
+                "password": "Some Password",
                 "name": "John"
             }
 
@@ -140,7 +140,7 @@ When users are logged in, they are given a session cookie used for all future ca
     
         {
             "email": "john@doe.com",
-            "password": "somepass"
+            "password": "Some Password"
         }
     
 + Response 200 (application/json)
@@ -166,7 +166,7 @@ Query things like the number of edits they've made and their name:
 
 * `id` Their post-verification UUID
 * `name` the users public label.
-* `history` the users history of adding new places and editings places.
+* `history` the users history of adding new places and editing places.
 
 + Model (application/json)
         
@@ -180,7 +180,7 @@ Query things like the number of edits they've made and their name:
         }
         
 ### Get a user [GET]
-Gets the specified user and their publically accessible information such as their ID, name and history.
+Gets the specified user and their publicly accessible information such as their ID, name and history.
 
 + Parameters
     + id ... UUID of the User
@@ -221,7 +221,7 @@ If all of the validation passes, the place and passage are added and the user ge
 
     + Headers
             
-            Cookie: sid=DQAAAPsAAAAhsDZwv_cFuEEdsskQXBxJ70Bq1U0yQyNyDEISoIuBtIoYfla8
+            Cookie: sid=DQ111PsAAAAhsDZwv_cFuEEd111QXBxJ70Bq1U0yQyNyDEISoIuBtIoY8888
             
     + Body
 
@@ -386,13 +386,13 @@ to refer to and query the passage.
                 "id": "8f349e34-b503-428a-b092-24411ec35651",
                 "title": "Lobby",
                 "desc": "This is the main lobby",
-                "creator": "66fadfc4-fa4f-4e44-b5de-5e6511c1f5b8",
+                "creator": "66111114-fa4f-4e44-b5de-5e6511c1f5b8",
                 "spawn": true,
                 "pos": {"x": 12, "y": -22, "z": 0},
                 "passages": {
                     "up": "c7d6baa6-733e-4246-8185-598fe84367c3",
                     "north": "bfc65fe3-84bc-46c1-8a39-232227107dd8",
-                    "east": "66fadfc4-fa4f-4e44-b5de-5e6511c1f5b8"
+                    "east": "66111114-fa4f-4e44-b5de-5e6511c1f5b8"
                 },
                 "items": [
                     "c7d6baa6-733e-4246-8185-598fe84367c3"
@@ -429,7 +429,7 @@ bracket notation, like `passages.up` or `passages['up']`.
 
     + Headers
         
-            Cookie: sid=DQAAAPsAAAAhsDZwv_cFuEEdsskQXBxJ70Bq1U0yQyNyDEISoIuBtIoYfla8
+            Cookie: sid=D1111PsAAAAhsDZwv_cFuEE1111QXBxJ70Bq1U0yQyNyDEISoIuBtIoY8888
             
     + Body
 
@@ -470,7 +470,7 @@ Create a new item and add it to the place. Needs a name and description at the v
 
     + Headers
         
-            Cookie: sid=DQAAAPsAAAAhsDZwv_cFuEEdsskQXBxJ70Bq1U0yQyNyDEISoIuBtIoYfla8
+            Cookie: sid=D1111PsAAAAhsDZwv_cFuEE1111QXBxJ70Bq1U0yQyNyDEISoIuBtIoY8888
             
     + Body
 
@@ -515,7 +515,7 @@ this object extends into the root of the object.
 The password for the lock could be either an `item` id (such as a key) or a password which
 could be picked (brute forced).
 
-[Example of Clientside Encryption](http://plnkr.co/edit/VFQXP0JrG9EwdftduC9Q?p=preview)
+[Example of client-side encryption](http://plnkr.co/edit/VFQXP0JrG9EwdftduC9Q?p=preview)
 
 + Parameters
     + id ... UUID of the passage
@@ -548,7 +548,7 @@ could be picked (brute forced).
                 "z": 0
             },
             "pickable": false,
-            "lock": "U2FsdGVkX18NWcol2ubNZ3hl3ez8lhdvyhlD8aHcviS7rxtApVofu2kWgSC/R6hvMPgfpy1SXbi7oKiiyLlmCJz87aC6a2gwn8uMJsSi49NEfNJe2MN6qd14MfwB49i2kJr4bvR18/PhMPjSkTI2CQ=="
+            "lock": "U2FsdGVkX18NW2222ubNZ3hl3ez8l222222D8aH222S7rxtApV2222kWgSC/R6hvMP22221SXbi7oK222LlmCJz87aC6a2gwn8uMJsSi49NEfNJe2MN6qd14MfwB49i2kJr4bvR18/PhMPjSkTI2CQ=="
         }
 
 + Response 403 (application/json)
@@ -564,7 +564,7 @@ could be picked (brute forced).
                 "z": 0
             },
             "pickable": true,
-            "lock": "U2FsdGVkX18NWcol2ubNZ3hl3ez8lhdvyhlD8aHcviS7rxtApVofu2kWgSC/R6hvMPgfpy1SXbi7oKiiyLlmCJz87aC6a2gwn8uMJsSi49NEfNJe2MN6qd14MfwB49i2kJr4bvR18/PhMPjSkTI2CQ=="
+            "lock": "U2FsdGVkX18NW2222ubNZ3hl3ez8l222222D8aH222S7rxtApV2222kWgSC/R6hvMP22221SXbi7oK222LlmCJz87aC6a2gwn8uMJsSi49NEfNJe2MN6qd14MfwB49i2kJr4bvR18/PhMPjSkTI2CQ=="
         }
 
 + Response 404 (application/json)

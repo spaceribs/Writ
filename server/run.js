@@ -1,7 +1,7 @@
 'use strict';
 
-var app = require('./app/app.js');
-//var config = require('./config.js');
+var app = require('./app/app');
+var config = require('./config');
 
 app.listen(config.port);
 
