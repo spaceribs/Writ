@@ -67,8 +67,7 @@ function usersGet(req, res) {
 function usersPost(req, res, next) {
 
     //TODO: Move to the configuration file.
-    var defaultPerm = models.io.user.properties.permission.default;
-    var params = util.permFilter(defaultPerm, 'user', req.body, true, true);
+    var params = util.permFilter(20, 'user', req.body, true, true);
     util.processPassword(params);
 
     Users.createIndex({
@@ -101,7 +100,10 @@ function usersPost(req, res, next) {
         if (validate.valid) {
             return Users.put(params);
         } else {
-            throw new errors.JsonSchemaValidation(validate.error);
+            throw new errors.JsonSchemaValidationError(
+                validate.errors,
+                validate.missing
+            );
         }
 
     }).then(function() {

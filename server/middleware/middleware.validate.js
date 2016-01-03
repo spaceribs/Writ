@@ -21,6 +21,7 @@ function validate(schema, schemaDependencies) {
 
     return function(req, res, next) {
         var validate = tv4.validateMultiple(req.body, schema);
+
         if (!validate.valid) {
             next(new errors.JsonSchemaValidationError(
                     validate.errors, validate.missing));

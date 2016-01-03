@@ -1,8 +1,89 @@
 'use strict';
 
 var errors = require('../app/app.errors');
+var roles = require('../roles');
 
 describe('Middleware Unit Tests', function() {
+
+    describe('middleware.restrict', function() {
+
+        var restrict = require('./middleware.restrict');
+
+        var testSchema = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'id': '/writ/io/user',
+            'type': 'object',
+            'properties': {
+                'email': {
+                    'type': 'string',
+                    'format': 'email',
+                    'permission': {
+                        'read': 19,
+                        'write': 19
+                    }
+                },
+                'name': {
+                    'type': 'string',
+                    'permission': {
+                        'read': 100,
+                        'write': 19
+                    }
+                },
+                'password': {
+                    'type': 'string',
+                    'permission': {
+                        'read': 0,
+                        'write': 19
+                    }
+                }
+            },
+            'additionalProperties': false,
+            'required': [
+                'email',
+                'name',
+                'password'
+            ]
+        };
+
+        it('Allows anonymous users to make unrestricted actions', function() {
+
+            var req = {
+                body: {
+                    email: 'test@test.com',
+                    name: 'Testing Tester',
+                    password: 'Testing123'
+                }
+            };
+
+            var restricted = restrict(roles.anonymous, testSchema);
+
+            restricted(req, null, function(err) {
+                expect(err).toBeUndefined();
+            });
+
+        });
+
+        it('Doesn\'t allow an anonymous user to make admin actions', function() {
+
+            var req = {
+                body: {
+                    email: 'test@test.com',
+                    name: 'Testing Tester',
+                    password: 'Testing123'
+                }
+            };
+
+            var restricted = restrict(roles.admin, testSchema);
+
+            restricted(req, null, function(err) {
+                expect(err)
+                    .toEqual(jasmine.any(errors.ForbiddenError));
+                expect(err.message).toBe('Your account is not allowed ' +
+                        'to access this endpoint.');
+            });
+
+        });
+    });
 
     describe('middleware.validate', function() {
 

@@ -66,6 +66,13 @@ function errorHandler(err, req, res, next) {
         };
         res.status(err.status).json(responseData);
 
+    } else if (err instanceof errors.ForbiddenError) {
+        responseData = {
+            status: 'FORBIDDEN',
+            message: err.message
+        };
+        res.status(err.status).json(responseData);
+
     } else {
         next(err);
 

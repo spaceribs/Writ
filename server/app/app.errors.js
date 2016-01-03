@@ -70,10 +70,25 @@ function LoginError(message) {
 LoginError.prototype = Object.create(Error.prototype);
 LoginError.prototype.constructor = LoginError;
 
+/**
+ * A custom error to handle unauthorized actions.
+ *
+ * @param {string} [message] - Custom login error message.
+ * @constructor
+ */
+function ForbiddenError(message) {
+    this.status = 403;
+    this.name = 'ForbiddenError';
+    this.message = (message || 'Account is forbidden.');
+}
+ForbiddenError.prototype = Object.create(Error.prototype);
+ForbiddenError.prototype.constructor = ForbiddenError;
+
 module.exports = {
     SyntaxError: SyntaxError,
     JsonSchemaValidationError: JsonSchemaValidationError,
     EmailUsedError: EmailUsedError,
     SecretNotFoundError: SecretNotFoundError,
-    LoginError: LoginError
+    LoginError: LoginError,
+    ForbiddenError: ForbiddenError
 };
