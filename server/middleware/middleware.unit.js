@@ -254,7 +254,8 @@ describe('Middleware Unit Tests', function() {
                          *
                          * @param {string} responseData - Object to send.
                          */
-                        return {json: function() {
+                        return {json: function(responseData) {
+                            expect(responseData).toBe({});
                             done();
                         }};
                     };
