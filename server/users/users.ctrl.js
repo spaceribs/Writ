@@ -1,6 +1,5 @@
 'use strict';
 
-var express = require('express');
 var nodemailer = require('nodemailer');
 var uuid = require('node-uuid');
 var _ = require('lodash');
@@ -116,7 +115,8 @@ function usersPost(req, res, next) {
                 } else {
                     res.json({
                         status  : 'SUCCESS',
-                        message : 'Please check your email to verify your account.',
+                        message : 'Please check your email to ' +
+                        'verify your account.',
                         data    : {
                             id    : params.id,
                             email : params.email
@@ -207,72 +207,75 @@ function userPost(req, res, next) {
     }
 
     Users.createIndex({
-            'index': {
-                'fields': ['email']
-            }
-        }).then(function() {
-            if (params.email) {
-                return Users.find({
-                    selector : {email: params.email}
-                }).then(function(result) {
-                    if (result.docs.length && result.docs[0].id !== userId) {
-                        throw new errors.EmailUsedError(
-                                'This email address is already in use by another account.',
-                                req.body.email
-                        );
+        'index': {
+            'fields': ['email']
+        }
+    }).then(function() {
+        if (params.email) {
+            return Users.find({
+                selector : {email: params.email}
+            }).then(function(result) {
+                if (result.docs.length && result.docs[0].id !== userId) {
+                    throw new errors.EmailUsedError(
+                            'This email address is already in ' +
+                            'use by another account.',
+                            req.body.email
+                    );
+                }
+            });
+        }
+
+    }).then(function() {
+        return Users.get('user/' + userId);
+
+    }).then(function(result) {
+        newParams = _.extend({}, result, params);
+        newParams.updated = new Date().toISOString();
+
+        var validate = tv4.validateMultiple(newParams, models.db.user);
+
+        if (validate.valid) {
+            return Users.put(newParams);
+        } else {
+            throw new errors.JsonSchemaValidation(validate.error);
+        }
+
+    }).then(function() {
+        if (!params.email) {
+
+            res.json({
+                status  : 'SUCCESS',
+                message : 'User has been successfully updated.',
+                data    : util.permFilter(newParams.permission, 'user',
+                        newParams, false, true)
+            });
+
+        } else {
+
+            var transporter = nodemailer.createTransport(emailConfig);
+            var verifyUrl = config.hostname + '/verify/' + params.secret;
+
+            transporter.sendMail(
+                util.tokenEmail(config.sysop, params.email, verifyUrl),
+                function(err) {
+                    if (err) {
+                        next(err);
+                    } else {
+                        res.json({
+                            status  : 'SUCCESS',
+                            message : 'User has been updated, and an email ' +
+                            'has been sent to the new address.',
+                            data    : util.permFilter(newParams.permission,
+                                    'user', newParams, false, true)
+                        });
                     }
                 });
-            }
 
-        }).then(function() {
-            return Users.get('user/' + userId);
+        }
 
-        }).then(function(result) {
-            newParams = _.extend({}, result, params);
-            newParams.updated = new Date().toISOString();
-
-            var validate = tv4.validateMultiple(newParams, models.db.user);
-
-            if (validate.valid) {
-                return Users.put(newParams);
-            } else {
-                throw new errors.JsonSchemaValidation(validate.error);
-            }
-
-        }).then(function() {
-            if (!params.email) {
-
-                res.json({
-                    status  : 'SUCCESS',
-                    message : 'User has been successfully updated.',
-                    data    : util.permFilter(newParams.permission, 'user', newParams, false, true)
-                });
-
-            } else {
-
-                var transporter = nodemailer.createTransport(emailConfig);
-                var verifyUrl = config.hostname + '/verify/' + params.secret;
-
-                transporter.sendMail(
-                    util.tokenEmail(config.sysop, params.email, verifyUrl),
-                    function(err) {
-                        if (err) {
-                            next(err);
-                        } else {
-                            res.json({
-                                status  : 'SUCCESS',
-                                message : 'User has been updated, and an email ' +
-                                'has been sent to the new address.',
-                                data    : util.permFilter(newParams.permission, 'user', newParams, false, true)
-                            });
-                        }
-                    });
-
-            }
-
-        }).catch(function(err) {
-            next(err);
-        });
+    }).catch(function(err) {
+        next(err);
+    });
 }
 
 /**
