@@ -17,6 +17,11 @@
             "always"
         ]
     },
+    "globals": {
+        "xit": false,
+        "require": false,
+        "beforeAll": false
+    },
     "env": {
         "es6": true,
         "node": true,
