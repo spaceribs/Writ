@@ -581,11 +581,11 @@ describe('Users Unit Tests', function() {
             it('returns an error if the user doesn\'t exist.', function(done) {
                 callback.and.callFake(function(response) {
                     expect(response).toEqual({
-                            status: 404,
-                            name: 'not_found',
-                            message: 'missing',
-                            reason: 'missing'
-                        });
+                        status: 404,
+                        name: 'not_found',
+                        message: 'missing',
+                        reason: 'missing'
+                    });
                     done();
                 });
 

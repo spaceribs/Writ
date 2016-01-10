@@ -1,5 +1,8 @@
 engines:
   fixme:
     enabled: true
+  eslint:
+    enabled: true
 ratings:
   paths:
+  - ".js"

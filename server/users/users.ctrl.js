@@ -1,6 +1,5 @@
 'use strict';
 
-var express = require('express');
 var nodemailer = require('nodemailer');
 var uuid = require('node-uuid');
 var _ = require('lodash');
