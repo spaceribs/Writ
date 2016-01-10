@@ -29,8 +29,6 @@ function restrict(minimumLevel, schema, schemaDependencies) {
             level = req.user.permission || 100;
         }
 
-        console.log(level, minimumLevel);
-
         if (level > minimumLevel) {
             next(new errors.ForbiddenError(
                     'Your account is not allowed to access this endpoint.'));

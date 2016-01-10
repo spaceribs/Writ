@@ -209,10 +209,10 @@ function userPost(req, res, next) {
     }
 
     Users.createIndex({
-            'index': {
+        'index': {
                 'fields': ['email']
             }
-        }).then(function() {
+    }).then(function() {
             if (params.email) {
                 return Users.find({
                     selector : {email: params.email}

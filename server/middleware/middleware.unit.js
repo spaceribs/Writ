@@ -254,8 +254,7 @@ describe('Middleware Unit Tests', function() {
                          *
                          * @param {string} responseData - Object to send.
                          */
-                        return {json: function(responseData) {
-                            console.log(responseData);
+                        return {json: function() {
                             done();
                         }};
                     };
