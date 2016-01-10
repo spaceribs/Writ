@@ -196,7 +196,7 @@ function userPost(req, res, next) {
 
     var userId = req.params.userId;
     //TODO: Hook this up to user's permission level.
-    var params = util.permFilter(30, 'user', req.body, true, true);
+    var params = util.permFilter(20, 'user', req.body, true, true);
     var newParams;
 
     if (params.password) {

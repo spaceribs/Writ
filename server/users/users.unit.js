@@ -8,7 +8,7 @@ var uuid = require('node-uuid');
 var errors = require('../app/app.errors');
 var config = require('../config');
 
-describe('Users Unit Tests', function() {
+describe('Users', function() {
 
     var userOne;
     var userTwo;
@@ -31,7 +31,7 @@ describe('Users Unit Tests', function() {
         userThree = jsf(userModel);
     });
 
-    describe('users.util', function() {
+    describe('Utilities', function() {
 
         var util = require('./users.util');
 
@@ -126,7 +126,7 @@ describe('Users Unit Tests', function() {
 
     });
 
-    describe('users.ctrl', function() {
+    describe('Controller', function() {
 
         var ctrl;
         var req;
@@ -431,7 +431,6 @@ describe('Users Unit Tests', function() {
                         status : 'SUCCESS',
                         message: 'User has been successfully updated.',
                         data: {
-                            email: userOne.email,
                             name: userTwo.name,
                             permission: 30
                         }
@@ -494,10 +493,9 @@ describe('Users Unit Tests', function() {
                     expect(callback).not.toHaveBeenCalled();
                     expect(response).toEqual({
                         status : 'SUCCESS',
-                        message: 'User has been updated, and an email ' +
-                            'has been sent to the new address.',
+                        message: 'User has been updated, and an ' +
+                        'email has been sent to the new address.',
                         data: {
-                            email: userOne.email,
                             name: userOne.name,
                             permission: 30
                         }
@@ -522,9 +520,7 @@ describe('Users Unit Tests', function() {
                     json: function(response) {
                         expect(response).toEqual({
                             status: 'SUCCESS',
-                            data  : {
-                                email: userOne.email
-                            }
+                            data  : {}
                         });
                         done();
                     }

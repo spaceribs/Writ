@@ -38,7 +38,7 @@ function errorHandler(err, req, res, next) {
                 }]
             }
         };
-        res.status(err.status).json(responseData);
+        res.status(400).json(responseData);
 
     } else if (err instanceof errors.EmailUsedError) {
         responseData = {

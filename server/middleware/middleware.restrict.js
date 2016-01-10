@@ -32,6 +32,7 @@ function restrict(minimumLevel, schema, schemaDependencies) {
         if (level > minimumLevel) {
             next(new errors.ForbiddenError(
                     'Your account is not allowed to access this endpoint.'));
+            return;
         }
 
         if (!validate.valid) {

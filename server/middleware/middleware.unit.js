@@ -3,9 +3,9 @@
 var errors = require('../app/app.errors');
 var roles = require('../roles');
 
-describe('Middleware Unit Tests', function() {
+describe('Middleware', function() {
 
-    describe('middleware.restrict', function() {
+    describe('restrict', function() {
 
         var restrict = require('./middleware.restrict');
 
@@ -232,7 +232,7 @@ describe('Middleware Unit Tests', function() {
                 function(done) {
 
                     /**
-                     * Mock response that the client doesn't accept JSON.
+                     * Mock response that the client accepts JSON.
                      *
                      * @returns {boolean}
                      */
@@ -244,7 +244,7 @@ describe('Middleware Unit Tests', function() {
                      * Mock status setting.
                      *
                      * @param {number} status - Status Code.
-                     * @returns {{send: send}}
+                     * @returns {{json: json}}
                      */
                     res.status = function(status) {
                         expect(status).toBe(400);
@@ -255,31 +255,172 @@ describe('Middleware Unit Tests', function() {
                          * @param {string} responseData - Object to send.
                          */
                         return {json: function(responseData) {
-                            expect(responseData).toBe({});
+                            expect(responseData).toEqual({
+                                'status': 'INVALID_JSON_SCHEME',
+                                'errors': {
+                                    body: []
+                                }
+                            });
                             done();
                         }};
                     };
 
+                    errorHandler(err, req, res, next);
                 });
 
-            xit('responds with an error if there is a JSON Parsing issue.',
-                function() {
+            it('responds with an error if there is a JSON Parsing issue.',
+                function(done) {
+                    /**
+                     * Mock response that the client accepts JSON.
+                     *
+                     * @returns {boolean}
+                     */
+                    req.accepts = function() { return true; };
 
+                    err = new errors.SyntaxError();
+
+                    /**
+                     * Mock status setting.
+                     *
+                     * @param {number} status - Status Code.
+                     * @returns {{json: json}}
+                     */
+                    res.status = function(status) {
+                        expect(status).toBe(400);
+
+                        /**
+                         * Mock simple json send.
+                         *
+                         * @param {string} responseData - Object to send.
+                         */
+                        return {json: function(responseData) {
+                            expect(responseData).toEqual({
+                                'status': 'INVALID_JSON',
+                                'errors': {
+                                    body: [{
+                                        value: undefined,
+                                        property: 'request.body',
+                                        messages: ['']
+                                    }]
+                                }
+                            });
+                            done();
+                        }};
+                    };
+
+                    errorHandler(err, req, res, next);
                 });
 
-            xit('responds with an error if an email is already used.',
-                function() {
+            it('responds with an error if an email is already used.',
+                function(done) {
+                    /**
+                     * Mock response that the client accepts JSON.
+                     *
+                     * @returns {boolean}
+                     */
+                    req.accepts = function() { return true; };
 
+                    err = new errors.EmailUsedError(
+                            'test message.', 'test@test.com');
+
+                    /**
+                     * Mock status setting.
+                     *
+                     * @param {number} status - Status Code.
+                     * @returns {{json: json}}
+                     */
+                    res.status = function(status) {
+                        expect(status).toBe(409);
+
+                        /**
+                         * Mock simple json send.
+                         *
+                         * @param {string} responseData - Object to send.
+                         */
+                        return {json: function(responseData) {
+                            expect(responseData).toEqual({
+                                status: 'EMAIL_USED',
+                                errors: {
+                                    'body': [{
+                                        'value': 'test@test.com',
+                                        'property': 'request.body.email',
+                                        'messages': ['test message.']
+                                    }]
+                                }
+                            });
+                            done();
+                        }};
+                    };
+
+                    errorHandler(err, req, res, next);
                 });
 
-            xit('responds with an error if an email secret isn\'t found.',
-                function() {
+            it('responds with an error if an email secret isn\'t found.',
+                function(done) {
+                    /**
+                     * Mock response that the client accepts JSON.
+                     *
+                     * @returns {boolean}
+                     */
+                    req.accepts = function() { return true; };
 
+                    err = new errors.SecretNotFoundError(
+                            'test message.', '12345');
+
+                    /**
+                     * Mock status setting.
+                     *
+                     * @param {number} status - Status Code.
+                     * @returns {{json: json}}
+                     */
+                    res.status = function(status) {
+                        expect(status).toBe(404);
+
+                        /**
+                         * Mock simple json send.
+                         *
+                         * @param {string} responseData - Object to send.
+                         */
+                        return {json: function(responseData) {
+                            expect(responseData).toEqual({
+                                status: 'EMAIL_TOKEN_NOT_FOUND',
+                                errors: {
+                                    'params': [{
+                                        'value': '12345',
+                                        'property': 'request.params.token',
+                                        'messages': ['test message.']
+                                    }]
+                                }
+                            });
+                            done();
+                        }};
+                    };
+
+                    errorHandler(err, req, res, next);
                 });
 
-            xit('passes off all other errors down the chain.',
-                function() {
+            it('passes off all other errors down the chain.',
+                function(done) {
+                    /**
+                     * Mock response that the client accepts JSON.
+                     *
+                     * @returns {boolean}
+                     */
+                    req.accepts = function() { return true; };
 
+                    err = new Error();
+
+                    /**
+                     * Generic error that should pass through
+                     *
+                     * @param {Error} err - Error object passed.
+                     */
+                    next = function(err) {
+                        expect(err).toEqual(jasmine.any(Error));
+                        done();
+                    };
+
+                    errorHandler(err, req, res, next);
                 });
         });
 
