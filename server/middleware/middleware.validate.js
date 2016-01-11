@@ -1,13 +1,13 @@
 'use strict';
 
 var tv4 = require('tv4');
-var errors = require('../app/errors');
+var errors = require('../app/app.errors');
 
 /**
  * Middleware to validate database updates from the user.
  *
  * @param {object} schema - Schema to validate against.
- * @param {?Array} schemaDependencies - Array of possible dependencies.
+ * @param {Array=} schemaDependencies - Array of possible dependencies.
  * @returns {Function}
  */
 function validate(schema, schemaDependencies) {
@@ -21,6 +21,7 @@ function validate(schema, schemaDependencies) {
 
     return function(req, res, next) {
         var validate = tv4.validateMultiple(req.body, schema);
+
         if (!validate.valid) {
             next(new errors.JsonSchemaValidationError(
                     validate.errors, validate.missing));

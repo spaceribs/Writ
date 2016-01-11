@@ -8,7 +8,7 @@ var tv4 = require('tv4');
 var models = require('../../models');
 var config = require('../config');
 var emailConfig = require('../email.json');
-var errors = require('../app/errors');
+var errors = require('../app/app.errors');
 var Users = require('./users.db');
 var util = require('./users.util');
 
@@ -66,8 +66,7 @@ function usersGet(req, res) {
 function usersPost(req, res, next) {
 
     //TODO: Move to the configuration file.
-    var defaultPerm = models.io.user.properties.permission.default;
-    var params = util.permFilter(defaultPerm, 'user', req.body, true, true);
+    var params = util.permFilter(20, 'user', req.body, true, true);
     util.processPassword(params);
 
     Users.createIndex({
@@ -100,7 +99,10 @@ function usersPost(req, res, next) {
         if (validate.valid) {
             return Users.put(params);
         } else {
-            throw new errors.JsonSchemaValidation(validate.error);
+            throw new errors.JsonSchemaValidationError(
+                validate.errors,
+                validate.missing
+            );
         }
 
     }).then(function() {
@@ -194,7 +196,7 @@ function userPost(req, res, next) {
 
     var userId = req.params.userId;
     //TODO: Hook this up to user's permission level.
-    var params = util.permFilter(30, 'user', req.body, true, true);
+    var params = util.permFilter(20, 'user', req.body, true, true);
     var newParams;
 
     if (params.password) {
@@ -217,8 +219,8 @@ function userPost(req, res, next) {
             }).then(function(result) {
                 if (result.docs.length && result.docs[0].id !== userId) {
                     throw new errors.EmailUsedError(
-                            'This email address is already in ' +
-                            'use by another account.',
+                            'This email address is already ' +
+                            'in use by another account.',
                             req.body.email
                     );
                 }
@@ -263,8 +265,8 @@ function userPost(req, res, next) {
                     } else {
                         res.json({
                             status  : 'SUCCESS',
-                            message : 'User has been updated, and an email ' +
-                            'has been sent to the new address.',
+                            message : 'User has been updated, and an ' +
+                            'email has been sent to the new address.',
                             data    : util.permFilter(newParams.permission,
                                     'user', newParams, false, true)
                         });

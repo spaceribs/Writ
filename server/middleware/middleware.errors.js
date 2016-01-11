@@ -1,8 +1,17 @@
 'use strict';
 
-var errors = require('../app/errors');
+var errors = require('../app/app.errors');
 
-module.exports = function(err, req, res, next) {
+/**
+ * The error handler for Writ, currently a very large switch statement
+ * for all the different kinds of errors we expect from our express app.
+ *
+ * @param {Error} err - Error thrown.
+ * @param {Request} req - Express request object.
+ * @param {Response} res - Express response object.
+ * @param {function} next - Callback for Express.
+ */
+function errorHandler(err, req, res, next) {
     var responseData;
 
     if (!req.accepts('json')) {
@@ -11,10 +20,9 @@ module.exports = function(err, req, res, next) {
 
     } else if (err instanceof errors.JsonSchemaValidationError) {
         responseData = {
-            status: 'INVALID_SCHEME',
+            status: 'INVALID_JSON_SCHEME',
             errors: {
-                validations: err.validations,
-                missing: err.missing
+                'body': err.errors
             }
         };
         res.status(err.status).json(responseData);
@@ -30,7 +38,7 @@ module.exports = function(err, req, res, next) {
                 }]
             }
         };
-        res.status(err.status).json(responseData);
+        res.status(400).json(responseData);
 
     } else if (err instanceof errors.EmailUsedError) {
         responseData = {
@@ -58,8 +66,17 @@ module.exports = function(err, req, res, next) {
         };
         res.status(err.status).json(responseData);
 
+    } else if (err instanceof errors.ForbiddenError) {
+        responseData = {
+            status: 'FORBIDDEN',
+            message: err.message
+        };
+        res.status(err.status).json(responseData);
+
     } else {
         next(err);
 
     }
-};
+}
+
+module.exports = errorHandler;

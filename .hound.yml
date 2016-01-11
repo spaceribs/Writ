@@ -1,8 +1,7 @@
 jscs:
   enabled: true
-  config_file: .jscsrc
+  config_file: ".jscsrc"
 javascript:
-  config_file: .eslintrc
   enabled: true
-  linter: eslint
+  config_file: ".jshintrc"
 fail_on_violations: true

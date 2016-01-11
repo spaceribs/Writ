@@ -99,8 +99,8 @@ function tokenEmail(from, to, tokenUrl) {
         from    : from,
         to   : to,
         subject : 'Writ - Verify your email address',
-        html    : 'Go to this URL to verify your email: <a href="' + tokenUrl + '">' +
-            tokenUrl + '</a>'
+        html    : 'Go to this URL to verify your email: ' +
+        '<a href="' + tokenUrl + '">' + tokenUrl + '</a>'
     };
 }
 

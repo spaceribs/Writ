@@ -5,10 +5,10 @@ var userModel = require('../../models').io.user;
 var _ = require('lodash');
 var mockery = require('mockery');
 var uuid = require('node-uuid');
-var errors = require('../app/errors');
+var errors = require('../app/app.errors');
 var config = require('../config');
 
-describe('Users Unit Tests', function() {
+describe('Users', function() {
 
     var userOne;
     var userTwo;
@@ -31,13 +31,14 @@ describe('Users Unit Tests', function() {
         userThree = jsf(userModel);
     });
 
-    describe('users.util', function() {
+    describe('Utilities', function() {
 
         var util = require('./users.util');
 
         describe('getHash', function() {
 
-            it('generates a valid sha512 hash string from a password and a salt.', function() {
+            it('generates a valid sha512 hash from a password and a salt.',
+            function() {
                 var hash = util.getHash(userOne.password, 'Some Salt');
 
                 expect(hash).toEqual(jasmine.any(String));
@@ -71,19 +72,24 @@ describe('Users Unit Tests', function() {
                 util.processPassword(processedUserOne);
                 util.processPassword(processedUserTwo);
 
-                expect(processedUserOne.salt).not.toEqual(processedUserTwo.salt);
-                expect(processedUserOne.hash).not.toEqual(processedUserTwo.hash);
+                expect(processedUserOne.salt)
+                    .not.toEqual(processedUserTwo.salt);
+                expect(processedUserOne.hash)
+                    .not.toEqual(processedUserTwo.hash);
             });
 
-            it('checks that no collisions exist even if users have the same password.', function() {
+            it('checks that no collisions exist even with the same password.',
+            function() {
                 var processedUserOne = _.clone(userOne);
                 var processedUserOneAlt = _.clone(userOne);
 
                 util.processPassword(processedUserOne);
                 util.processPassword(processedUserOneAlt);
 
-                expect(processedUserOne.salt).not.toEqual(processedUserOneAlt.salt);
-                expect(processedUserOne.hash).not.toEqual(processedUserOneAlt.hash);
+                expect(processedUserOne.salt)
+                    .not.toEqual(processedUserOneAlt.salt);
+                expect(processedUserOne.hash)
+                    .not.toEqual(processedUserOneAlt.hash);
             });
 
         });
@@ -95,7 +101,9 @@ describe('Users Unit Tests', function() {
                 util.processPassword(processedUserOne);
 
                 var userOneCheck = util
-                        .checkPassword(userOne.password, processedUserOne.salt, processedUserOne.hash);
+                    .checkPassword(userOne.password,
+                        processedUserOne.salt,
+                        processedUserOne.hash);
 
                 expect(userOneCheck).toEqual(jasmine.any(Boolean));
                 expect(userOneCheck).toBe(true);
@@ -106,7 +114,9 @@ describe('Users Unit Tests', function() {
                 util.processPassword(processedUserOne);
 
                 var userOneCheck = util
-                        .checkPassword('$$$ THIS IS WRONG $$$', processedUserOne.salt, processedUserOne.hash);
+                    .checkPassword('$$$ THIS IS WRONG $$$',
+                        processedUserOne.salt,
+                        processedUserOne.hash);
 
                 expect(userOneCheck).toEqual(jasmine.any(Boolean));
                 expect(userOneCheck).toBe(false);
@@ -116,7 +126,7 @@ describe('Users Unit Tests', function() {
 
     });
 
-    describe('users.ctrl', function() {
+    describe('Controller', function() {
 
         var ctrl;
         var req;
@@ -179,7 +189,6 @@ describe('Users Unit Tests', function() {
                     .toEqual({
                         status: 'SUCCESS',
                         data  : {
-                            email: userOne.email,
                             name: userOne.name,
                             permission: userOne.permission
                         }
@@ -195,7 +204,8 @@ describe('Users Unit Tests', function() {
             });
 
             it('returns a json-schema when requesting options.', function() {
-                req.accepts = jasmine.createSpy('accepts').and.returnValue(true);
+                req.accepts = jasmine.createSpy('accepts')
+                    .and.returnValue(true);
                 ctrl.users.options(req, res, callback);
 
                 expect(req.accepts).toHaveBeenCalled();
@@ -206,7 +216,8 @@ describe('Users Unit Tests', function() {
             });
 
             it('passes through if json isn\'t accepted.', function() {
-                req.accepts = jasmine.createSpy('accepts').and.returnValue(false);
+                req.accepts = jasmine.createSpy('accepts')
+                    .and.returnValue(false);
                 ctrl.users.options(req, res, callback);
 
                 expect(req.accepts).toHaveBeenCalled();
@@ -218,7 +229,8 @@ describe('Users Unit Tests', function() {
 
         describe('usersGet', function() {
 
-            it('returns the decorated profile of the current user.', function() {
+            it('returns the decorated profile of the current user.',
+            function() {
                 req = {user: userOne};
                 ctrl.users.get(req, res);
 
@@ -242,22 +254,29 @@ describe('Users Unit Tests', function() {
                 res.json.and.callFake(function() {
                     expect(res.json).toHaveBeenCalled();
                     expect(res.json.calls.mostRecent().args[0])
-                            .toEqual({
-                                status : 'SUCCESS',
-                                message: 'Please check your email to verify your account.',
-                                data   : {
-                                    id   : jasmine.any(String),
-                                    email: userThree.email
-                                }
-                            });
+                        .toEqual({
+                            status : 'SUCCESS',
+                            message: 'Please check your email to ' +
+                                'verify your account.',
+                            data   : {
+                                id   : jasmine.any(String),
+                                email: userThree.email
+                            }
+                        });
+                    done();
+                });
+
+                callback.and.callFake(function() {
+                    expect(callback).not.toHaveBeenCalled();
                     done();
                 });
 
                 ctrl.users.post(req, res, callback);
-                expect(callback).not.toHaveBeenCalled();
             });
 
-            it('checks if the email already exists before creating a new user.', function(done) {
+            it('checks if the email already exists before creating a new user.',
+            function(done) {
+
                 callback.and.callFake(function(err) {
                     expect(err).toEqual(jasmine.any(errors.EmailUsedError));
                     done();
@@ -269,7 +288,9 @@ describe('Users Unit Tests', function() {
                 ctrl.users.post(req, res, callback);
             });
 
-            it('constructs an email for users to verify their accounts.', function(done) {
+            it('constructs an email for users to verify their accounts.',
+            function(done) {
+
                 mailerMethods.sendMail.and.callFake(function(options) {
                     expect(options).toEqual({
                         from   : config.sysop,
@@ -410,7 +431,6 @@ describe('Users Unit Tests', function() {
                         status : 'SUCCESS',
                         message: 'User has been successfully updated.',
                         data: {
-                            email: userOne.email,
                             name: userTwo.name,
                             permission: 30
                         }
@@ -473,9 +493,9 @@ describe('Users Unit Tests', function() {
                     expect(callback).not.toHaveBeenCalled();
                     expect(response).toEqual({
                         status : 'SUCCESS',
-                        message: 'User has been updated, and an email has been sent to the new address.',
+                        message: 'User has been updated, and an ' +
+                        'email has been sent to the new address.',
                         data: {
-                            email: userOne.email,
                             name: userOne.name,
                             permission: 30
                         }
@@ -500,9 +520,7 @@ describe('Users Unit Tests', function() {
                     json: function(response) {
                         expect(response).toEqual({
                             status: 'SUCCESS',
-                            data  : {
-                                email: userOne.email
-                            }
+                            data  : {}
                         });
                         done();
                     }
@@ -524,7 +542,6 @@ describe('Users Unit Tests', function() {
                         status : 'SUCCESS',
                         message: 'User has been successfully updated.',
                         data: {
-                            email: userOne.email,
                             name: userOne.name,
                             permission: 30
                         }
