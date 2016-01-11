@@ -274,6 +274,20 @@ describe('Users', function() {
                 ctrl.users.post(req, res, callback);
             });
 
+            it('throws an error if sending an email failed.', function(done) {
+                mailerMethods.sendMail
+                    .and.callFake(function(content, callback) {
+                        callback(Error('test message.'));
+                    });
+
+                callback.and.callFake(function(err) {
+                    expect(err).toEqual(jasmine.any(Error));
+                    done();
+                });
+
+                ctrl.users.post(req, res, callback);
+            });
+
             it('checks if the email already exists before creating a new user.',
             function(done) {
 
