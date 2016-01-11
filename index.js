@@ -2,7 +2,8 @@
 
 var jsf = require('json-schema-faker');
 var prettyjson = require('prettyjson');
+var util = require('util');
 
 var models = require('./models');
 
-console.log(prettyjson.render(jsf(models.item, [models])));
+util.log(prettyjson.render(jsf(models.item, [models])));

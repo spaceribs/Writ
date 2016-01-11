@@ -7,4 +7,5 @@
 
 ### Develop Branch
 [![Build Status](https://travis-ci.org/spaceribs/Writ.svg?branch=develop)](https://travis-ci.org/spaceribs/Writ)
+[![Issue Count](https://codeclimate.com/github/spaceribs/Writ/badges/issue_count.svg)](https://codeclimate.com/github/spaceribs/Writ)
 [![Floobits Status](https://floobits.com/spaceribs/writ_game.svg)](https://floobits.com/spaceribs/writ_game/redirect)
