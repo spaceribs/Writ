@@ -274,6 +274,20 @@ describe('Users', function() {
                 ctrl.users.post(req, res, callback);
             });
 
+            it('throws an error if sending an email failed.', function(done) {
+                mailerMethods.sendMail
+                    .and.callFake(function(content, callback) {
+                        callback(Error('test message.'));
+                    });
+
+                callback.and.callFake(function(err) {
+                    expect(err).toEqual(jasmine.any(Error));
+                    done();
+                });
+
+                ctrl.users.post(req, res, callback);
+            });
+
             it('checks if the email already exists before creating a new user.',
             function(done) {
 
@@ -286,6 +300,26 @@ describe('Users', function() {
                     ctrl.users.post(req, res, callback);
                 });
                 ctrl.users.post(req, res, callback);
+            });
+
+            it('checks if the schema is valid.',
+            function(done) {
+
+                req.body.name = 12;
+
+                callback.and.callFake(function(err) {
+                    expect(err).toEqual(
+                            jasmine.any(errors.JsonSchemaValidationError));
+                    expect(err.errors[0].message)
+                            .toBe('Invalid type: number (expected string)');
+                    done();
+                });
+
+                res.json.and.callFake(function() {
+                    ctrl.users.post(req, res, callback);
+                });
+                ctrl.users.post(req, res, callback);
+
             });
 
             it('constructs an email for users to verify their accounts.',

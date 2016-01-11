@@ -45,7 +45,11 @@ describe('Middleware', function() {
             ]
         };
 
-        it('Allows anonymous users to make unrestricted actions', function() {
+        var refSchema = {
+            '$ref': '/writ/io/user'
+        };
+
+        it('allows anonymous users to make unrestricted actions', function() {
 
             var req = {
                 body: {
@@ -63,10 +67,29 @@ describe('Middleware', function() {
 
         });
 
-        it('Doesn\'t allow an anonymous user to make admin actions',
+        it('accepts and properly uses schema dependencies', function() {
+
+            var req = {
+                body: {
+                    email: 'test@test.com',
+                    name: 'Testing Tester',
+                    password: 'Testing123'
+                }
+            };
+
+            var restricted = restrict(roles.anonymous, refSchema, [testSchema]);
+
+            restricted(req, null, function(err) {
+                expect(err).toBeUndefined();
+            });
+
+        });
+
+        it('doesn\'t allow an anonymous user to make admin actions',
         function() {
 
             var req = {
+                user: {},
                 body: {
                     email: 'test@test.com',
                     name: 'Testing Tester',
@@ -84,9 +107,56 @@ describe('Middleware', function() {
             });
 
         });
+
+        it('allows an admin user to make admin actions',
+        function() {
+
+            var req = {
+                user: {
+                    permission: roles.admin
+                },
+                body: {
+                    email: 'test@test.com',
+                    name: 'Testing Tester',
+                    password: 'Testing123'
+                }
+            };
+
+            var restricted = restrict(roles.admin, testSchema);
+
+            restricted(req, null, function(err) {
+                expect(err).toBeUndefined();
+            });
+
+        });
+
+        it('doesn\'t allow an admin user to go against the json-schema.',
+        function() {
+
+            var req = {
+                user: {
+                    permission: roles.admin
+                },
+                body: {
+                    email: {},
+                    name: [],
+                    password: Infinity
+                }
+            };
+
+            var restricted = restrict(roles.admin, testSchema);
+
+            restricted(req, null, function(err) {
+                expect(err)
+                        .toEqual(jasmine.any(errors.JsonSchemaValidationError));
+                expect(err.message).toBe('One or more request parameters ' +
+                        'failed validation.');
+            });
+
+        });
     });
 
-    describe('middleware.validate', function() {
+    describe('validate', function() {
 
         var validator = require('./middleware.validate');
 
@@ -114,9 +184,14 @@ describe('Middleware', function() {
             ]
         };
 
+        var refSchema = {
+            '$ref': '/writ/io/user'
+        };
+
         describe('validate', function() {
 
             var validate = validator(testSchema);
+            var validateRef = validator(refSchema, [testSchema]);
 
             it('passes validation if the JSON request is valid.', function() {
 
@@ -129,6 +204,22 @@ describe('Middleware', function() {
                 };
 
                 validate(req, null, function(err) {
+                    expect(err).toBeUndefined();
+                });
+
+            });
+
+            it('accepts references to other schemas.', function() {
+
+                var req = {
+                    body: {
+                        email: 'test@test.com',
+                        name: 'Testing Tester',
+                        password: 'Testing123'
+                    }
+                };
+
+                validateRef(req, null, function(err) {
                     expect(err).toBeUndefined();
                 });
 
@@ -155,7 +246,7 @@ describe('Middleware', function() {
 
     });
 
-    describe('middleware.errors', function() {
+    describe('errors', function() {
 
         var errorHandler = require('./middleware.errors');
         var err;
@@ -166,15 +257,10 @@ describe('Middleware', function() {
         beforeAll(function() {
             err = null;
             req = {
-                /**
-                 * Mock response that the client doesn't accept JSON.
-                 *
-                 * @returns {boolean}
-                 */
-                accepts: function() { return true; }
+                accepts: null
             };
             res = {};
-            next = function() {};
+            next = null;
         });
 
         describe('errorHandler', function() {
@@ -391,6 +477,43 @@ describe('Middleware', function() {
                                         'messages': ['test message.']
                                     }]
                                 }
+                            });
+                            done();
+                        }};
+                    };
+
+                    errorHandler(err, req, res, next);
+                });
+
+            it('responds with an error if an action is forbidden.',
+                function(done) {
+                    /**
+                     * Mock response that the client accepts JSON.
+                     *
+                     * @returns {boolean}
+                     */
+                    req.accepts = function() { return true; };
+
+                    err = new errors.ForbiddenError('test message.');
+
+                    /**
+                     * Mock status setting.
+                     *
+                     * @param {number} status - Status Code.
+                     * @returns {{json: json}}
+                     */
+                    res.status = function(status) {
+                        expect(status).toBe(403);
+
+                        /**
+                         * Mock simple json send.
+                         *
+                         * @param {string} responseData - Object to send.
+                         */
+                        return {json: function(responseData) {
+                            expect(responseData).toEqual({
+                                status: 'FORBIDDEN',
+                                message: 'test message.'
                             });
                             done();
                         }};
