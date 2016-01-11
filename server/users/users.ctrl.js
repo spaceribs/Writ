@@ -19,6 +19,8 @@ var util = require('./users.util');
  * @param {object} res - Express response object.
  */
 function login(req, res) {
+
+    //OPTIMIZE: Success method.
     res.json({
         status : 'SUCCESS',
         data   : util.permFilter(30, 'user', req.user, false, true)
@@ -49,6 +51,8 @@ function usersOptions(req, res, next) {
  * @param {object} res - Express response object.
  */
 function usersGet(req, res) {
+
+    //OPTIMIZE: Success method.
     res.json({
         status : 'SUCCESS',
         data   : req.user
@@ -81,8 +85,8 @@ function usersPost(req, res, next) {
     }).then(function(result) {
         if (result.docs.length) {
             throw new errors.EmailUsedError(
-                    'This email address is already in use by another account.',
-                    req.body.email
+                'This email address is already in use by another account.',
+                req.body.email
             );
         }
 
@@ -115,6 +119,8 @@ function usersPost(req, res, next) {
                 if (err) {
                     next(err);
                 } else {
+
+                    //OPTIMIZE: Success method.
                     res.json({
                         status  : 'SUCCESS',
                         message : 'Please check your email to ' +
@@ -245,6 +251,7 @@ function userPost(req, res, next) {
     }).then(function() {
         if (!params.email) {
 
+            //OPTIMIZE: Success method.
             res.json({
                 status  : 'SUCCESS',
                 message : 'User has been successfully updated.',
@@ -263,6 +270,8 @@ function userPost(req, res, next) {
                     if (err) {
                         next(err);
                     } else {
+
+                        //OPTIMIZE: Success method.
                         res.json({
                             status  : 'SUCCESS',
                             message : 'User has been updated, and an ' +
@@ -294,6 +303,8 @@ function userDelete(req, res, next) {
     Users.get('user/' + userId).then(function(doc) {
         return Users.remove(doc);
     }).then(function() {
+
+        //OPTIMIZE: Success method.
         res.json({
             status  : 'SUCCESS',
             message : 'User has been deleted.'
@@ -343,6 +354,8 @@ function userVerify(req, res, next) {
         }
 
     }).then(function() {
+
+        //OPTIMIZE: Success method.
         res.json({
             status  : 'SUCCESS',
             message : 'Your email has been verified.'
