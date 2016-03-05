@@ -12,6 +12,7 @@ var errors = require('../app/app.errors');
  * @param {function} next - Callback for Express.
  */
 function errorHandler(err, req, res, next) {
+
     var responseData;
 
     if (!req.accepts('json')) {
@@ -69,6 +70,13 @@ function errorHandler(err, req, res, next) {
     } else if (err instanceof errors.ForbiddenError) {
         responseData = {
             status: 'FORBIDDEN',
+            message: err.message
+        };
+        res.status(err.status).json(responseData);
+
+    } else if (err.name === 'LoginError') {
+        responseData = {
+            status: 'INVALID_LOGIN',
             message: err.message
         };
         res.status(err.status).json(responseData);

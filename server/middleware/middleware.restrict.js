@@ -1,43 +1,31 @@
 'use strict';
-
-var tv4 = require('tv4');
 var errors = require('../app/app.errors');
+var roles = require('../roles');
 
 /**
- * Throw an error if the minimum user level isn't satisfied or the JSON schema
- * isn't valid.
+ * Throw an error if the minimum user level isn't satisfied.
  *
  * @param {integer} minimumLevel - Minimum level that a user is required to have
- * @param {object} schema - Schema to check permissions with.
- * @param {Array=} schemaDependencies - Array of possible dependencies.
+ * @param {string} allowOwner - If this action is allowed by owner, check
+ *     this parameter against the user.id
  * @returns {Function}
  */
-function restrict(minimumLevel, schema, schemaDependencies) {
-
-    if (schemaDependencies) {
-        for (var i = 0; i < schemaDependencies.length; i++) {
-            var dependency = schemaDependencies[i];
-            tv4.addSchema(dependency);
-        }
-    }
+function restrict(minimumLevel, isOwner) {
 
     return function(req, res, next) {
-        var level = 100;
-        var validate = tv4.validateMultiple(req.body, schema);
 
+        var level = roles.anonymous;
         if (req.user) {
-            level = req.user.permission || 100;
+            level = req.user.permission || roles.anonymous;
+        } else {
+            req.user = {
+                permission: roles.anonymous
+            };
         }
 
         if (level > minimumLevel) {
             next(new errors.ForbiddenError(
                     'Your account is not allowed to access this endpoint.'));
-            return;
-        }
-
-        if (!validate.valid) {
-            next(new errors.JsonSchemaValidationError(
-                    validate.errors, validate.missing));
             return;
         }
 

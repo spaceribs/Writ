@@ -346,7 +346,7 @@ describe('Users', function() {
 
             beforeEach(function() {
                 userThree = jsf(userModel);
-                req = {body: userThree};
+                req = {user: userThree};
             });
 
             it('returns an array of users.', function(done) {
@@ -364,8 +364,6 @@ describe('Users', function() {
                 expect(callback).not.toHaveBeenCalled();
             });
 
-            xit('returns an error if you aren\'t an admin.', function() {});
-
         });
 
         describe('userGet', function() {
@@ -376,7 +374,12 @@ describe('Users', function() {
 
             beforeEach(function() {
                 userThree = jsf(userModel);
-                req = {params: {userId: uuid.v4()}};
+                req = {
+                    params: {userId: uuid.v4()},
+                    user: {
+                        permission: 100
+                    }
+                };
                 postReq = {body: userThree};
                 postRes = {json: jasmine.createSpy('post-json')};
             });
@@ -392,6 +395,7 @@ describe('Users', function() {
                 });
 
                 res.json.and.callFake(function(response) {
+                    console.log(response);
                     expect(response.name).toBe(userThree.name);
                     expect(callback).not.toHaveBeenCalled();
                     done();
@@ -417,7 +421,26 @@ describe('Users', function() {
                 ctrl.user.get(req, res, callback);
             });
 
-            xit('returns more information if you are an admin.', function() {});
+            it('returns more information if you are an admin.', function(done) {
+
+                postRes.json.and.callFake(function(response) {
+                    expect(response.data).toBeDefined();
+                    expect(response.data.id).toBeDefined();
+                    req.params.userId = response.data.id;
+                    req.user.permission = 10;
+
+                    ctrl.user.get(req, res, callback);
+                });
+
+                res.json.and.callFake(function(response) {
+                    expect(response.email).toBe(userThree.email);
+                    expect(callback).not.toHaveBeenCalled();
+                    done();
+                });
+
+                ctrl.users.post(postReq, postRes, callback);
+
+            });
 
         });
 
@@ -426,7 +449,15 @@ describe('Users', function() {
             var postRes;
 
             beforeEach(function() {
-                req = {body: userThree, params: {userId: uuid.v4()}};
+                req = {
+                    body: userThree,
+                    params: {
+                        userId: uuid.v4()
+                    },
+                    user: {
+                        permission: 100
+                    }
+                };
                 postRes = {json: jasmine.createSpy('post-json')};
             });
 

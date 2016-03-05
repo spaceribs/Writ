@@ -9,47 +9,7 @@ describe('Middleware', function() {
 
         var restrict = require('./middleware.restrict');
 
-        var testSchema = {
-            '$schema': 'http://json-schema.org/draft-04/schema#',
-            'id': '/writ/io/user',
-            'type': 'object',
-            'properties': {
-                'email': {
-                    'type': 'string',
-                    'format': 'email',
-                    'permission': {
-                        'read': 19,
-                        'write': 19
-                    }
-                },
-                'name': {
-                    'type': 'string',
-                    'permission': {
-                        'read': 100,
-                        'write': 19
-                    }
-                },
-                'password': {
-                    'type': 'string',
-                    'permission': {
-                        'read': 0,
-                        'write': 19
-                    }
-                }
-            },
-            'additionalProperties': false,
-            'required': [
-                'email',
-                'name',
-                'password'
-            ]
-        };
-
-        var refSchema = {
-            '$ref': '/writ/io/user'
-        };
-
-        it('allows anonymous users to make unrestricted actions', function() {
+        it('allows anonymous users to access open endpoints', function() {
 
             var req = {
                 body: {
@@ -59,7 +19,7 @@ describe('Middleware', function() {
                 }
             };
 
-            var restricted = restrict(roles.anonymous, testSchema);
+            var restricted = restrict(roles.anonymous);
 
             restricted(req, null, function(err) {
                 expect(err).toBeUndefined();
@@ -67,25 +27,7 @@ describe('Middleware', function() {
 
         });
 
-        it('accepts and properly uses schema dependencies', function() {
-
-            var req = {
-                body: {
-                    email: 'test@test.com',
-                    name: 'Testing Tester',
-                    password: 'Testing123'
-                }
-            };
-
-            var restricted = restrict(roles.anonymous, refSchema, [testSchema]);
-
-            restricted(req, null, function(err) {
-                expect(err).toBeUndefined();
-            });
-
-        });
-
-        it('doesn\'t allow an anonymous user to make admin actions',
+        it('doesn\'t allow an anonymous user to access admin endpoints',
         function() {
 
             var req = {
@@ -97,7 +39,7 @@ describe('Middleware', function() {
                 }
             };
 
-            var restricted = restrict(roles.admin, testSchema);
+            var restricted = restrict(roles.admin);
 
             restricted(req, null, function(err) {
                 expect(err)
@@ -108,7 +50,7 @@ describe('Middleware', function() {
 
         });
 
-        it('allows an admin user to make admin actions',
+        it('allows an admin user to access admin endpoints',
         function() {
 
             var req = {
@@ -122,7 +64,7 @@ describe('Middleware', function() {
                 }
             };
 
-            var restricted = restrict(roles.admin, testSchema);
+            var restricted = restrict(roles.admin);
 
             restricted(req, null, function(err) {
                 expect(err).toBeUndefined();
@@ -130,7 +72,7 @@ describe('Middleware', function() {
 
         });
 
-        it('doesn\'t allow an admin user to go against the json-schema.',
+        it('doesn\'t allow an admin user to access system endpoints',
         function() {
 
             var req = {
@@ -138,19 +80,19 @@ describe('Middleware', function() {
                     permission: roles.admin
                 },
                 body: {
-                    email: {},
-                    name: [],
-                    password: Infinity
+                    email: 'test@test.com',
+                    name: 'Testing Tester',
+                    password: 'Testing123'
                 }
             };
 
-            var restricted = restrict(roles.admin, testSchema);
+            var restricted = restrict(roles.system);
 
             restricted(req, null, function(err) {
                 expect(err)
-                        .toEqual(jasmine.any(errors.JsonSchemaValidationError));
-                expect(err.message).toBe('One or more request parameters ' +
-                        'failed validation.');
+                        .toEqual(jasmine.any(errors.ForbiddenError));
+                expect(err.message).toBe('Your account is not allowed ' +
+                        'to access this endpoint.');
             });
 
         });

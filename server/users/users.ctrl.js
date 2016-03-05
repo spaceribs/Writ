@@ -61,7 +61,7 @@ function usersGet(req, res) {
 
 /**
  * Called when a user makes an POST request to /user/.
- * Creates a new user.
+ * Creates a new user or updates the currently logged in user.
  *
  * @param {object} req - Express request object.
  * @param {object} res - Express response object.
@@ -69,6 +69,7 @@ function usersGet(req, res) {
  */
 function usersPost(req, res, next) {
 
+    //TODO: Update my information if currently logged in.
     //TODO: Move to the configuration file.
     var params = util.permFilter(20, 'user', req.body, true, true);
     util.processPassword(params);
@@ -148,7 +149,6 @@ function usersPost(req, res, next) {
  */
 function usersList(req, res, next) {
 
-    //TODO: Limit this call to only admins.
     Users.allDocs({
         startkey     : 'user/',
         endkey   : 'user/\uffff',
@@ -156,8 +156,10 @@ function usersList(req, res, next) {
     }).then(function(results) {
         for (var i = 0; i < results.rows.length; i++) {
             var row = results.rows[i];
-            //TODO: Hook up permission level to user.
-            results.rows[i].doc = util.permFilter(10, 'user', row.doc);
+            results.rows[i].doc = util.permFilter(
+                req.user.permission,
+                'user',
+                row.doc);
         }
         return results;
     })
@@ -181,8 +183,7 @@ function userGet(req, res, next) {
     var userId = req.params.userId;
     Users.get('user/' + userId)
         .then(function(result) {
-            //TODO: Hook this up to user's permission level.
-            var filtered = util.permFilter(100,
+            var filtered = util.permFilter(req.user.permission,
                     'user', result);
             res.json(filtered);
         }).catch(function(err) {
@@ -201,8 +202,8 @@ function userGet(req, res, next) {
 function userPost(req, res, next) {
 
     var userId = req.params.userId;
-    //TODO: Hook this up to user's permission level.
-    var params = util.permFilter(20, 'user', req.body, true, true);
+    var params = util.permFilter(req.user.permission,
+            'user', req.body, true, true);
     var newParams;
 
     if (params.password) {

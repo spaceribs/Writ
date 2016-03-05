@@ -24,6 +24,7 @@
     "jscs": "^2.6.0",
     "jscs-jsdoc": "^1.2.0",
     "json-schema-faker": "^0.2.2",
-    "mockery": "^1.4.0"
+    "mockery": "^1.4.0",
+    "supertest": "^1.2.0"
   }
 }

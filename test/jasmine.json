@@ -1,9 +1,8 @@
 {
     "spec_dir": "./",
     "spec_files": [
-        "server/app/app.unit.js",
-        "server/middleware/middleware.unit.js",
-        "server/users/users.unit.js"
+        "server/**/**.unit.js",
+        "server/**/**.e2e.js"
     ],
     "stopSpecOnExpectationFailure": false,
     "random": false
