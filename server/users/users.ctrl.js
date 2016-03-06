@@ -7,6 +7,7 @@ var tv4 = require('tv4');
 
 var models = require('../../models');
 var config = require('../config');
+var roles = require('../roles');
 var emailConfig = require('../email.json');
 var errors = require('../app/app.errors');
 var Users = require('./users.db');
@@ -23,7 +24,7 @@ function login(req, res) {
     //OPTIMIZE: Success method.
     res.json({
         status : 'SUCCESS',
-        data   : util.permFilter(30, 'user', req.user, false, true)
+        data   : util.ioFilter(30, 'user', req.user, false, true)
     });
 }
 
@@ -52,27 +53,24 @@ function usersOptions(req, res, next) {
  */
 function usersGet(req, res) {
 
+    var filtered = util.dbFilter(
+            req.user.permission, 'user', req.user, false, true);
+
     //OPTIMIZE: Success method.
     res.json({
         status : 'SUCCESS',
-        data   : req.user
+        data   : filtered
     });
 }
 
 /**
- * Called when a user makes an POST request to /user/.
- * Creates a new user or updates the currently logged in user.
+ * Called to create a new user.
  *
- * @param {object} req - Express request object.
+ * @param {object} params - Options for new users.
  * @param {object} res - Express response object.
  * @param {function} next - Callback for the response.
  */
-function usersPost(req, res, next) {
-
-    //TODO: Update my information if currently logged in.
-    //TODO: Move to the configuration file.
-    var params = util.permFilter(20, 'user', req.body, true, true);
-    util.processPassword(params);
+function createUser(params, res, next) {
 
     Users.createIndex({
         'index': {
@@ -80,14 +78,14 @@ function usersPost(req, res, next) {
         }
     }).then(function() {
         return Users.find({
-            selector : {email: req.body.email}
+            selector : {email: params.email}
         });
 
     }).then(function(result) {
         if (result.docs.length) {
             throw new errors.EmailUsedError(
-                'This email address is already in use by another account.',
-                req.body.email
+                    'This email address is already in use by another account.',
+                    params.email
             );
         }
 
@@ -97,7 +95,7 @@ function usersPost(req, res, next) {
         params._id = 'user/' + params.id;
         params.created = new Date().toISOString();
         params.updated = new Date().toISOString();
-        params.permission = 30;
+        params.permission = roles.unverified;
 
         var validate = tv4.validateMultiple(params, models.db.user);
 
@@ -120,7 +118,6 @@ function usersPost(req, res, next) {
                 if (err) {
                     next(err);
                 } else {
-
                     //OPTIMIZE: Success method.
                     res.json({
                         status  : 'SUCCESS',
@@ -137,6 +134,26 @@ function usersPost(req, res, next) {
     }).catch(function(err) {
         next(err);
     });
+
+}
+
+/**
+ * Called when a user makes an POST request to /user/.
+ * Creates a new user or updates the currently logged in user.
+ *
+ * @param {object} req - Express request object.
+ * @param {object} res - Express response object.
+ * @param {function} next - Callback for the response.
+ */
+function usersPost(req, res, next) {
+
+    //TODO: Move to the configuration file.
+    var params = util.ioFilter(20, 'user', req.body, true, true);
+    util.processPassword(params);
+
+    //TODO: Update my information if currently logged in.
+    createUser(params, res, next);
+
 }
 
 /**
@@ -156,10 +173,8 @@ function usersList(req, res, next) {
     }).then(function(results) {
         for (var i = 0; i < results.rows.length; i++) {
             var row = results.rows[i];
-            results.rows[i].doc = util.permFilter(
-                req.user.permission,
-                'user',
-                row.doc);
+            results.rows[i].doc = util.ioFilter(
+                req.user.permission, 'user', row.doc);
         }
         return results;
     })
@@ -183,8 +198,8 @@ function userGet(req, res, next) {
     var userId = req.params.userId;
     Users.get('user/' + userId)
         .then(function(result) {
-            var filtered = util.permFilter(req.user.permission,
-                    'user', result);
+            var filtered = util.dbFilter(req.user.permission,
+                'user', result, false, true);
             res.json(filtered);
         }).catch(function(err) {
             //TODO: validate if this needs to be converted to an object?
@@ -202,8 +217,8 @@ function userGet(req, res, next) {
 function userPost(req, res, next) {
 
     var userId = req.params.userId;
-    var params = util.permFilter(req.user.permission,
-            'user', req.body, true, true);
+    var params = util.ioFilter(
+        req.user.permission, 'user', req.body, true, true);
     var newParams;
 
     if (params.password) {
@@ -256,7 +271,7 @@ function userPost(req, res, next) {
             res.json({
                 status  : 'SUCCESS',
                 message : 'User has been successfully updated.',
-                data    : util.permFilter(newParams.permission, 'user',
+                data    : util.ioFilter(newParams.permission, 'user',
                         newParams, false, true)
             });
 
@@ -277,7 +292,7 @@ function userPost(req, res, next) {
                             status  : 'SUCCESS',
                             message : 'User has been updated, and an ' +
                             'email has been sent to the new address.',
-                            data    : util.permFilter(newParams.permission,
+                            data    : util.ioFilter(newParams.permission,
                                     'user', newParams, false, true)
                         });
                     }

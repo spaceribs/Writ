@@ -707,7 +707,7 @@ describe('Users', function() {
 
                 });
 
-            it('verifies a user via email sent.', function(done) {
+            it('verifies a user via an email.', function(done) {
                 res.json.and.callFake(function(response) {
                     expect(response).toEqual({
                         status: 'SUCCESS',

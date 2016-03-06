@@ -9,14 +9,14 @@
             "type": "string",
             "pattern": "^user\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "permission": {
-                "read": 100,
+                "read": 0,
                 "write": 0
             }
         },
         "_rev": {
             "type": "string",
             "permission": {
-                "read": 10,
+                "read": 0,
                 "write": 0
             }
         },
@@ -34,7 +34,7 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "faker": "random.uuid",
             "permission": {
-                "read": 100,
+                "read": 10,
                 "write": 0
             }
         },
@@ -43,8 +43,9 @@
             "format": "email",
             "chance": "email",
             "permission": {
-                "read": 29,
-                "write": 29
+                "read": 20,
+                "write": 10,
+                "owner": true
             },
             "unique": true
         },
@@ -53,7 +54,8 @@
             "chance": "name",
             "permission": {
                 "read": 100,
-                "write": 29
+                "write": 10,
+                "owner": true
             }
         },
         "permission": {
@@ -64,7 +66,8 @@
             "default": 30,
             "permission": {
                 "read": 100,
-                "write": 10
+                "write": 10,
+                "owner": true
             }
         },
         "salt": {
@@ -86,12 +89,20 @@
         "created": {
             "type": "string",
             "pattern": "^([\\+-]?\\d{4}(?!\\d{2}\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?$",
-            "faker": "date.recent"
+            "faker": "date.recent",
+            "permission": {
+                "read": 0,
+                "write": 0
+            }
         },
         "updated": {
             "type": "string",
             "pattern": "^([\\+-]?\\d{4}(?!\\d{2}\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?$",
-            "faker": "date.recent"
+            "faker": "date.recent",
+            "permission": {
+                "read": 0,
+                "write": 0
+            }
         }
     },
     "additionalProperties": false,
