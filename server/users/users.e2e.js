@@ -6,9 +6,10 @@ var supertest = require('supertest');
 var mockery = require('mockery');
 var util = require('../../test/util');
 
-fdescribe('Users Endpoint', function() {
+describe('Users Endpoint', function() {
 
     var adminUser = {
+        id: 'ef288553-635a-44a7-ab7d-3404bebc02a5',
         name: 'Admin User',
         email: 'admin@test.com',
         password: 'root'
@@ -144,7 +145,6 @@ fdescribe('Users Endpoint', function() {
 
         xit('should update my information ' +
             'when I make an authenticated request.', function() {
-
         });
 
     });
@@ -274,8 +274,8 @@ fdescribe('Users Endpoint', function() {
 
         });
 
-        it('should return success when ' +
-            'you do authenticate.', function(done) {
+        it('should return the current user ' +
+            'when authenticated.', function(done) {
             supertest(app)
                 .get('/user/')
                 .auth(normalUser.email, normalUser.password)
@@ -297,11 +297,322 @@ fdescribe('Users Endpoint', function() {
 
         });
 
+        it('should return an admin user' +
+            'authenticated as an admin.', function(done) {
+            supertest(app)
+                .get('/user/')
+                .auth(adminUser.email, adminUser.password)
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .expect(function(res) {
+                    expect(res.body).toEqual({
+                        status: 'SUCCESS',
+                        data: {
+                            email: adminUser.email,
+                            name: adminUser.name,
+                            id: adminUser.id,
+                            permission: 10
+                        }
+                    });
+                })
+                .end(util.handleSupertest(done));
+
+        });
+
     });
 
-    xdescribe('"/user/list" GET', function() {});
+    describe('"/user/list/" GET', function() {
 
-    xdescribe('"/user/:userId" GET', function() {});
-    xdescribe('"/user/:userId" POST', function() {});
-    xdescribe('"/user/:userId" DELETE', function() {});
+        it('should return an error when ' +
+                'you don\'t authenticate.', function(done) {
+            supertest(app)
+                .get('/user/list/')
+                .expect(401)
+                .end(util.handleSupertest(done));
+
+        });
+
+        it('should return an error when ' +
+            'authenticated without admin privileges.', function(done) {
+            supertest(app)
+                .get('/user/list/')
+                .auth(normalUser.email, normalUser.password)
+                .expect('Content-Type', /json/)
+                .expect(403)
+                .expect(function(res) {
+                    expect(res.body).toEqual({
+                        status: 'FORBIDDEN',
+                        message: 'Your account is not allowed ' +
+                            'to access this endpoint.'
+                    });
+                })
+                .end(util.handleSupertest(done));
+
+        });
+
+        it('should return an admin user' +
+                'authenticated as an admin.', function(done) {
+            supertest(app)
+                .get('/user/list/')
+                .auth(adminUser.email, adminUser.password)
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .expect(function(res) {
+                    expect(res.body).toEqual({
+                        'total_rows': jasmine.any(Number),
+                        'offset': 0,
+                        'rows': jasmine.any(Array)
+                    });
+                })
+                .end(util.handleSupertest(done));
+
+        });
+
+    });
+
+    describe('"/user/:userId" GET', function() {
+
+        it('should return basic information if ' +
+            'you are not authenticated', function(done) {
+            supertest(app)
+                .get('/user/' + normalUser.id)
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .expect(function(res) {
+                    expect(res.body).toEqual({
+                        'id': normalUser.id,
+                        'name': normalUser.name,
+                        'permission': normalUser.permission
+                    });
+                })
+                .end(util.handleSupertest(done));
+
+        });
+
+        it('should return more information if ' +
+            'you are authenticated as an admin', function(done) {
+            supertest(app)
+                .get('/user/' + normalUser.id)
+                .auth(adminUser.email, adminUser.password)
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .expect(function(res) {
+                    expect(res.body).toEqual({
+                        'id': normalUser.id,
+                        'email': normalUser.email,
+                        'name': normalUser.name,
+                        'permission': normalUser.permission
+                    });
+                })
+                .end(util.handleSupertest(done));
+
+        });
+
+    });
+
+    describe('"/user/:userId" POST', function() {
+
+        it('should not allow anonymous users ' +
+            'to make changes to other users.', function(done) {
+            supertest(app)
+                .post('/user/' + unverifiedUser.id)
+                .send({name: 'Bad Name'})
+                .expect(401)
+                .end(function(err) {
+                    if (err) {
+                        done.fail(err);
+                    }
+
+                    supertest(app).get('/user/' + unverifiedUser.id)
+                        .expect('Content-Type', /json/)
+                        .expect(200)
+                        .expect(function(res) {
+                            expect(res.body.name).not.toBe('Bad Name');
+                        })
+                        .end(util.handleSupertest(done));
+                });
+        });
+
+        it('should not allow normal users ' +
+            'to make changes to other users.', function(done) {
+            supertest(app)
+                .post('/user/' + unverifiedUser.id)
+                .send({name: 'Bad Name'})
+                .auth(normalUser.email, normalUser.password)
+                .expect('Content-Type', /json/)
+                .expect(403)
+                .expect(function(res) {
+                    expect(res.body).toEqual({
+                        status: 'FORBIDDEN',
+                        message: 'Your account is not allowed ' +
+                            'to access this endpoint.'
+                    });
+                })
+                .end(function(err) {
+                    if (err) {
+                        done.fail(err);
+                        return false;
+                    }
+
+                    supertest(app).get('/user/' + unverifiedUser.id)
+                        .expect('Content-Type', /json/)
+                        .expect(200)
+                        .expect(function(res) {
+                            expect(res.body.name).not.toBe('Bad Name');
+                        })
+                        .end(util.handleSupertest(done));
+                });
+
+        });
+
+        it('should allow admin users ' +
+            'to make changes to other users.', function(done) {
+            supertest(app)
+                .post('/user/' + unverifiedUser.id)
+                .send({name: 'Good Name'})
+                .auth(adminUser.email, adminUser.password)
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .expect(function(res) {
+                    expect(res.body).toEqual({
+                        status: 'SUCCESS',
+                        message: 'User has been successfully updated.',
+                        data: {
+                            email: unverifiedUser.email,
+                            name: 'Good Name',
+                            permission: 30
+                        }
+                    });
+                })
+                .end(function(err) {
+                    if (err) {
+                        done.fail(err);
+                        return false;
+                    }
+
+                    supertest(app).get('/user/' + unverifiedUser.id)
+                        .expect('Content-Type', /json/)
+                        .expect(200)
+                        .expect(function(res) {
+                            expect(res.body.name).toBe('Good Name');
+                        })
+                        .end(util.handleSupertest(done));
+                });
+
+        });
+
+        it('should allow admin users ' +
+            'to change other users\' email address.', function(done) {
+            supertest(app)
+                .post('/user/' + unverifiedUser.id)
+                .send({email: 'test@test.com'})
+                .auth(adminUser.email, adminUser.password)
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .expect(function(res) {
+                    expect(res.body).toEqual({
+                        status: 'SUCCESS',
+                        message: 'User has been updated, and ' +
+                            'an email has been sent to the new address.',
+                        data: {
+                            email: 'test@test.com',
+                            name: 'Good Name',
+                            permission: 30
+                        }
+                    });
+                })
+                .end(function(err) {
+                    if (err) {
+                        done.fail(err);
+                        return false;
+                    }
+
+                    supertest(app).get('/user/' + unverifiedUser.id)
+                        .auth(adminUser.email, adminUser.password)
+                        .expect('Content-Type', /json/)
+                        .expect(200)
+                        .expect(function(res) {
+                            expect(res.body.email).toBe('test@test.com');
+                        })
+                        .end(util.handleSupertest(done));
+                });
+
+        });
+
+    });
+
+    describe('"/user/:userId" DELETE', function() {
+
+        it('should not allow anonymous users ' +
+            'to delete other users.', function(done) {
+            supertest(app)
+                .delete('/user/' + unverifiedUser.id)
+                .expect(401)
+                .end(function(err) {
+                    if (err) {
+                        done.fail(err);
+                        return false;
+                    }
+
+                    supertest(app).get('/user/' + unverifiedUser.id)
+                        .expect('Content-Type', /json/)
+                        .expect(200)
+                        .end(util.handleSupertest(done));
+                });
+        });
+
+        it('should not allow normal users ' +
+            'to delete other users.', function(done) {
+            supertest(app)
+                .delete('/user/' + unverifiedUser.id)
+                .auth(normalUser.email, normalUser.password)
+                .expect(403)
+                .expect(function(res) {
+                    expect(res.body).toEqual({
+                        status: 'FORBIDDEN',
+                        message: 'Your account is not allowed ' +
+                        'to access this endpoint.'
+                    });
+                })
+                .end(function(err) {
+                    if (err) {
+                        done.fail(err);
+                        return false;
+                    }
+
+                    supertest(app).get('/user/' + unverifiedUser.id)
+                        .expect('Content-Type', /json/)
+                        .expect(200)
+                        .end(util.handleSupertest(done));
+                });
+        });
+
+        it('should allow admin users ' +
+            'to delete other users.', function(done) {
+            supertest(app)
+                .delete('/user/' + unverifiedUser.id)
+                .auth(adminUser.email, adminUser.password)
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .expect(function(res) {
+                    expect(res.body).toEqual({
+                        status: 'SUCCESS',
+                        message: 'User has been deleted.'
+                    });
+                })
+                .end(function(err) {
+                    if (err) {
+                        done.fail(err);
+                        return false;
+                    }
+
+                    supertest(app).get('/user/' + unverifiedUser.id)
+                        .expect(404)
+                        .end(util.handleSupertest(done));
+                });
+
+        });
+
+    });
+
 });

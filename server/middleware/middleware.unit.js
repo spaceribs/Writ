@@ -324,13 +324,7 @@ describe('Middleware', function() {
                         return {json: function(responseData) {
                             expect(responseData).toEqual({
                                 'status': 'INVALID_JSON',
-                                'errors': {
-                                    body: [{
-                                        value: undefined,
-                                        property: 'request.body',
-                                        messages: ['']
-                                    }]
-                                }
+                                'message': ''
                             });
                             done();
                         }};
@@ -368,13 +362,7 @@ describe('Middleware', function() {
                         return {json: function(responseData) {
                             expect(responseData).toEqual({
                                 status: 'EMAIL_USED',
-                                errors: {
-                                    'body': [{
-                                        'value': 'test@test.com',
-                                        'property': 'request.body.email',
-                                        'messages': ['test message.']
-                                    }]
-                                }
+                                message: 'test message.'
                             });
                             done();
                         }};
@@ -412,13 +400,7 @@ describe('Middleware', function() {
                         return {json: function(responseData) {
                             expect(responseData).toEqual({
                                 status: 'EMAIL_TOKEN_NOT_FOUND',
-                                errors: {
-                                    'params': [{
-                                        'value': '12345',
-                                        'property': 'request.params.token',
-                                        'messages': ['test message.']
-                                    }]
-                                }
+                                message: 'test message.'
                             });
                             done();
                         }};

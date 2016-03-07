@@ -54,7 +54,7 @@ function usersOptions(req, res, next) {
 function usersGet(req, res) {
 
     var filtered = util.dbFilter(
-            req.user.permission, 'user', req.user, false, true);
+        req.user.permission, 'user', req.user, false, true);
 
     //OPTIMIZE: Success method.
     res.json({
@@ -198,8 +198,8 @@ function userGet(req, res, next) {
     var userId = req.params.userId;
     Users.get('user/' + userId)
         .then(function(result) {
-            var filtered = util.dbFilter(req.user.permission,
-                'user', result, false, true);
+            var filtered = util.dbFilter(
+                req.user.permission, 'user', result, false, false);
             res.json(filtered);
         }).catch(function(err) {
             //TODO: validate if this needs to be converted to an object?

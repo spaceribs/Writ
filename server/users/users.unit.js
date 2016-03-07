@@ -27,6 +27,8 @@ describe('Users', function() {
 
     beforeEach(function() {
         userOne = jsf(userModel);
+        userOne.permission = 30;
+
         userTwo = jsf(userModel);
         userThree = jsf(userModel);
     });
@@ -189,6 +191,8 @@ describe('Users', function() {
                     .toEqual({
                         status: 'SUCCESS',
                         data  : {
+                            email: userOne.email,
+                            password: userOne.password,
                             name: userOne.name,
                             permission: userOne.permission
                         }
@@ -236,10 +240,14 @@ describe('Users', function() {
 
                 expect(res.json).toHaveBeenCalled();
                 expect(res.json.calls.mostRecent().args[0])
-                        .toEqual({
-                            status: 'SUCCESS',
-                            data  : userOne
-                        });
+                    .toEqual({
+                        status: 'SUCCESS',
+                        data  : {
+                            email: userOne.email,
+                            name: userOne.name,
+                            permission: userOne.permission
+                        }
+                    });
             });
 
         });
@@ -496,6 +504,7 @@ describe('Users', function() {
                         status : 'SUCCESS',
                         message: 'User has been successfully updated.',
                         data: {
+                            email: userOne.email,
                             name: userTwo.name,
                             permission: 30
                         }
@@ -561,6 +570,7 @@ describe('Users', function() {
                         message: 'User has been updated, and an ' +
                         'email has been sent to the new address.',
                         data: {
+                            email: userOne.email,
                             name: userOne.name,
                             permission: 30
                         }
@@ -607,6 +617,7 @@ describe('Users', function() {
                         status : 'SUCCESS',
                         message: 'User has been successfully updated.',
                         data: {
+                            email: userOne.email,
                             name: userOne.name,
                             permission: 30
                         }

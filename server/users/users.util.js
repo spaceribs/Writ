@@ -58,7 +58,7 @@ function userCan(permLevel, model, prop, write, owner) {
     }
     if (typeof permLevel === 'number') {
         permLevel = Math.ceil(permLevel);
-        permLevel = Math.min(permLevel, 100);
+        permLevel = Math.min(permLevel, 101);
         permLevel = Math.max(permLevel, -1);
         return permLevel <= propLevel;
     }

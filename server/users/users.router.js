@@ -36,7 +36,8 @@ router.route('/user/list')
         controller.users.list);
 
 router.route('/user/:userId')
-    .get(restrict(roles.anonymous),
+    .get(passport.authenticate(['basic', 'anonymous'], passOptions),
+        restrict(roles.anonymous),
         controller.user.get)
     .post(passport.authenticate('basic', passOptions),
         restrict(roles.admin),

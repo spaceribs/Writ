@@ -6,11 +6,9 @@ var roles = require('../roles');
  * Throw an error if the minimum user level isn't satisfied.
  *
  * @param {integer} minimumLevel - Minimum level that a user is required to have
- * @param {string} allowOwner - If this action is allowed by owner, check
- *     this parameter against the user.id
  * @returns {Function}
  */
-function restrict(minimumLevel, isOwner) {
+function restrict(minimumLevel) {
 
     return function(req, res, next) {
 

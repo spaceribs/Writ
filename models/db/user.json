@@ -34,7 +34,7 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "faker": "random.uuid",
             "permission": {
-                "read": 10,
+                "read": 0,
                 "write": 0
             }
         },
@@ -43,7 +43,7 @@
             "format": "email",
             "chance": "email",
             "permission": {
-                "read": 20,
+                "read": 10,
                 "write": 10,
                 "owner": true
             },
