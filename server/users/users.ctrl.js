@@ -24,7 +24,8 @@ function login(req, res) {
     //OPTIMIZE: Success method.
     res.json({
         status : 'SUCCESS',
-        data   : util.ioFilter(30, 'user', req.user, false, true)
+        data   : util.dbFilter(
+            req.user.permission, 'user', req.user, false, true)
     });
 }
 

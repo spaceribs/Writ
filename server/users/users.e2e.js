@@ -27,6 +27,7 @@ describe('Users Endpoint', function() {
         normalUser = jsf(userModel);
 
         mockery.enable({
+            useCleanCache     : true,
             warnOnReplace     : false,
             warnOnUnregistered: false
         });
@@ -202,6 +203,7 @@ describe('Users Endpoint', function() {
                     expect(res.body).toEqual({
                         status: 'SUCCESS',
                         data: {
+                            id: normalUser.id,
                             email: normalUser.email,
                             name: normalUser.name,
                             permission: 30

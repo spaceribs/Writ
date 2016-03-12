@@ -192,7 +192,6 @@ describe('Users', function() {
                         status: 'SUCCESS',
                         data  : {
                             email: userOne.email,
-                            password: userOne.password,
                             name: userOne.name,
                             permission: userOne.permission
                         }
@@ -403,7 +402,6 @@ describe('Users', function() {
                 });
 
                 res.json.and.callFake(function(response) {
-                    console.log(response);
                     expect(response.name).toBe(userThree.name);
                     expect(callback).not.toHaveBeenCalled();
                     done();
@@ -595,7 +593,9 @@ describe('Users', function() {
                     json: function(response) {
                         expect(response).toEqual({
                             status: 'SUCCESS',
-                            data  : {}
+                            data  : {
+                                email: userOne.email
+                            }
                         });
                         done();
                     }
