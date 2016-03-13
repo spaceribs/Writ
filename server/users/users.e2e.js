@@ -150,72 +150,6 @@ describe('Users Endpoint', function() {
 
     });
 
-    describe('"/login/" GET', function() {
-
-        it('should return an error when ' +
-            'no credentials are provided.', function(done) {
-            supertest(app)
-                .get('/login/')
-                .expect(401)
-                .end(util.handleSupertest(done));
-        });
-
-        it('should return an error when ' +
-            'invalid credentials are provided.', function(done) {
-            supertest(app)
-                .get('/login/')
-                    .auth('badcred', 'badpass')
-                .expect('Content-Type', /json/)
-                .expect(401)
-                .expect(function(res) {
-                    expect(res.body).toEqual({
-                        status: 'INVALID_LOGIN',
-                        message: 'Invalid login.'
-                    });
-                })
-                .end(util.handleSupertest(done));
-        });
-
-        it('should return an error when ' +
-            'an invalid password is provided.', function(done) {
-            supertest(app)
-                .get('/login/')
-                .auth(normalUser.email, 'badpass')
-                .expect('Content-Type', /json/)
-                .expect(401)
-                .expect(function(res) {
-                    expect(res.body).toEqual({
-                        status: 'INVALID_LOGIN',
-                        message: 'Invalid login.'
-                    });
-                })
-                .end(util.handleSupertest(done));
-        });
-
-        it('should return success when ' +
-            'valid credentials are provided.', function(done) {
-            supertest(app)
-                .get('/login/')
-                .auth(normalUser.email, normalUser.password)
-                .expect('Content-Type', /json/)
-                .expect(200)
-                .expect(function(res) {
-                    expect(res.body).toEqual({
-                        status: 'SUCCESS',
-                        data: {
-                            id: normalUser.id,
-                            email: normalUser.email,
-                            name: normalUser.name,
-                            permission: 30
-                        }
-                    });
-                    normalUser.permission = res.body.data.permission;
-                })
-                .end(util.handleSupertest(done));
-        });
-
-    });
-
     describe('"/verify/:token" GET', function() {
 
         it('should return an error when ' +
@@ -286,6 +220,7 @@ describe('Users Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status: 'SUCCESS',
+                        message: 'Your credentials are valid.',
                         data: {
                             email: normalUser.email,
                             name: normalUser.name,
@@ -299,8 +234,8 @@ describe('Users Endpoint', function() {
 
         });
 
-        it('should return an admin user' +
-            'authenticated as an admin.', function(done) {
+        it('should return an admin user ' +
+            'when authenticated as an admin.', function(done) {
             supertest(app)
                 .get('/user/')
                 .auth(adminUser.email, adminUser.password)
@@ -309,6 +244,7 @@ describe('Users Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status: 'SUCCESS',
+                        message: 'Your credentials are valid.',
                         data: {
                             email: adminUser.email,
                             name: adminUser.name,

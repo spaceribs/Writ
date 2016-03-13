@@ -1,11 +1,13 @@
 'use strict';
 
 var jsf = require('json-schema-faker');
+var Users = require('./users.db.mock');
 var userModel = require('../../models').io.user;
 var _ = require('lodash');
 var mockery = require('mockery');
 var uuid = require('node-uuid');
 var errors = require('../app/app.errors');
+var SuccessMessage = require('../app/app.successes').SuccessMessage;
 var config = require('../config');
 
 describe('Users', function() {
@@ -13,6 +15,11 @@ describe('Users', function() {
     var userOne;
     var userTwo;
     var userThree;
+    var anonymousUser = {
+        name: 'Anonymous',
+        permission: 100,
+        anonymous: true
+    };
 
     beforeAll(function() {
         mockery.enable({
@@ -179,27 +186,6 @@ describe('Users', function() {
             mailerMethods.sendMail.and.callThrough();
         });
 
-        describe('login', function() {
-
-            it('returns a successful login.', function() {
-                userOne.permission = 30;
-                req = {user: userOne};
-                ctrl.login(req, res);
-
-                expect(res.json).toHaveBeenCalled();
-                expect(res.json.calls.mostRecent().args[0])
-                    .toEqual({
-                        status: 'SUCCESS',
-                        data  : {
-                            email: userOne.email,
-                            name: userOne.name,
-                            permission: userOne.permission
-                        }
-                    });
-            });
-
-        });
-
         describe('usersOptions', function() {
 
             beforeAll(function() {
@@ -215,7 +201,7 @@ describe('Users', function() {
                 expect(req.accepts).toHaveBeenCalledWith('json');
                 expect(res.json).toHaveBeenCalled();
                 expect(res.json.calls.mostRecent().args[0])
-                        .toEqual(userModel);
+                    .toEqual(userModel);
             });
 
             it('passes through if json isn\'t accepted.', function() {
@@ -239,14 +225,11 @@ describe('Users', function() {
 
                 expect(res.json).toHaveBeenCalled();
                 expect(res.json.calls.mostRecent().args[0])
-                    .toEqual({
-                        status: 'SUCCESS',
-                        data  : {
-                            email: userOne.email,
-                            name: userOne.name,
-                            permission: userOne.permission
-                        }
-                    });
+                    .toEqual(new SuccessMessage('Your credentials are valid.', {
+                        email: userOne.email,
+                        name: userOne.name,
+                        permission: userOne.permission
+                    }));
             });
 
         });
@@ -254,22 +237,22 @@ describe('Users', function() {
         describe('usersPost', function() {
 
             beforeEach(function() {
-                req = {body: userThree};
+                req = {
+                    user: anonymousUser,
+                    body: userThree
+                };
             });
 
             it('creates a new user with the post body.', function(done) {
                 res.json.and.callFake(function() {
                     expect(res.json).toHaveBeenCalled();
                     expect(res.json.calls.mostRecent().args[0])
-                        .toEqual({
-                            status : 'SUCCESS',
-                            message: 'Please check your email to ' +
-                                'verify your account.',
-                            data   : {
+                        .toEqual(new SuccessMessage(
+                            'Please check your email to ' +
+                            'verify your account.', {
                                 id   : jasmine.any(String),
                                 email: userThree.email
-                            }
-                        });
+                            }));
                     done();
                 });
 
@@ -306,6 +289,7 @@ describe('Users', function() {
                 res.json.and.callFake(function() {
                     ctrl.users.post(req, res, callback);
                 });
+
                 ctrl.users.post(req, res, callback);
             });
 
@@ -325,6 +309,7 @@ describe('Users', function() {
                 res.json.and.callFake(function() {
                     ctrl.users.post(req, res, callback);
                 });
+
                 ctrl.users.post(req, res, callback);
 
             });
@@ -353,7 +338,9 @@ describe('Users', function() {
 
             beforeEach(function() {
                 userThree = jsf(userModel);
-                req = {user: userThree};
+                req = {
+                    user: userThree
+                };
             });
 
             it('returns an array of users.', function(done) {
@@ -383,11 +370,12 @@ describe('Users', function() {
                 userThree = jsf(userModel);
                 req = {
                     params: {userId: uuid.v4()},
-                    user: {
-                        permission: 100
-                    }
+                    user: anonymousUser
                 };
-                postReq = {body: userThree};
+                postReq = {
+                    body: userThree,
+                    user: anonymousUser
+                };
                 postRes = {json: jasmine.createSpy('post-json')};
             });
 
@@ -397,7 +385,6 @@ describe('Users', function() {
                     expect(response.data).toBeDefined();
                     expect(response.data.id).toBeDefined();
                     req.params.userId = response.data.id;
-
                     ctrl.user.get(req, res, callback);
                 });
 
@@ -416,10 +403,8 @@ describe('Users', function() {
                     expect(callback).toHaveBeenCalled();
                     expect(callback.calls.mostRecent().args[0])
                             .toEqual({
-                                status : 404,
-                                name   : 'not_found',
-                                message: 'missing',
-                                reason : 'missing'
+                                status: 'DATABASE_ERROR',
+                                message: 'missing'
                             });
                     done();
                 });
@@ -450,7 +435,7 @@ describe('Users', function() {
 
         });
 
-        describe('userPost', function() {
+        fdescribe('userPost', function() {
 
             var postRes;
 
@@ -461,10 +446,12 @@ describe('Users', function() {
                         userId: uuid.v4()
                     },
                     user: {
-                        permission: 100
+                        permission: 10
                     }
                 };
-                postRes = {json: jasmine.createSpy('post-json')};
+                postRes = {
+                    json: jasmine.createSpy('post-json')
+                };
             });
 
             it('returns a 404 error if no user exists.', function(done) {
@@ -472,12 +459,10 @@ describe('Users', function() {
                 callback.and.callFake(function() {
                     expect(callback).toHaveBeenCalled();
                     expect(callback.calls.mostRecent().args[0])
-                            .toEqual({
-                                status : 404,
-                                name   : 'not_found',
-                                message: 'missing',
-                                reason : 'missing'
-                            });
+                        .toEqual({
+                            status: 'DATABASE_ERROR',
+                            message: 'missing'
+                        });
                     done();
                 });
 
@@ -490,7 +475,6 @@ describe('Users', function() {
                     expect(response.data).toBeDefined();
                     expect(response.data.id).toBeDefined();
                     req.params.userId = response.data.id;
-
                     req.body = {name: userTwo.name};
 
                     ctrl.user.post(req, res, callback);
@@ -498,20 +482,26 @@ describe('Users', function() {
 
                 res.json.and.callFake(function(response) {
                     expect(callback).not.toHaveBeenCalled();
-                    expect(response).toEqual({
-                        status : 'SUCCESS',
-                        message: 'User has been successfully updated.',
-                        data: {
+                    expect(response).toEqual(new SuccessMessage(
+                        'User has been successfully updated.', {
                             email: userOne.email,
                             name: userTwo.name,
                             permission: 30
-                        }
-                    });
+                        }));
+                    done();
+                });
+
+                callback.and.callFake(function(err) {
+                    console.log('test', JSON.stringify(err));
+                    expect(callback).not.toHaveBeenCalled();
                     done();
                 });
 
                 ctrl.users.post({
-                    body: userOne
+                    body: userOne,
+                    user: {
+                        permission: 10
+                    }
                 }, postRes, callback);
 
             });
@@ -563,16 +553,13 @@ describe('Users', function() {
 
                 res.json.and.callFake(function(response) {
                     expect(callback).not.toHaveBeenCalled();
-                    expect(response).toEqual({
-                        status : 'SUCCESS',
-                        message: 'User has been updated, and an ' +
-                        'email has been sent to the new address.',
-                        data: {
+                    expect(response).toEqual(new SuccessMessage(
+                        'User has been updated, and an ' +
+                        'email has been sent to the new address.', {
                             email: userOne.email,
                             name: userOne.name,
                             permission: 30
-                        }
-                    });
+                        }));
                     done();
                 });
 
@@ -591,12 +578,9 @@ describe('Users', function() {
                      * @param {object} response - Response object
                      */
                     json: function(response) {
-                        expect(response).toEqual({
-                            status: 'SUCCESS',
-                            data  : {
-                                email: userOne.email
-                            }
-                        });
+                        expect(response).toEqual(new SuccessMessage('', {
+                            email: userOne.email
+                        }));
                         done();
                     }
                 };
@@ -613,15 +597,12 @@ describe('Users', function() {
 
                 res.json.and.callFake(function(response) {
                     expect(callback).not.toHaveBeenCalled();
-                    expect(response).toEqual({
-                        status : 'SUCCESS',
-                        message: 'User has been successfully updated.',
-                        data: {
+                    expect(response).toEqual(new SuccessMessage(
+                        'User has been successfully updated.', {
                             email: userOne.email,
                             name: userOne.name,
                             permission: 30
-                        }
-                    });
+                        }));
 
                     var loginReq = {user: {
                         email: userOne.email,
@@ -653,10 +634,8 @@ describe('Users', function() {
             it('returns an error if the user doesn\'t exist.', function(done) {
                 callback.and.callFake(function(response) {
                     expect(response).toEqual({
-                        status: 404,
-                        name: 'not_found',
-                        message: 'missing',
-                        reason: 'missing'
+                        status: 'DATABASE_ERROR',
+                        message: 'missing'
                     });
                     done();
                 });
@@ -666,10 +645,8 @@ describe('Users', function() {
 
             it('deletes a user.', function(done) {
                 res.json.and.callFake(function(response) {
-                    expect(response).toEqual({
-                        status: 'SUCCESS',
-                        message: 'User has been deleted.'
-                    });
+                    expect(response).toEqual(new SuccessMessage(
+                        'User has been deleted.'));
                     done();
                 });
 
@@ -720,11 +697,8 @@ describe('Users', function() {
 
             it('verifies a user via an email.', function(done) {
                 res.json.and.callFake(function(response) {
-                    expect(response).toEqual({
-                        status: 'SUCCESS',
-                        message: 'Your email has been verified.'
-                    });
-
+                    expect(response).toEqual(new SuccessMessage(
+                        'Your email has been verified.'));
                     done();
                 });
 
@@ -748,7 +722,10 @@ describe('Users', function() {
             var postRes;
 
             beforeEach(function() {
-                req = {params: {token: uuid.v4()}};
+                req = {
+                    params: {token: uuid.v4()},
+                    user: anonymousUser
+                };
                 postRes = {json: jasmine.createSpy('post-json')};
             });
 

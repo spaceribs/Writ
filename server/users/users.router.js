@@ -13,10 +13,6 @@ var passOptions = {
     session: false
 };
 
-router.route('/login/')
-    .get(passport.authenticate('basic', passOptions),
-        controller.login);
-
 router.route('/verify/:token')
     .get(controller.user.verify);
 
@@ -25,7 +21,7 @@ router.route('/user/')
     .get(passport.authenticate('basic', passOptions),
         restrict(roles.user),
         controller.users.get)
-    .post(
+    .post(passport.authenticate(['basic', 'anonymous'], passOptions),
         restrict(roles.anonymous),
         validate(models.io.user),
         controller.users.post);

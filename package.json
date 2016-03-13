@@ -4,7 +4,7 @@
   "description": "The main package for the writ application.",
   "main": "index.js",
   "scripts": {
-    "test": "istanbul cover test"
+    "test": "istanbul cover test -x='**/*.unit.js, **/*.e2e.js'"
   },
   "author": "",
   "license": "ISC",
