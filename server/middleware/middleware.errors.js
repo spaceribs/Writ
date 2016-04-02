@@ -56,6 +56,13 @@ function errorHandler(err, req, res, next) {
         };
         res.status(err.status).json(responseData);
 
+    } else if (err.name === 'LoginError') {
+        responseData = {
+            status: 'INVALID_LOGIN',
+            message: err.message
+        };
+        res.status(err.status).json(responseData);
+
     } else {
         next(err);
 
