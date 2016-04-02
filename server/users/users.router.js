@@ -4,9 +4,7 @@ var express = require('express');
 var router = express.Router();
 var passport = require('./users.auth');
 var controller = require('./users.ctrl');
-var validate = require('../middleware/middleware.validate');
 var restrict = require('../middleware/middleware.restrict');
-var models = require('../../models');
 var roles = require('../roles');
 
 var authOptions = {
