@@ -451,7 +451,7 @@ describe('Users', function() {
 
                 ctrl.users.list(req, res, callback);
 
-            });
+            }, 30000);
 
             it('returns an error if the database call fails.',
             function(done) {
