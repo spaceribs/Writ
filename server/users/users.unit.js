@@ -452,22 +452,6 @@ describe('Users', function() {
 
             });
 
-            it('returns an error if the database call fails.',
-            function(done) {
-
-                callback.and.callFake(function() {
-                    expect(callback).toHaveBeenCalled();
-                    expect(callback.calls.mostRecent().args[0])
-                        .toEqual(jasmine.any(Error));
-                    Users.mockError = false;
-                    done();
-                });
-
-                Users.mockError = true;
-                ctrl.users.list(req, res, callback);
-
-            });
-
         });
 
         describe('userGet', function() {

@@ -1,38 +1,11 @@
 'use strict';
 
-var PouchDB = require('pouchdb');
 var Database = require('../../db');
 var userModel = require('../../models').db.user;
 var jsf = require('json-schema-faker');
 var uuid = require('node-uuid');
 var util = require('./users.util');
 var memdown = require('memdown');
-var Promise = require('lie');
-
-var pouchAllDocs = PouchDB.prototype.allDocs;
-
-/**
- * Plugin to test database error handling on allDocs.
- *
- * @param {object} options - allDocs options.
- * @param {function} callback - Callback for allDocs operation.
- * @returns {*}
- */
-function ErrorTestPlugin(options, callback) {
-
-    callback = function() {};
-
-    if (module.exports.mockError) {
-        return new Promise(function(resolve, reject) {
-            reject(new Error('TestError'));
-        });
-    } else {
-        return pouchAllDocs.call(this, options, callback);
-    }
-
-}
-
-PouchDB.plugin({allDocs: ErrorTestPlugin});
 
 var Users = new Database('Mock-Users', {
     db: memdown
@@ -73,4 +46,3 @@ function mockUser(permission, invalid) {
 
 module.exports = Users;
 module.exports.mockUser = mockUser;
-module.exports.mockError = false;

@@ -187,9 +187,8 @@ function usersPost(req, res, next) {
  *
  * @param {object} req - Express request object.
  * @param {object} res - Express response object.
- * @param {function} next - Callback for the response.
  */
-function usersList(req, res, next) {
+function usersList(req, res) {
 
     Users.allDocs({
         startkey    : 'user/',
@@ -202,10 +201,10 @@ function usersList(req, res, next) {
                 req.user.permission, 'user', row.doc);
         }
         return results;
+
     }).then(function(results) {
         res.json(results);
-    }).catch(function(err) {
-        next(err);
+
     });
 }
 
@@ -394,6 +393,7 @@ function userVerify(req, res, next) {
         return Users.find({
             selector: {secret: req.params.token}
         });
+
     }).then(function(results) {
         if (!results.docs.length) {
             throw new errors.SecretNotFoundError(
@@ -419,11 +419,11 @@ function userVerify(req, res, next) {
         }
 
     }).then(function() {
-
         res.json(new SuccessMessage('Your email has been verified.'));
 
     }).catch(function(err) {
         next(err);
+
     });
 }
 
