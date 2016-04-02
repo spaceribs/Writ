@@ -466,7 +466,7 @@ describe('Users', function() {
                 Users.mockError = true;
                 ctrl.users.list(req, res, callback);
 
-            });
+            }, 30000);
 
         });
 
