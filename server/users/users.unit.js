@@ -449,9 +449,14 @@ describe('Users', function() {
                     done();
                 });
 
+                callback.and.callFake(function(err) {
+                    expect(err).toBeUndefined();
+                    done();
+                });
+
                 ctrl.users.list(req, res, callback);
 
-            }, 30000);
+            });
 
             it('returns an error if the database call fails.',
             function(done) {
@@ -463,10 +468,15 @@ describe('Users', function() {
                     done();
                 });
 
+                res.json.and.callFake(function(options) {
+                    expect(options).toBeUndefined();
+                    done();
+                });
+
                 Users.mockError = true;
                 ctrl.users.list(req, res, callback);
 
-            }, 30000);
+            });
 
         });
 
