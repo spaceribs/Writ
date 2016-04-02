@@ -13,7 +13,6 @@ describe('Users Endpoint', function() {
     var app;
     var mail;
     var newUser1;
-    var newUser2;
 
     beforeAll(function() {
 
@@ -33,7 +32,6 @@ describe('Users Endpoint', function() {
 
     beforeEach(function() {
         newUser1 = jsf(userModel);
-        newUser2 = jsf(userModel);
     });
 
     describe('"/user/" POST', function() {
