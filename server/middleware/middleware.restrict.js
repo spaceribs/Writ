@@ -13,11 +13,14 @@ function restrict(minimumLevel) {
     return function(req, res, next) {
 
         var level = roles.anonymous;
+
         if (req.user) {
             level = req.user.permission || roles.anonymous;
         } else {
             req.user = {
-                permission: roles.anonymous
+                name: 'Anonymous',
+                permission: roles.anonymous,
+                anonymous: true
             };
         }
 
