@@ -73,8 +73,6 @@ describe('Users Endpoint', function() {
             'trying to create a user without information.', function(done) {
             supertest(app)
                 .post('/user/')
-                .expect('Content-Type', /json/)
-                .expect(400)
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status: 'INVALID_JSON_SCHEME',
@@ -82,6 +80,8 @@ describe('Users Endpoint', function() {
                     });
                     expect(res.body.errors.body.length).toBe(3);
                 })
+                .expect('Content-Type', /json/)
+                .expect(400)
                 .end(util.handleSupertest(done));
         });
 
@@ -97,7 +97,7 @@ describe('Users Endpoint', function() {
                         status: 'INVALID_JSON_SCHEME',
                         errors: jasmine.any(Object)
                     });
-                    expect(res.body.errors.body.length).toBe(5);
+                    expect(res.body.errors.body.length).toBe(3);
                 })
                 .end(util.handleSupertest(done));
         });
@@ -111,25 +111,59 @@ describe('Users Endpoint', function() {
                 .post('/user/')
                 .send(newUser)
                 .expect('Content-Type', /json/)
-                .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'SUCCESS',
                         message: 'Please check your email ' +
-                            'to verify your account.',
+                        'to verify your account.',
                         data   : {
                             id   : jasmine.any(String),
                             email: newUser.email
                         }
                     });
                 })
+                .expect(200)
                 .expect(function() {
                     expect(mail.sent.length).toBe(sentLength + 1);
                 })
                 .end(util.handleSupertest(done));
         });
 
-        it('should update my information ' +
+        it('should update my basic information ' +
+        'when I make an authenticated request.', function(done) {
+            supertest(app).post('/user/')
+                .auth(verifiedUser.email, verifiedUser.password)
+                .send({name: newUser.name})
+                .expect('Content-Type', /json/)
+                .expect(function(res) {
+                    expect(res.body).toEqual({
+                        status : 'SUCCESS',
+                        message: 'User has been successfully updated.',
+                        data   : {
+                            email     : verifiedUser.email,
+                            name      : newUser.name,
+                            permission: 20
+                        }
+                    });
+                })
+                .expect(200)
+                .end(function() {
+                    supertest(app).get('/user/' + verifiedUser.id)
+                        .expect('Content-Type', /json/)
+                        .expect(function(res) {
+                            expect(res.body).toEqual({
+                                id: verifiedUser.id,
+                                name: newUser.name,
+                                permission: 20
+                            });
+                        })
+                        .expect(200)
+                        .end(util.handleSupertest(done));
+
+                });
+        });
+
+        it('should update my email address ' +
         'when I make an authenticated request.', function(done) {
 
             var sentLength = mail.sent.length;
@@ -137,25 +171,40 @@ describe('Users Endpoint', function() {
             supertest(app)
                 .post('/user/')
                 .auth(verifiedUser.email, verifiedUser.password)
-                .send(newUser)
+                .send({email: newUser.email})
                 .expect('Content-Type', /json/)
-                .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'SUCCESS',
                         message: 'User has been updated, and an ' +
                         'email has been sent to the new address.',
                         data   : {
-                            email: newUser.email,
-                            name: newUser.name,
+                            email     : newUser.email,
+                            name      : verifiedUser.name,
                             permission: 30
                         }
                     });
                 })
+                .expect(200)
                 .expect(function() {
                     expect(mail.sent.length).toBe(sentLength + 1);
                 })
-                .end(util.handleSupertest(done));
+                .end(function() {
+                    supertest(app).get('/user/' + verifiedUser.id)
+                        .auth(adminUser.email, adminUser.password)
+                        .expect('Content-Type', /json/)
+                        .expect(function(res) {
+                            expect(res.body).toEqual({
+                                id: verifiedUser.id,
+                                email: newUser.email,
+                                name: verifiedUser.name,
+                                permission: 30
+                            });
+                        })
+                        .expect(200)
+                        .end(util.handleSupertest(done));
+
+                });
         });
 
     });
@@ -170,7 +219,7 @@ describe('Users Endpoint', function() {
                 .expect(404)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'EMAIL_TOKEN_NOT_FOUND',
+                        status : 'EMAIL_TOKEN_NOT_FOUND',
                         message: 'This token was not found.'
                     });
                 })
@@ -182,13 +231,13 @@ describe('Users Endpoint', function() {
             supertest(app)
                 .get('/verify/' + unverifiedUser.secret)
                 .expect('Content-Type', /json/)
-                .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'SUCCESS',
+                        status : 'SUCCESS',
                         message: 'Your email has been verified.'
                     });
                 })
+                .expect(200)
                 .end(util.handleSupertest(done));
         });
 
@@ -200,10 +249,10 @@ describe('Users Endpoint', function() {
             supertest(app)
                 .options('/user/')
                 .expect('Content-Type', /json/)
-                .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual(userModel);
                 })
+                .expect(200)
                 .end(util.handleSupertest(done));
         });
 
@@ -226,19 +275,19 @@ describe('Users Endpoint', function() {
                 .get('/user/')
                 .auth(verifiedUser.email, verifiedUser.password)
                 .expect('Content-Type', /json/)
-                .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'SUCCESS',
+                        status : 'SUCCESS',
                         message: 'Your credentials are valid.',
-                        data: {
-                            email: verifiedUser.email,
-                            name: verifiedUser.name,
-                            id: verifiedUser.id,
+                        data   : {
+                            email     : verifiedUser.email,
+                            name      : verifiedUser.name,
+                            id        : verifiedUser.id,
                             permission: 20
                         }
                     });
                 })
+                .expect(200)
                 .end(util.handleSupertest(done));
 
         });
@@ -249,19 +298,19 @@ describe('Users Endpoint', function() {
                 .get('/user/')
                 .auth(adminUser.email, adminUser.password)
                 .expect('Content-Type', /json/)
-                .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'SUCCESS',
+                        status : 'SUCCESS',
                         message: 'Your credentials are valid.',
-                        data: {
-                            email: adminUser.email,
-                            name: adminUser.name,
-                            id: adminUser.id,
+                        data   : {
+                            email     : adminUser.email,
+                            name      : adminUser.name,
+                            id        : adminUser.id,
                             permission: 10
                         }
                     });
                 })
+                .expect(200)
                 .end(util.handleSupertest(done));
 
         });
@@ -271,7 +320,7 @@ describe('Users Endpoint', function() {
     describe('"/user/list/" GET', function() {
 
         it('should return an error when ' +
-                'you don\'t authenticate.', function(done) {
+            'you don\'t authenticate.', function(done) {
             supertest(app)
                 .get('/user/list/')
                 .expect(401)
@@ -288,9 +337,9 @@ describe('Users Endpoint', function() {
                 .expect(403)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'FORBIDDEN',
+                        status : 'FORBIDDEN',
                         message: 'Your account is not allowed ' +
-                            'to access this endpoint.'
+                        'to access this endpoint.'
                     });
                 })
                 .end(util.handleSupertest(done));
@@ -298,19 +347,19 @@ describe('Users Endpoint', function() {
         });
 
         it('should return an admin user' +
-                'authenticated as an admin.', function(done) {
+            'authenticated as an admin.', function(done) {
             supertest(app)
                 .get('/user/list/')
                 .auth(adminUser.email, adminUser.password)
                 .expect('Content-Type', /json/)
-                .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         'total_rows': jasmine.any(Number),
-                        'offset': 0,
-                        'rows': jasmine.any(Array)
+                        'offset'    : 0,
+                        'rows'      : jasmine.any(Array)
                     });
                 })
+                .expect(200)
                 .end(util.handleSupertest(done));
 
         });
@@ -324,14 +373,14 @@ describe('Users Endpoint', function() {
             supertest(app)
                 .get('/user/' + verifiedUser.id)
                 .expect('Content-Type', /json/)
-                .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        'id': verifiedUser.id,
-                        'name': verifiedUser.name,
+                        'id'        : verifiedUser.id,
+                        'name'      : verifiedUser.name,
                         'permission': verifiedUser.permission
                     });
                 })
+                .expect(200)
                 .end(util.handleSupertest(done));
 
         });
@@ -342,15 +391,15 @@ describe('Users Endpoint', function() {
                 .get('/user/' + verifiedUser.id)
                 .auth(adminUser.email, adminUser.password)
                 .expect('Content-Type', /json/)
-                .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        'id': verifiedUser.id,
-                        'email': verifiedUser.email,
-                        'name': verifiedUser.name,
+                        'id'        : verifiedUser.id,
+                        'email'     : verifiedUser.email,
+                        'name'      : verifiedUser.name,
                         'permission': verifiedUser.permission
                     });
                 })
+                .expect(200)
                 .end(util.handleSupertest(done));
 
         });
@@ -372,10 +421,10 @@ describe('Users Endpoint', function() {
 
                     supertest(app).get('/user/' + unverifiedUser.id)
                         .expect('Content-Type', /json/)
-                        .expect(200)
                         .expect(function(res) {
                             expect(res.body.name).not.toBe('Bad Name');
                         })
+                        .expect(200)
                         .end(util.handleSupertest(done));
                 });
         });
@@ -390,9 +439,9 @@ describe('Users Endpoint', function() {
                 .expect(403)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'FORBIDDEN',
+                        status : 'FORBIDDEN',
                         message: 'Your account is not allowed ' +
-                            'to access this endpoint.'
+                        'to access this endpoint.'
                     });
                 })
                 .end(function(err) {
@@ -403,10 +452,10 @@ describe('Users Endpoint', function() {
 
                     supertest(app).get('/user/' + unverifiedUser.id)
                         .expect('Content-Type', /json/)
-                        .expect(200)
                         .expect(function(res) {
                             expect(res.body.name).not.toBe('Bad Name');
                         })
+                        .expect(200)
                         .end(util.handleSupertest(done));
                 });
 
@@ -419,18 +468,18 @@ describe('Users Endpoint', function() {
                 .send({name: 'Good Name'})
                 .auth(adminUser.email, adminUser.password)
                 .expect('Content-Type', /json/)
-                .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'SUCCESS',
+                        status : 'SUCCESS',
                         message: 'User has been successfully updated.',
-                        data: {
-                            email: verifiedUser.email,
-                            name: 'Good Name',
+                        data   : {
+                            email     : verifiedUser.email,
+                            name      : 'Good Name',
                             permission: 20
                         }
                     });
                 })
+                .expect(200)
                 .end(function(err) {
                     if (err) {
                         done.fail(err);
@@ -439,10 +488,10 @@ describe('Users Endpoint', function() {
 
                     supertest(app).get('/user/' + verifiedUser.id)
                         .expect('Content-Type', /json/)
-                        .expect(200)
                         .expect(function(res) {
                             expect(res.body.name).toBe('Good Name');
                         })
+                        .expect(200)
                         .end(util.handleSupertest(done));
                 });
 
@@ -455,19 +504,19 @@ describe('Users Endpoint', function() {
                 .send({email: 'test@test.com'})
                 .auth(adminUser.email, adminUser.password)
                 .expect('Content-Type', /json/)
-                .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'SUCCESS',
+                        status : 'SUCCESS',
                         message: 'User has been updated, and ' +
-                            'an email has been sent to the new address.',
-                        data: {
-                            email: 'test@test.com',
-                            name: verifiedUser.name,
+                        'an email has been sent to the new address.',
+                        data   : {
+                            email     : 'test@test.com',
+                            name      : verifiedUser.name,
                             permission: 30
                         }
                     });
                 })
+                .expect(200)
                 .end(function(err) {
                     if (err) {
                         done.fail(err);
@@ -477,10 +526,10 @@ describe('Users Endpoint', function() {
                     supertest(app).get('/user/' + verifiedUser.id)
                         .auth(adminUser.email, adminUser.password)
                         .expect('Content-Type', /json/)
-                        .expect(200)
                         .expect(function(res) {
                             expect(res.body.email).toBe('test@test.com');
                         })
+                        .expect(200)
                         .end(util.handleSupertest(done));
                 });
 
@@ -516,7 +565,7 @@ describe('Users Endpoint', function() {
                 .expect(403)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'FORBIDDEN',
+                        status : 'FORBIDDEN',
                         message: 'Your account is not allowed ' +
                         'to access this endpoint.'
                     });
@@ -540,13 +589,13 @@ describe('Users Endpoint', function() {
                 .delete('/user/' + unverifiedUser.id)
                 .auth(adminUser.email, adminUser.password)
                 .expect('Content-Type', /json/)
-                .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'SUCCESS',
+                        status : 'SUCCESS',
                         message: 'User has been deleted.'
                     });
                 })
+                .expect(200)
                 .end(function() {
                     supertest(app).get('/user/' + verifiedUser.id)
                         .expect('Content-Type', /json/)

@@ -99,6 +99,16 @@ function usersGet(req, res) {
  */
 function createUser(userData, res, next) {
 
+    var validation = tv4.validateMultiple(userData, models.io.user);
+
+    if (!validation.valid) {
+        next(new errors.JsonSchemaValidationError(
+            validation.errors, validation.missing));
+        return false;
+    }
+
+    util.processPassword(userData);
+
     Users.createIndex({
         'index': {
             'fields': ['email']
@@ -106,15 +116,15 @@ function createUser(userData, res, next) {
     }).then(function() {
         return Users.find({
             selector: {email: userData.email}
+        }).then(function(result) {
+            if (result.docs.length) {
+                throw new errors.EmailUsedError(
+                    'This email address is already in use ' +
+                    'by another account.',
+                    userData.email
+                );
+            }
         });
-
-    }).then(function(result) {
-        if (result.docs.length) {
-            throw new errors.EmailUsedError(
-                'This email address is already in use by another account.',
-                userData.email
-            );
-        }
 
     }).then(function() {
 
@@ -126,15 +136,7 @@ function createUser(userData, res, next) {
         userData.updated = new Date().toISOString();
         userData.permission = roles.unverified;
 
-        var validate = tv4.validateMultiple(userData, models.db.user);
-
-        if (validate.valid) {
-            return Users.put(userData);
-        } else {
-            throw new errors.JsonSchemaValidationError(
-                validate.errors, validate.missing
-            );
-        }
+        return Users.put(userData);
 
     }).then(function() {
 
@@ -170,15 +172,6 @@ function usersPost(req, res, next) {
 
     var userData = util.ioFilter(
         req.user.permission, 'user', req.body, true, true);
-
-    if (userData.password) {
-        util.processPassword(userData);
-    }
-
-    if (userData.email) {
-        userData.secret = uuid.v4();
-        userData.permission = 30;
-    }
 
     if (req.user.anonymous) {
         createUser(userData, res, next);
@@ -252,12 +245,19 @@ function updateUser(editor, userId, userData, res, next) {
 
     var newUserData;
 
+    if (userData.password) {
+        util.processPassword(userData);
+    }
+
     Users.createIndex({
         'index': {
             'fields': ['email']
         }
     }).then(function() {
         if (userData.email) {
+            userData.secret = uuid.v4();
+            userData.permission = 30;
+
             return Users.find({
                 selector: {
                     email: userData.email
@@ -407,12 +407,15 @@ function userVerify(req, res, next) {
     }).then(function(user) {
         user.permission = Math.min(20, user.permission);
         user.updated = new Date().toISOString();
+
         var validate = tv4.validateMultiple(user, models.db.user);
 
         if (validate.valid) {
             return Users.put(user);
         } else {
-            throw new errors.JsonSchemaValidation(validate.error);
+            throw new errors.JsonSchemaValidationError(
+                validate.errors, validate.missing
+            );
         }
 
     }).then(function() {

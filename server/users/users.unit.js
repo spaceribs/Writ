@@ -17,6 +17,7 @@ describe('Users', function() {
     var adminUser;
     var verifiedUser;
     var unverifiedUser;
+    var invalidUser;
 
     var util;
     var ctrl;
@@ -95,6 +96,10 @@ describe('Users', function() {
                 })
                 .then(function(user) {
                     unverifiedUser = user;
+                    return Users.mockUser(20, true);
+                })
+                .then(function(user) {
+                    invalidUser = user;
                     done();
                 });
 
@@ -180,12 +185,73 @@ describe('Users', function() {
 
         });
 
+        describe('userCan', function() {
+
+            var model;
+
+            beforeEach(function() {
+                model = {
+                    'test': {
+                        'permission': {
+                            read: 20,
+                            write: 10,
+                            owner: true
+                        }
+                    }
+                };
+            });
+
+            it('allows an admin user to read.', function() {
+                var can = util.userCan(10, model, 'test', false, false);
+                expect(can).toBe(true);
+            });
+
+            it('allows a verified user to read.', function() {
+                var can = util.userCan(20, model, 'test', false, false);
+                expect(can).toBe(true);
+            });
+
+            it('disallows a unverified user to read.', function() {
+                var can = util.userCan(30, model, 'test', false, false);
+                expect(can).toBe(false);
+            });
+
+            it('disallows an anonymous user to read.', function() {
+                var can = util.userCan(100, model, 'test', false, false);
+                expect(can).toBe(false);
+            });
+
+            it('allows an unverified user to read if they are the owner.',
+            function() {
+                var can = util.userCan(30, model, 'test', false, true);
+                expect(can).toBe(true);
+            });
+
+            it('allows an admin user to write.', function() {
+                var can = util.userCan(10, model, 'test', true, false);
+                expect(can).toBe(true);
+            });
+
+            it('disallows a verified user to write.', function() {
+                var can = util.userCan(20, model, 'test', true, false);
+                expect(can).toBe(false);
+            });
+
+            it('only accepts numbers', function() {
+                //noinspection JSCheckFunctionSignatures
+                var can = util.userCan('admin', model, 'test', true, true);
+                expect(can).toBe(false);
+            });
+
+        });
+
     });
 
     describe('Controller', function() {
 
         afterEach(function() {
             mail.testError = false;
+            Users.mockError = false;
         });
 
         describe('usersOptions', function() {
@@ -255,6 +321,61 @@ describe('Users', function() {
                 ctrl.users.post(req, res, callback);
             });
 
+            it('updates an existing user with a new name.', function(done) {
+                res.json.and.callFake(function() {
+                    expect(res.json).toHaveBeenCalled();
+                    expect(res.json.calls.mostRecent().args[0])
+                        .toEqual(new SuccessMessage(
+                            'User has been successfully updated.', {
+                                email: verifiedUser.email,
+                                name: newUser.name,
+                                permission: 20
+                            }));
+                    done();
+                });
+
+                req.user = verifiedUser;
+                req.body = {name: newUser.name};
+                ctrl.users.post(req, res, callback);
+            });
+
+            it('updates an existing user with a new email.', function(done) {
+                res.json.and.callFake(function() {
+                    expect(res.json).toHaveBeenCalled();
+                    expect(res.json.calls.mostRecent().args[0])
+                        .toEqual(new SuccessMessage(
+                            'User has been updated, and an email ' +
+                            'has been sent to the new address.', {
+                                email: newUser.email,
+                                name: verifiedUser.name,
+                                permission: 30
+                            }));
+                    done();
+                });
+
+                req.user = verifiedUser;
+                req.body = {email: newUser.email};
+                ctrl.users.post(req, res, callback);
+            });
+
+            it('updates an existing user with a new password.', function(done) {
+                res.json.and.callFake(function() {
+                    expect(res.json).toHaveBeenCalled();
+                    expect(res.json.calls.mostRecent().args[0])
+                        .toEqual(new SuccessMessage(
+                            'User has been successfully updated.', {
+                                email: verifiedUser.email,
+                                name: verifiedUser.name,
+                                permission: 20
+                            }));
+                    done();
+                });
+
+                req.user = verifiedUser;
+                req.body = {password: newUser.password};
+                ctrl.users.post(req, res, callback);
+            });
+
             it('throws an error if sending an email failed.', function(done) {
                 callback.and.callFake(function(err) {
                     expect(err).toEqual(jasmine.any(Error));
@@ -280,10 +401,8 @@ describe('Users', function() {
                 ctrl.users.post(req, res, callback);
             });
 
-            it('checks if the schema is valid.',
+            it('checks if the user schema is valid.',
             function(done) {
-
-                req.body.name = 12;
 
                 callback.and.callFake(function(err) {
                     expect(err).toEqual(
@@ -293,6 +412,24 @@ describe('Users', function() {
                     done();
                 });
 
+                req.body.name = 12;
+                ctrl.users.post(req, res, callback);
+
+            });
+
+            it('checks if the user is valid before updating.',
+            function(done) {
+
+                callback.and.callFake(function(err) {
+                    expect(err).toEqual(
+                        jasmine.any(errors.JsonSchemaValidationError));
+                    expect(err.errors[0].message)
+                        .toBe('Additional properties not allowed');
+                    done();
+                });
+
+                req.user = invalidUser;
+                req.body = {name: newUser.name};
                 ctrl.users.post(req, res, callback);
 
             });
@@ -312,6 +449,21 @@ describe('Users', function() {
                     done();
                 });
 
+                ctrl.users.list(req, res, callback);
+
+            });
+
+            it('returns an error if the database call fails.',
+            function(done) {
+
+                callback.and.callFake(function() {
+                    expect(callback).toHaveBeenCalled();
+                    expect(callback.calls.mostRecent().args[0])
+                        .toEqual(jasmine.any(Error));
+                    done();
+                });
+
+                Users.mockError = true;
                 ctrl.users.list(req, res, callback);
 
             });
@@ -529,8 +681,23 @@ describe('Users', function() {
                     done();
                 });
 
-                req.params.token = verifiedUser.secret;
+                req.params.token = unverifiedUser.secret;
                 ctrl.user.verify(req, res, callback);
+            });
+
+            it('checks if the user is valid before verifying.', function(done) {
+
+                callback.and.callFake(function(err) {
+                    expect(err).toEqual(
+                        jasmine.any(errors.JsonSchemaValidationError));
+                    expect(err.errors[0].message)
+                        .toBe('Additional properties not allowed');
+                    done();
+                });
+
+                req.params.token = invalidUser.secret;
+                ctrl.user.verify(req, res, callback);
+
             });
 
         });
