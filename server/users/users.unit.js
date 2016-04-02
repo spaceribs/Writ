@@ -251,7 +251,6 @@ describe('Users', function() {
 
         afterEach(function() {
             mail.testError = false;
-            Users.mockError = false;
         });
 
         describe('usersOptions', function() {
@@ -449,11 +448,6 @@ describe('Users', function() {
                     done();
                 });
 
-                callback.and.callFake(function(err) {
-                    expect(err).toBeUndefined();
-                    done();
-                });
-
                 ctrl.users.list(req, res, callback);
 
             });
@@ -465,11 +459,7 @@ describe('Users', function() {
                     expect(callback).toHaveBeenCalled();
                     expect(callback.calls.mostRecent().args[0])
                         .toEqual(jasmine.any(Error));
-                    done();
-                });
-
-                res.json.and.callFake(function(options) {
-                    expect(options).toBeUndefined();
+                    Users.mockError = false;
                     done();
                 });
 
