@@ -9,7 +9,7 @@ var restrict = require('../middleware/middleware.restrict');
 var models = require('../../models');
 var roles = require('../roles');
 
-var passOptions = {
+var authOptions = {
     session: false
 };
 
@@ -18,27 +18,26 @@ router.route('/verify/:token')
 
 router.route('/user/')
     .options(controller.users.options)
-    .get(passport.authenticate('basic', passOptions),
+    .get(passport.authenticate('basic', authOptions),
         restrict(roles.user),
         controller.users.get)
-    .post(passport.authenticate(['basic', 'anonymous'], passOptions),
+    .post(passport.authenticate(['basic', 'anonymous'], authOptions),
         restrict(roles.anonymous),
-        validate(models.io.user),
         controller.users.post);
 
 router.route('/user/list')
-    .get(passport.authenticate('basic', passOptions),
+    .get(passport.authenticate('basic', authOptions),
         restrict(roles.admin),
         controller.users.list);
 
 router.route('/user/:userId')
-    .get(passport.authenticate(['basic', 'anonymous'], passOptions),
+    .get(passport.authenticate(['basic', 'anonymous'], authOptions),
         restrict(roles.anonymous),
         controller.user.get)
-    .post(passport.authenticate('basic', passOptions),
+    .post(passport.authenticate('basic', authOptions),
         restrict(roles.admin),
         controller.user.post)
-    .delete(passport.authenticate('basic', passOptions),
+    .delete(passport.authenticate('basic', authOptions),
         restrict(roles.admin),
         controller.user.delete);
 
