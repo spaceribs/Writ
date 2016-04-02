@@ -1,6 +1,5 @@
 'use strict';
 
-var nodemailer = require('nodemailer');
 var uuid = require('node-uuid');
 var _ = require('lodash');
 var tv4 = require('tv4');
@@ -8,11 +7,11 @@ var tv4 = require('tv4');
 var models = require('../../models');
 var config = require('../config');
 var roles = require('../roles');
-var emailConfig = require('../email.json');
 var errors = require('../app/app.errors');
 var SuccessMessage = require('../app/app.successes').SuccessMessage;
 var Users = require('./users.db');
 var util = require('./users.util');
+var mail = require('../mail/mail.ctrl');
 
 /**
  * Passport uses this to validate provided credentials.
@@ -133,29 +132,25 @@ function createUser(userData, res, next) {
             return Users.put(userData);
         } else {
             throw new errors.JsonSchemaValidationError(
-                validate.errors,
-                validate.missing
+                validate.errors, validate.missing
             );
         }
 
     }).then(function() {
-        var transporter = nodemailer.createTransport(emailConfig);
-        var verifyUrl = config.hostname + '/verify/' + userData.secret;
 
-        transporter.sendMail(
-            util.tokenEmail(config.sysop, userData.email, verifyUrl),
-            function(err) {
-                if (err) {
-                    next(err);
-                } else {
-                    res.json(new SuccessMessage(
-                        'Please check your email to ' +
-                        'verify your account.', {
-                            id   : userData.id,
-                            email: userData.email
-                        }));
-                }
-            });
+        var verifyUrl = config.hostname + '/verify/' + userData.secret;
+        var message = util.tokenEmail(config.sysop, userData.email, verifyUrl);
+
+        return mail.send(message);
+
+    }).then(function() {
+
+        res.json(new SuccessMessage(
+            'Please check your email to ' +
+            'verify your account.', {
+                id   : userData.id,
+                email: userData.email
+            }));
 
     }).catch(function(err) {
         next(err);
@@ -188,7 +183,7 @@ function usersPost(req, res, next) {
     if (req.user.anonymous) {
         createUser(userData, res, next);
     } else {
-        updateUser(req.user.id, userData, res, next);
+        updateUser(req.user, req.user.id, userData, res, next);
     }
 
 }
@@ -247,12 +242,13 @@ function userGet(req, res, next) {
 /**
  * Update the specified user by their unique ID.
  *
+ * @param {object} editor - The user making changes.
  * @param {string} userId - The user to update.
  * @param {object} userData - The new user data.
  * @param {Response} res - The response call.
- * @param {callback} next - The error callback.
+ * @param {function} next - The error callback.
  */
-function updateUser(userId, userData, res, next) {
+function updateUser(editor, userId, userData, res, next) {
 
     var newUserData;
 
@@ -289,47 +285,41 @@ function updateUser(userId, userData, res, next) {
         if (validate.valid) {
             return Users.put(newUserData);
         } else {
-            throw new errors.JsonSchemaValidation(validate.error);
+            throw new errors.JsonSchemaValidationError(
+                validate.errors, validate.missing
+            );
         }
 
     }).then(function() {
-        if (!userData.email) {
+        if (userData.email) {
 
-            var userInfo = util.ioFilter(
-                newUserData.permission, 'user',
-                newUserData, false, true);
+            var verifyUrl = config.hostname + '/verify/' + userData.secret;
+            var message = util.tokenEmail(
+                config.sysop, userData.email, verifyUrl);
 
-            res.json(new SuccessMessage(
-                'User has been successfully updated.',
-                userInfo));
+            return mail.send(message);
 
         } else {
-
-            var transporter = nodemailer.createTransport(emailConfig);
-            var verifyUrl = config.hostname + '/verify/' + userData.secret;
-
-            transporter.sendMail(
-                util.tokenEmail(config.sysop, userData.email, verifyUrl),
-                function(err) {
-                    if (err) {
-                        next(err);
-                    } else {
-
-                        var userInfo = util.ioFilter(
-                            newUserData.permission, 'user',
-                            newUserData, false, true);
-
-                        res.json(new SuccessMessage(
-                            'User has been updated, and an ' +
-                            'email has been sent to the new address.',
-                            userInfo));
-
-                    }
-                });
-
+            return true;
         }
 
-    }).catch(function(err) {
+    })
+    .then(function() {
+        var userInfo = util.ioFilter(
+            editor.permission, 'user',
+            newUserData, false, editor.id === newUserData.id);
+
+        var message = 'User has been successfully updated.';
+
+        if (userData.email) {
+            message = 'User has been updated, and an ' +
+                'email has been sent to the new address.';
+        }
+
+        res.json(new SuccessMessage(message, userInfo));
+
+    })
+    .catch(function(err) {
         next(err);
     });
 }
@@ -338,7 +328,7 @@ function updateUser(userId, userData, res, next) {
  * Called when a user makes a POST request to /user/{some-uuid}/.
  *
  * @param {object} req - Express request object.
- * @param {object} res - Express response object.
+ * @param {Response} res - Express response object.
  * @param {function} next - Callback for the response.
  */
 function userPost(req, res, next) {
@@ -356,7 +346,7 @@ function userPost(req, res, next) {
         userData.permission = 30;
     }
 
-    updateUser(userId, userData, res, next);
+    updateUser(req.user, userId, userData, res, next);
 
 }
 

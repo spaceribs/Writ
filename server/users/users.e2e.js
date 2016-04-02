@@ -6,65 +6,34 @@ var supertest = require('supertest');
 var mockery = require('mockery');
 var util = require('../../test/util');
 
+var Users = require('./users.db.mock');
+
 describe('Users Endpoint', function() {
 
-    var adminUser = {
-        id: 'ef288553-635a-44a7-ab7d-3404bebc02a5',
-        name: 'Admin User',
-        email: 'admin@test.com',
-        password: 'root'
-    };
-    var unverifiedUser;
-    var normalUser;
-
-    var mailerMethods;
-    var mockMailer;
     var app;
+    var mail;
+    var newUser1;
+    var newUser2;
 
     beforeAll(function() {
 
-        unverifiedUser = jsf(userModel);
-        normalUser = jsf(userModel);
-
         mockery.enable({
-            useCleanCache     : true,
             warnOnReplace     : false,
             warnOnUnregistered: false
         });
 
-        mailerMethods = {
-            /**
-             * Mock method for sending an email.
-             *
-             * @param {object} content - content to send.
-             * @param {function} callback - Callback function.
-             */
-            sendMail: function(content, callback) {
-                callback();
-            }
-        };
-        spyOn(mailerMethods, 'sendMail').and.callThrough();
+        mockery.registerSubstitute(
+            './users.db', './users.db.mock');
+        mockery.registerSubstitute(
+            '../mail/mail.ctrl', '../mail/mail.ctrl.mock');
 
-        mockMailer = {
-            /**
-             * Mock method for creating a transport.
-             *
-             * @returns {{sendMail: mailerMethods.sendMail}}
-             */
-            createTransport: function() {
-                return mailerMethods;
-            }
-        };
-        spyOn(mockMailer, 'createTransport').and.callThrough();
-
-        mockery.registerMock('nodemailer', mockMailer);
-        mockery.registerSubstitute('./users.db', './users.db.mock');
+        mail = require('../mail/mail.ctrl');
         app = require('../app/app');
     });
 
-    afterEach(function() {
-        mailerMethods.sendMail.and.stub();
-        mailerMethods.sendMail.and.callThrough();
+    beforeEach(function() {
+        newUser1 = jsf(userModel);
+        newUser2 = jsf(userModel);
     });
 
     describe('"/user/" POST', function() {
@@ -103,17 +72,13 @@ describe('Users Endpoint', function() {
         });
 
         it('should return success when ' +
-            'the new user submission is valid.', function(done) {
-            mailerMethods.sendMail.and.callFake(function(options, callback) {
-                expect(options.html).toEqual(jasmine.any(String));
-                var tokenRegex = /\/verify\/([a-f0-9-]*)/ig;
-                normalUser.token = tokenRegex.exec(options.html)[1];
-                callback();
-            });
+        'the new user submission is valid.', function(done) {
+
+            var sentLength = mail.sent.length;
 
             supertest(app)
                 .post('/user/')
-                .send(normalUser)
+                .send(newUser1)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .expect(function(res) {
@@ -123,23 +88,12 @@ describe('Users Endpoint', function() {
                             'to verify your account.',
                         data   : {
                             id   : jasmine.any(String),
-                            email: normalUser.email
+                            email: newUser1.email
                         }
                     });
-                    normalUser.id = res.body.data.id;
                 })
-                .end(util.handleSupertest(done));
-        });
-
-        it('should return success when ' +
-            'another user is created.', function(done) {
-            supertest(app)
-                .post('/user/')
-                .send(unverifiedUser)
-                .expect('Content-Type', /json/)
-                .expect(200)
-                .expect(function(res) {
-                    unverifiedUser.id = res.body.data.id;
+                .expect(function() {
+                    expect(mail.sent.length).toBe(sentLength + 1);
                 })
                 .end(util.handleSupertest(done));
         });
@@ -170,7 +124,7 @@ describe('Users Endpoint', function() {
         it('should return success when ' +
             'a valid token is provided.', function(done) {
             supertest(app)
-                .get('/verify/' + normalUser.token)
+                .get('/verify/' + Users.unverifiedUser.secret)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .expect(function(res) {
@@ -214,7 +168,7 @@ describe('Users Endpoint', function() {
             'when authenticated.', function(done) {
             supertest(app)
                 .get('/user/')
-                .auth(normalUser.email, normalUser.password)
+                .auth(Users.verifiedUser.email, Users.verifiedUser.password)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .expect(function(res) {
@@ -222,13 +176,13 @@ describe('Users Endpoint', function() {
                         status: 'SUCCESS',
                         message: 'Your credentials are valid.',
                         data: {
-                            email: normalUser.email,
-                            name: normalUser.name,
-                            id: normalUser.id,
+                            email: Users.verifiedUser.email,
+                            name: Users.verifiedUser.name,
+                            id: Users.verifiedUser.id,
                             permission: 20
                         }
                     });
-                    normalUser.permission = res.body.data.permission;
+                    Users.verifiedUser.permission = res.body.data.permission;
                 })
                 .end(util.handleSupertest(done));
 
@@ -238,7 +192,7 @@ describe('Users Endpoint', function() {
             'when authenticated as an admin.', function(done) {
             supertest(app)
                 .get('/user/')
-                .auth(adminUser.email, adminUser.password)
+                .auth(Users.adminUser.email, Users.adminUser.password)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .expect(function(res) {
@@ -246,9 +200,9 @@ describe('Users Endpoint', function() {
                         status: 'SUCCESS',
                         message: 'Your credentials are valid.',
                         data: {
-                            email: adminUser.email,
-                            name: adminUser.name,
-                            id: adminUser.id,
+                            email: Users.adminUser.email,
+                            name: Users.adminUser.name,
+                            id: Users.adminUser.id,
                             permission: 10
                         }
                     });
@@ -274,7 +228,7 @@ describe('Users Endpoint', function() {
             'authenticated without admin privileges.', function(done) {
             supertest(app)
                 .get('/user/list/')
-                .auth(normalUser.email, normalUser.password)
+                .auth(Users.verifiedUser.email, Users.verifiedUser.password)
                 .expect('Content-Type', /json/)
                 .expect(403)
                 .expect(function(res) {
@@ -292,7 +246,7 @@ describe('Users Endpoint', function() {
                 'authenticated as an admin.', function(done) {
             supertest(app)
                 .get('/user/list/')
-                .auth(adminUser.email, adminUser.password)
+                .auth(Users.adminUser.email, Users.adminUser.password)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .expect(function(res) {
@@ -313,14 +267,14 @@ describe('Users Endpoint', function() {
         it('should return basic information if ' +
             'you are not authenticated', function(done) {
             supertest(app)
-                .get('/user/' + normalUser.id)
+                .get('/user/' + Users.verifiedUser.id)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        'id': normalUser.id,
-                        'name': normalUser.name,
-                        'permission': normalUser.permission
+                        'id': Users.verifiedUser.id,
+                        'name': Users.verifiedUser.name,
+                        'permission': Users.verifiedUser.permission
                     });
                 })
                 .end(util.handleSupertest(done));
@@ -330,16 +284,16 @@ describe('Users Endpoint', function() {
         it('should return more information if ' +
             'you are authenticated as an admin', function(done) {
             supertest(app)
-                .get('/user/' + normalUser.id)
-                .auth(adminUser.email, adminUser.password)
+                .get('/user/' + Users.verifiedUser.id)
+                .auth(Users.adminUser.email, Users.adminUser.password)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        'id': normalUser.id,
-                        'email': normalUser.email,
-                        'name': normalUser.name,
-                        'permission': normalUser.permission
+                        'id': Users.verifiedUser.id,
+                        'email': Users.verifiedUser.email,
+                        'name': Users.verifiedUser.name,
+                        'permission': Users.verifiedUser.permission
                     });
                 })
                 .end(util.handleSupertest(done));
@@ -353,7 +307,7 @@ describe('Users Endpoint', function() {
         it('should not allow anonymous users ' +
             'to make changes to other users.', function(done) {
             supertest(app)
-                .post('/user/' + unverifiedUser.id)
+                .post('/user/' + Users.unverifiedUser.id)
                 .send({name: 'Bad Name'})
                 .expect(401)
                 .end(function(err) {
@@ -361,7 +315,7 @@ describe('Users Endpoint', function() {
                         done.fail(err);
                     }
 
-                    supertest(app).get('/user/' + unverifiedUser.id)
+                    supertest(app).get('/user/' + Users.unverifiedUser.id)
                         .expect('Content-Type', /json/)
                         .expect(200)
                         .expect(function(res) {
@@ -374,9 +328,9 @@ describe('Users Endpoint', function() {
         it('should not allow normal users ' +
             'to make changes to other users.', function(done) {
             supertest(app)
-                .post('/user/' + unverifiedUser.id)
+                .post('/user/' + Users.unverifiedUser.id)
                 .send({name: 'Bad Name'})
-                .auth(normalUser.email, normalUser.password)
+                .auth(Users.verifiedUser.email, Users.verifiedUser.password)
                 .expect('Content-Type', /json/)
                 .expect(403)
                 .expect(function(res) {
@@ -392,7 +346,7 @@ describe('Users Endpoint', function() {
                         return false;
                     }
 
-                    supertest(app).get('/user/' + unverifiedUser.id)
+                    supertest(app).get('/user/' + Users.unverifiedUser.id)
                         .expect('Content-Type', /json/)
                         .expect(200)
                         .expect(function(res) {
@@ -406,9 +360,9 @@ describe('Users Endpoint', function() {
         it('should allow admin users ' +
             'to make changes to other users.', function(done) {
             supertest(app)
-                .post('/user/' + unverifiedUser.id)
+                .post('/user/' + Users.verifiedUser.id)
                 .send({name: 'Good Name'})
-                .auth(adminUser.email, adminUser.password)
+                .auth(Users.adminUser.email, Users.adminUser.password)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .expect(function(res) {
@@ -416,9 +370,9 @@ describe('Users Endpoint', function() {
                         status: 'SUCCESS',
                         message: 'User has been successfully updated.',
                         data: {
-                            email: unverifiedUser.email,
+                            email: Users.verifiedUser.email,
                             name: 'Good Name',
-                            permission: 30
+                            permission: 20
                         }
                     });
                 })
@@ -428,7 +382,7 @@ describe('Users Endpoint', function() {
                         return false;
                     }
 
-                    supertest(app).get('/user/' + unverifiedUser.id)
+                    supertest(app).get('/user/' + Users.verifiedUser.id)
                         .expect('Content-Type', /json/)
                         .expect(200)
                         .expect(function(res) {
@@ -442,9 +396,9 @@ describe('Users Endpoint', function() {
         it('should allow admin users ' +
             'to change other users\' email address.', function(done) {
             supertest(app)
-                .post('/user/' + unverifiedUser.id)
+                .post('/user/' + Users.verifiedUser.id)
                 .send({email: 'test@test.com'})
-                .auth(adminUser.email, adminUser.password)
+                .auth(Users.adminUser.email, Users.adminUser.password)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .expect(function(res) {
@@ -465,8 +419,8 @@ describe('Users Endpoint', function() {
                         return false;
                     }
 
-                    supertest(app).get('/user/' + unverifiedUser.id)
-                        .auth(adminUser.email, adminUser.password)
+                    supertest(app).get('/user/' + Users.verifiedUser.id)
+                        .auth(Users.adminUser.email, Users.adminUser.password)
                         .expect('Content-Type', /json/)
                         .expect(200)
                         .expect(function(res) {
@@ -484,7 +438,7 @@ describe('Users Endpoint', function() {
         it('should not allow anonymous users ' +
             'to delete other users.', function(done) {
             supertest(app)
-                .delete('/user/' + unverifiedUser.id)
+                .delete('/user/' + Users.verifiedUser.id)
                 .expect(401)
                 .end(function(err) {
                     if (err) {
@@ -492,7 +446,7 @@ describe('Users Endpoint', function() {
                         return false;
                     }
 
-                    supertest(app).get('/user/' + unverifiedUser.id)
+                    supertest(app).get('/user/' + Users.verifiedUser.id)
                         .expect('Content-Type', /json/)
                         .expect(200)
                         .end(util.handleSupertest(done));
@@ -502,8 +456,8 @@ describe('Users Endpoint', function() {
         it('should not allow normal users ' +
             'to delete other users.', function(done) {
             supertest(app)
-                .delete('/user/' + unverifiedUser.id)
-                .auth(normalUser.email, normalUser.password)
+                .delete('/user/' + Users.verifiedUser.id)
+                .auth(Users.unverifiedUser.email, Users.unverifiedUser.password)
                 .expect(403)
                 .expect(function(res) {
                     expect(res.body).toEqual({
@@ -518,7 +472,7 @@ describe('Users Endpoint', function() {
                         return false;
                     }
 
-                    supertest(app).get('/user/' + unverifiedUser.id)
+                    supertest(app).get('/user/' + Users.verifiedUser.id)
                         .expect('Content-Type', /json/)
                         .expect(200)
                         .end(util.handleSupertest(done));
@@ -528,8 +482,8 @@ describe('Users Endpoint', function() {
         it('should allow admin users ' +
             'to delete other users.', function(done) {
             supertest(app)
-                .delete('/user/' + unverifiedUser.id)
-                .auth(adminUser.email, adminUser.password)
+                .delete('/user/' + Users.unverifiedUser.id)
+                .auth(Users.adminUser.email, Users.adminUser.password)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .expect(function(res) {
@@ -538,16 +492,7 @@ describe('Users Endpoint', function() {
                         message: 'User has been deleted.'
                     });
                 })
-                .end(function(err) {
-                    if (err) {
-                        done.fail(err);
-                        return false;
-                    }
-
-                    supertest(app).get('/user/' + unverifiedUser.id)
-                        .expect(404)
-                        .end(util.handleSupertest(done));
-                });
+                .end(util.handleSupertest(done));
 
         });
 

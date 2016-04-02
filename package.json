@@ -11,21 +11,25 @@
   "dependencies": {
     "crypto-js": "^3.1.5",
     "jsonschema": "^1.0.2",
-    "karma": "^0.13.15",
-    "passport-anonymous": "^1.0.1",
-    "pouchdb": "^5.1.0",
-    "pouchdb-find": "^0.8.0"
+    "pouchdb": "^5.3.1",
+    "pouchdb-find": "^0.9.0",
+    "lie": "^3.0.2"
   },
   "devDependencies": {
     "debug": "^2.2.0",
     "istanbul": "^0.4.1",
     "jasmine": "^2.4.1",
+    "jasmine-core": "^2.4.1",
     "jasmine-reporters": "^2.0.7",
     "jasmine-spec-reporter": "^2.4.0",
     "jscs": "^2.6.0",
     "jscs-jsdoc": "^1.2.0",
     "json-schema-faker": "^0.2.2",
+    "karma": "^0.13.22",
+    "karma-coverage": "^0.5.5",
+    "karma-jasmine": "^0.3.8",
     "mockery": "^1.4.0",
+    "nodemailer-mock-transport": "^1.2.0",
     "supertest": "^1.2.0"
   }
 }
