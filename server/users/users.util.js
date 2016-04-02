@@ -47,14 +47,18 @@ function getHash(password, salt) {
  * @param {object} model - Model schema properties to check.
  * @param {string} prop - Model property to check permissions levels on.
  * @param {boolean=} write - Check write permissions instead of read.
+ * @param {boolean=} owner - If ownership trumps normal permissions.
  * @returns {boolean} - The user can perform the action.
  */
-function userCan(permLevel, model, prop, write) {
+function userCan(permLevel, model, prop, write, owner) {
     var permissions = model[prop].permission;
     var propLevel = write ? permissions.write : permissions.read;
+    if (owner && permissions.owner) {
+        return true;
+    }
     if (typeof permLevel === 'number') {
         permLevel = Math.ceil(permLevel);
-        permLevel = Math.min(permLevel, 100);
+        permLevel = Math.min(permLevel, 101);
         permLevel = Math.max(permLevel, -1);
         return permLevel <= propLevel;
     }
@@ -70,13 +74,36 @@ function userCan(permLevel, model, prop, write) {
  * @param {boolean=} owner - If the param is private, is the caller the owner?
  * @returns {object} - Filtered object
  */
-function inputFilter(permLevel, modelName, result, write, owner) {
+function ioFilter(permLevel, modelName, result, write, owner) {
     var output = {};
     var model = models.io[modelName].properties;
     var keys = Object.keys(model);
     permLevel -= owner ? 1 : 0;
     for (var i = 0; i < keys.length; i++) {
-        if (userCan(permLevel, model, keys[i], write) &&
+        if (userCan(permLevel, model, keys[i], write, owner) &&
+                typeof result[keys[i]] !== 'undefined') {
+            output[keys[i]] = result[keys[i]];
+        }
+    }
+    return output;
+}
+
+/**
+ * Filter parameters based on permission level of user.
+ *
+ * @param {int} permLevel - Permission level to check.
+ * @param {string} modelName - Model schema to check.
+ * @param {object} result - Result to filter.
+ * @param {boolean=} write - Check against write permissions.
+ * @param {boolean=} owner - If the param is private, is the caller the owner?
+ * @returns {object} - Filtered object
+ */
+function dbFilter(permLevel, modelName, result, write, owner) {
+    var model = models.db[modelName].properties;
+    var keys = Object.keys(model);
+    var output = {};
+    for (var i = 0; i < keys.length; i++) {
+        if (userCan(permLevel, model, keys[i], write, owner) &&
                 typeof result[keys[i]] !== 'undefined') {
             output[keys[i]] = result[keys[i]];
         }
@@ -107,6 +134,7 @@ module.exports = {
     checkPassword  : checkPassword,
     getHash        : getHash,
     userCan        : userCan,
-    permFilter     : inputFilter,
+    ioFilter       : ioFilter,
+    dbFilter       : dbFilter,
     tokenEmail     : tokenEmail
 };

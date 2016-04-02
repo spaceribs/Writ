@@ -2,44 +2,88 @@
 
 var jsf = require('json-schema-faker');
 var userModel = require('../../models').io.user;
+var userDbModel = require('../../models').db.user;
 var _ = require('lodash');
 var mockery = require('mockery');
 var uuid = require('node-uuid');
 var errors = require('../app/app.errors');
-var config = require('../config');
+var SuccessMessage = require('../app/app.successes').SuccessMessage;
+
+var Users = require('./users.db.mock');
 
 describe('Users', function() {
 
-    var userOne;
-    var userTwo;
-    var userThree;
+    var newUser1;
+    var newUser2;
+    var newDbUser;
+    var util;
+    var ctrl;
+    var mail;
+
+    var req;
+    var res;
+    var callback;
+
+    var anonymousUser = {
+        name: 'Anonymous User',
+        permission: 100,
+        anonymous: true
+    };
 
     beforeAll(function() {
         mockery.enable({
             warnOnReplace     : false,
             warnOnUnregistered: false
         });
+
+        mockery.registerSubstitute(
+            './users.db', './users.db.mock');
+        mockery.registerSubstitute(
+            '../mail/mail.ctrl', '../mail/mail.ctrl.mock');
+
+        mail = require('../mail/mail.ctrl');
+        util = require('./users.util');
+        ctrl = require('./users.ctrl');
     });
 
     afterAll(function() {
         mockery.disable();
     });
 
-    beforeEach(function() {
-        userOne = jsf(userModel);
-        userTwo = jsf(userModel);
-        userThree = jsf(userModel);
+    beforeEach(function(done) {
+
+        req = {
+            user: anonymousUser,
+            accepts: jasmine.createSpy('accepts')
+        };
+
+        res = {
+            json: jasmine.createSpy('json')
+        };
+
+        callback = jasmine.createSpy('callback');
+
+        newUser1 = jsf(userModel);
+        newUser2 = jsf(userModel);
+
+        newDbUser = jsf(userDbModel);
+        newDbUser.permission = 20;
+        newDbUser.secret = uuid.v4();
+        newDbUser.id = newDbUser._id.match(/^user\/([a-z0-9-]+)$/)[1];
+        delete newDbUser._rev;
+
+        Users.put(newDbUser)
+            .then(done);
+
     });
 
     describe('Utilities', function() {
-
-        var util = require('./users.util');
 
         describe('getHash', function() {
 
             it('generates a valid sha512 hash from a password and a salt.',
             function() {
-                var hash = util.getHash(userOne.password, 'Some Salt');
+                var hash = util.getHash('Some Password', 'Some Salt');
 
                 expect(hash).toEqual(jasmine.any(String));
                 expect(hash).toMatch(/^[a-f0-9]{128}$/);
@@ -49,47 +93,34 @@ describe('Users', function() {
         describe('processPassword', function() {
 
             it('removes a password and generates a salt/hash.', function() {
-                var processedUserOne = _.clone(userOne);
-
-                util.processPassword(processedUserOne);
-
-                expect(processedUserOne.password).toBeUndefined();
-                expect(processedUserOne.salt).toEqual(jasmine.any(String));
-                expect(processedUserOne.hash).toEqual(jasmine.any(String));
+                util.processPassword(newUser1);
+                expect(newUser1.password).toBeUndefined();
+                expect(newUser1.salt).toEqual(jasmine.any(String));
+                expect(newUser1.hash).toEqual(jasmine.any(String));
             });
 
-            it('checks the hash is valid.', function() {
-                var processedUserOne = _.clone(userOne);
-                util.processPassword(processedUserOne);
-
-                expect(processedUserOne.hash).toMatch(/^[a-f0-9]{128}$/);
+            it('makes a valid hash.', function() {
+                util.processPassword(newUser1);
+                expect(newUser1.hash).toMatch(/^[a-f0-9]{128}$/);
             });
 
             it('checks that no collisions exist between users.', function() {
-                var processedUserOne = _.clone(userOne);
-                var processedUserTwo = _.clone(userTwo);
+                util.processPassword(newUser1);
+                util.processPassword(newUser2);
 
-                util.processPassword(processedUserOne);
-                util.processPassword(processedUserTwo);
-
-                expect(processedUserOne.salt)
-                    .not.toEqual(processedUserTwo.salt);
-                expect(processedUserOne.hash)
-                    .not.toEqual(processedUserTwo.hash);
+                expect(newUser1.salt).not.toEqual(newUser2.salt);
+                expect(newUser1.hash).not.toEqual(newUser2.hash);
             });
 
             it('checks that no collisions exist even with the same password.',
             function() {
-                var processedUserOne = _.clone(userOne);
-                var processedUserOneAlt = _.clone(userOne);
+                var newUser11 = _.clone(newUser1);
 
-                util.processPassword(processedUserOne);
-                util.processPassword(processedUserOneAlt);
+                util.processPassword(newUser1);
+                util.processPassword(newUser11);
 
-                expect(processedUserOne.salt)
-                    .not.toEqual(processedUserOneAlt.salt);
-                expect(processedUserOne.hash)
-                    .not.toEqual(processedUserOneAlt.hash);
+                expect(newUser1.salt).not.toEqual(newUser11.salt);
+                expect(newUser1.hash).not.toEqual(newUser11.hash);
             });
 
         });
@@ -97,20 +128,19 @@ describe('Users', function() {
         describe('checkPassword', function() {
 
             it('validates a matching password correctly.', function() {
-                var processedUserOne = _.clone(userOne);
+                var processedUserOne = _.clone(newUser1);
                 util.processPassword(processedUserOne);
 
                 var userOneCheck = util
-                    .checkPassword(userOne.password,
+                    .checkPassword(newUser1.password,
                         processedUserOne.salt,
                         processedUserOne.hash);
 
-                expect(userOneCheck).toEqual(jasmine.any(Boolean));
                 expect(userOneCheck).toBe(true);
             });
 
             it('validates that incorrect passwords fail to match.', function() {
-                var processedUserOne = _.clone(userOne);
+                var processedUserOne = _.clone(newUser1);
                 util.processPassword(processedUserOne);
 
                 var userOneCheck = util
@@ -118,7 +148,6 @@ describe('Users', function() {
                         processedUserOne.salt,
                         processedUserOne.hash);
 
-                expect(userOneCheck).toEqual(jasmine.any(Boolean));
                 expect(userOneCheck).toBe(false);
             });
 
@@ -128,96 +157,23 @@ describe('Users', function() {
 
     describe('Controller', function() {
 
-        var ctrl;
-        var req;
-        var res;
-        var callback;
-        var mailerMethods;
-        var mockMailer;
-
-        beforeAll(function() {
-
-            mailerMethods = {
-                /**
-                 * Mock method for sending an email.
-                 *
-                 * @param {object} content - content to send.
-                 * @param {function} callback - Callback function.
-                 */
-                sendMail: function(content, callback) {
-                    callback();
-                }
-            };
-            spyOn(mailerMethods, 'sendMail').and.callThrough();
-
-            mockMailer = {
-                /**
-                 * Mock method for creating a transport.
-                 *
-                 * @returns {{sendMail: mailerMethods.sendMail}}
-                 */
-                createTransport: function() {
-                    return mailerMethods;
-                }
-            };
-            spyOn(mockMailer, 'createTransport').and.callThrough();
-
-            mockery.registerMock('nodemailer', mockMailer);
-            mockery.registerSubstitute('./users.db', './users.db.mock');
-            ctrl = require('./users.ctrl');
-        });
-
-        beforeEach(function() {
-            callback = jasmine.createSpy('callback');
-            res = {json: jasmine.createSpy('json')};
-        });
-
-        afterEach(function() {
-            mailerMethods.sendMail.and.stub();
-            mailerMethods.sendMail.and.callThrough();
-        });
-
-        describe('login', function() {
-
-            it('returns a successful login.', function() {
-                userOne.permission = 30;
-                req = {user: userOne};
-                ctrl.login(req, res);
-
-                expect(res.json).toHaveBeenCalled();
-                expect(res.json.calls.mostRecent().args[0])
-                    .toEqual({
-                        status: 'SUCCESS',
-                        data  : {
-                            name: userOne.name,
-                            permission: userOne.permission
-                        }
-                    });
-            });
-
-        });
-
         describe('usersOptions', function() {
 
-            beforeAll(function() {
-                req = {user: userOne};
-            });
-
             it('returns a json-schema when requesting options.', function() {
-                req.accepts = jasmine.createSpy('accepts')
-                    .and.returnValue(true);
+                req.accepts.and.returnValue(true);
+
                 ctrl.users.options(req, res, callback);
 
                 expect(req.accepts).toHaveBeenCalled();
                 expect(req.accepts).toHaveBeenCalledWith('json');
                 expect(res.json).toHaveBeenCalled();
                 expect(res.json.calls.mostRecent().args[0])
-                        .toEqual(userModel);
+                    .toEqual(userModel);
             });
 
             it('passes through if json isn\'t accepted.', function() {
-                req.accepts = jasmine.createSpy('accepts')
-                    .and.returnValue(false);
+                req.accepts.and.returnValue(false);
+
                 ctrl.users.options(req, res, callback);
 
                 expect(req.accepts).toHaveBeenCalled();
@@ -231,15 +187,17 @@ describe('Users', function() {
 
             it('returns the decorated profile of the current user.',
             function() {
-                req = {user: userOne};
+                req.user = Users.verifiedUser;
                 ctrl.users.get(req, res);
 
                 expect(res.json).toHaveBeenCalled();
                 expect(res.json.calls.mostRecent().args[0])
-                        .toEqual({
-                            status: 'SUCCESS',
-                            data  : userOne
-                        });
+                    .toEqual(new SuccessMessage('Your credentials are valid.', {
+                        id: Users.verifiedUser.id,
+                        email: Users.verifiedUser.email,
+                        name: Users.verifiedUser.name,
+                        permission: Users.verifiedUser.permission
+                    }));
             });
 
         });
@@ -247,27 +205,20 @@ describe('Users', function() {
         describe('usersPost', function() {
 
             beforeEach(function() {
-                req = {body: userThree};
+                req.body = newUser1;
+                mail.testError = false;
             });
 
             it('creates a new user with the post body.', function(done) {
                 res.json.and.callFake(function() {
                     expect(res.json).toHaveBeenCalled();
                     expect(res.json.calls.mostRecent().args[0])
-                        .toEqual({
-                            status : 'SUCCESS',
-                            message: 'Please check your email to ' +
-                                'verify your account.',
-                            data   : {
+                        .toEqual(new SuccessMessage(
+                            'Please check your email to ' +
+                            'verify your account.', {
                                 id   : jasmine.any(String),
-                                email: userThree.email
-                            }
-                        });
-                    done();
-                });
-
-                callback.and.callFake(function() {
-                    expect(callback).not.toHaveBeenCalled();
+                                email: newUser1.email
+                            }));
                     done();
                 });
 
@@ -275,15 +226,12 @@ describe('Users', function() {
             });
 
             it('throws an error if sending an email failed.', function(done) {
-                mailerMethods.sendMail
-                    .and.callFake(function(content, callback) {
-                        callback(Error('test message.'));
-                    });
-
                 callback.and.callFake(function(err) {
                     expect(err).toEqual(jasmine.any(Error));
                     done();
                 });
+
+                mail.testError = true;
 
                 ctrl.users.post(req, res, callback);
             });
@@ -299,6 +247,7 @@ describe('Users', function() {
                 res.json.and.callFake(function() {
                     ctrl.users.post(req, res, callback);
                 });
+
                 ctrl.users.post(req, res, callback);
             });
 
@@ -315,39 +264,13 @@ describe('Users', function() {
                     done();
                 });
 
-                res.json.and.callFake(function() {
-                    ctrl.users.post(req, res, callback);
-                });
                 ctrl.users.post(req, res, callback);
 
-            });
-
-            it('constructs an email for users to verify their accounts.',
-            function(done) {
-
-                mailerMethods.sendMail.and.callFake(function(options) {
-                    expect(options).toEqual({
-                        from   : config.sysop,
-                        to     : userThree.email,
-                        subject: 'Writ - Verify your email address',
-                        html   : jasmine.any(String)
-                    });
-                    done();
-                });
-
-                ctrl.users.post(req, res, callback);
             });
 
         });
 
         describe('usersList', function() {
-
-            var userThree;
-
-            beforeEach(function() {
-                userThree = jsf(userModel);
-                req = {body: userThree};
-            });
 
             it('returns an array of users.', function(done) {
 
@@ -361,43 +284,31 @@ describe('Users', function() {
                 });
 
                 ctrl.users.list(req, res, callback);
-                expect(callback).not.toHaveBeenCalled();
-            });
 
-            xit('returns an error if you aren\'t an admin.', function() {});
+            });
 
         });
 
         describe('userGet', function() {
 
-            var userThree;
-            var postReq;
-            var postRes;
-
             beforeEach(function() {
-                userThree = jsf(userModel);
-                req = {params: {userId: uuid.v4()}};
-                postReq = {body: userThree};
-                postRes = {json: jasmine.createSpy('post-json')};
+                req.params = {
+                    userId: newDbUser.id
+                };
             });
 
             it('gets a user by their id.', function(done) {
 
-                postRes.json.and.callFake(function(response) {
-                    expect(response.data).toBeDefined();
-                    expect(response.data.id).toBeDefined();
-                    req.params.userId = response.data.id;
-
-                    ctrl.user.get(req, res, callback);
-                });
-
                 res.json.and.callFake(function(response) {
-                    expect(response.name).toBe(userThree.name);
-                    expect(callback).not.toHaveBeenCalled();
+                    expect(response).toEqual({
+                        id: newDbUser.id,
+                        name: newDbUser.name,
+                        permission: newDbUser.permission
+                    });
                     done();
                 });
 
-                ctrl.users.post(postReq, postRes, callback);
+                ctrl.user.get(req, res, callback);
             });
 
             it('returns a 404 error if no user exists.', function(done) {
@@ -405,29 +316,55 @@ describe('Users', function() {
                 callback.and.callFake(function() {
                     expect(callback).toHaveBeenCalled();
                     expect(callback.calls.mostRecent().args[0])
-                            .toEqual({
-                                status : 404,
-                                name   : 'not_found',
-                                message: 'missing',
-                                reason : 'missing'
-                            });
+                        .toEqual({
+                            status: 'DATABASE_ERROR',
+                            message: 'missing'
+                        });
                     done();
                 });
 
+                req.params.userId = uuid.v4();
                 ctrl.user.get(req, res, callback);
             });
 
-            xit('returns more information if you are an admin.', function() {});
+            it('returns more information if you are an admin.', function(done) {
+
+                res.json.and.callFake(function(response) {
+                    expect(response).toEqual({
+                        id: newDbUser.id,
+                        name: newDbUser.name,
+                        email: newDbUser.email,
+                        permission: newDbUser.permission
+                    });
+                    done();
+                });
+
+                req.user = Users.adminUser;
+                ctrl.user.get(req, res, callback);
+
+            });
 
         });
 
         describe('userPost', function() {
 
-            var postRes;
+            beforeEach(function initRequest() {
+                req.user = Users.adminUser;
+                req.params = {
+                    userId: Users.verifiedUser.id
+                };
+                req.body = {};
+            });
 
-            beforeEach(function() {
-                req = {body: userThree, params: {userId: uuid.v4()}};
-                postRes = {json: jasmine.createSpy('post-json')};
+            afterEach(function resetUser() {
+                Users.get('user/' + Users.verifiedUser.id)
+                    .then(function(result) {
+                        result.email = Users.verifiedUser.email;
+                        result.name = Users.verifiedUser.name;
+                        result.permission = 20;
+                        util.processPassword(result);
+                        Users.put(result);
+                    });
             });
 
             it('returns a 404 error if no user exists.', function(done) {
@@ -435,233 +372,126 @@ describe('Users', function() {
                 callback.and.callFake(function() {
                     expect(callback).toHaveBeenCalled();
                     expect(callback.calls.mostRecent().args[0])
-                            .toEqual({
-                                status : 404,
-                                name   : 'not_found',
-                                message: 'missing',
-                                reason : 'missing'
-                            });
+                        .toEqual({
+                            status: 'DATABASE_ERROR',
+                            message: 'missing'
+                        });
                     done();
                 });
 
+                req.params.userId = uuid.v4();
                 ctrl.user.get(req, res, callback);
             });
 
             it('updates basic user information.', function(done) {
 
-                postRes.json.and.callFake(function(response) {
-                    expect(response.data).toBeDefined();
-                    expect(response.data.id).toBeDefined();
-                    req.params.userId = response.data.id;
-
-                    req.body = {name: userTwo.name};
-
-                    ctrl.user.post(req, res, callback);
-                });
-
                 res.json.and.callFake(function(response) {
-                    expect(callback).not.toHaveBeenCalled();
-                    expect(response).toEqual({
-                        status : 'SUCCESS',
-                        message: 'User has been successfully updated.',
-                        data: {
-                            name: userTwo.name,
-                            permission: 30
-                        }
-                    });
+                    expect(response).toEqual(new SuccessMessage(
+                        'User has been successfully updated.', {
+                            email: Users.verifiedUser.email,
+                            name: newUser1.name,
+                            permission: 20
+                        }));
                     done();
+
                 });
 
-                ctrl.users.post({
-                    body: userOne
-                }, postRes, callback);
+                req.body.name = newUser1.name;
+                ctrl.user.post(req, res, callback);
 
             });
 
             it('doesn\'t update a user if their email is already ' +
             'associated with another account.', function(done) {
 
-                postRes.json.and.callFake(function(response) {
-                    expect(response.data).toBeDefined();
-                    expect(response.data.id).toBeDefined();
-                    req.params.userId = response.data.id;
-
-                    req.body = {email: userOne.email};
-
-                    ctrl.user.post(req, res, callback);
-                });
-
                 callback.and.callFake(function() {
                     expect(callback).toHaveBeenCalled();
                     expect(callback.calls.mostRecent().args[0])
-                            .toEqual(jasmine.any(errors.EmailUsedError));
+                        .toEqual(jasmine.any(errors.EmailUsedError));
                     done();
                 });
 
-                var userOneRes = {
-                    json: function() {
-                        ctrl.users.post({
-                            body: userTwo
-                        }, postRes, callback);
-                    }
-                };
+                req.body.email = Users.unverifiedUser.email;
+                ctrl.user.post(req, res, callback);
 
-                ctrl.users.post({
-                    body: userOne
-                }, userOneRes, callback);
             });
 
             it('updates a users email.', function(done) {
 
-                postRes.json.and.callFake(function(response) {
-                    expect(response.data).toBeDefined();
-                    expect(response.data.id).toBeDefined();
-                    req.params.userId = response.data.id;
-
-                    req.body = {email: userOne.email};
-
-                    ctrl.user.post(req, res, callback);
-                });
-
                 res.json.and.callFake(function(response) {
-                    expect(callback).not.toHaveBeenCalled();
-                    expect(response).toEqual({
-                        status : 'SUCCESS',
-                        message: 'User has been updated, and an ' +
-                        'email has been sent to the new address.',
-                        data: {
-                            name: userOne.name,
+                    expect(response).toEqual(new SuccessMessage(
+                        'User has been updated, and an ' +
+                        'email has been sent to the new address.', {
+                            email: newUser1.email,
+                            name: Users.verifiedUser.name,
                             permission: 30
-                        }
-                    });
+                        }));
+                    Users.verifiedUser.email = newUser1.email;
                     done();
                 });
 
-                ctrl.users.post({
-                    body: userOne
-                }, postRes, callback);
+                req.body.email = newUser1.email;
+                ctrl.user.post(req, res, callback);
 
             });
 
             it('updates a users password.', function(done) {
 
-                var loginRes = {
-                    /**
-                     * Temporary callback for login response.
-                     *
-                     * @param {object} response - Response object
-                     */
-                    json: function(response) {
-                        expect(response).toEqual({
-                            status: 'SUCCESS',
-                            data  : {}
-                        });
-                        done();
-                    }
-                };
-
-                postRes.json.and.callFake(function(response) {
-                    expect(response.data).toBeDefined();
-                    expect(response.data.id).toBeDefined();
-                    req.params.userId = response.data.id;
-
-                    req.body = {password: userTwo.password};
-
-                    ctrl.user.post(req, res, callback);
-                });
-
                 res.json.and.callFake(function(response) {
-                    expect(callback).not.toHaveBeenCalled();
-                    expect(response).toEqual({
-                        status : 'SUCCESS',
-                        message: 'User has been successfully updated.',
-                        data: {
-                            name: userOne.name,
-                            permission: 30
-                        }
-                    });
+                    expect(response).toEqual(new SuccessMessage(
+                        'User has been successfully updated.', {
+                            email: Users.verifiedUser.email,
+                            name: Users.verifiedUser.name,
+                            permission: 20
+                        }));
+                    Users.verifiedUser.password = newUser1.password;
+                    done();
 
-                    var loginReq = {user: {
-                        email: userOne.email,
-                        password: userTwo.password
-                    }};
-
-                    ctrl.login(loginReq, loginRes);
                 });
 
-                ctrl.users.post({
-                    body: userOne
-                }, postRes, callback);
+                req.body.password = newUser1.password;
+                ctrl.user.post(req, res, callback);
 
             });
-
-            xit('admin can update permissions for a user.', function() {});
 
         });
 
         describe('userDelete', function() {
 
-            var postRes;
-
             beforeEach(function() {
-                req = {body: userOne, params: {userId: uuid.v4()}};
-                postRes = {json: jasmine.createSpy('post-json')};
+                req.user = Users.adminUser;
+                req.params = {};
             });
 
             it('returns an error if the user doesn\'t exist.', function(done) {
                 callback.and.callFake(function(response) {
                     expect(response).toEqual({
-                        status: 404,
-                        name: 'not_found',
-                        message: 'missing',
-                        reason: 'missing'
+                        status: 'DATABASE_ERROR',
+                        message: 'missing'
                     });
                     done();
                 });
 
-                ctrl.user.delete(req, postRes, callback);
+                ctrl.user.delete(req, res, callback);
             });
 
             it('deletes a user.', function(done) {
                 res.json.and.callFake(function(response) {
-                    expect(response).toEqual({
-                        status: 'SUCCESS',
-                        message: 'User has been deleted.'
-                    });
+                    expect(response).toEqual(new SuccessMessage(
+                        'User has been deleted.'));
                     done();
                 });
 
-                postRes.json.and.callFake(function(response) {
-                    expect(response.data).toBeDefined();
-                    expect(response.data.id).toBeDefined();
-                    req.params.userId = response.data.id;
-
-                    ctrl.user.delete(req, res, callback);
-                });
-
-                ctrl.users.post({
-                    body: userOne
-                }, postRes, callback);
+                req.params.userId = newDbUser.id;
+                ctrl.user.delete(req, res, callback);
             });
-
-            xit('deletes a user if they are the owner of an account.',
-                function() {});
-
-            xit('deletes a user if they are an admin.',
-                function() {});
-
-            xit('doesn\'t delete a user if you aren\'t an owner/admin.',
-                function() {});
 
         });
 
         describe('userVerify', function() {
 
-            var postRes;
-
             beforeEach(function() {
                 req = {params: {token: uuid.v4()}};
-                postRes = {json: jasmine.createSpy('post-json')};
             });
 
             it('returns an error if no user matches the token',
@@ -676,42 +506,30 @@ describe('Users', function() {
 
                 });
 
-            it('verifies a user via email sent.', function(done) {
+            it('verifies a user via an email.', function(done) {
                 res.json.and.callFake(function(response) {
-                    expect(response).toEqual({
-                        status: 'SUCCESS',
-                        message: 'Your email has been verified.'
-                    });
-
+                    expect(response).toEqual(new SuccessMessage(
+                        'Your email has been verified.'));
                     done();
                 });
 
-                mailerMethods.sendMail.and.callFake(function(options) {
-                    expect(options.html).toEqual(jasmine.any(String));
-                    var tokenRegex = /\/verify\/([a-f0-9-]*)/ig;
-                    req.params.token = tokenRegex.exec(options.html)[1];
-
-                    ctrl.user.verify(req, res, callback);
-                });
-
-                ctrl.users.post({
-                    body: userOne
-                }, postRes, callback);
+                req.params.token = newDbUser.secret;
+                ctrl.user.verify(req, res, callback);
             });
 
         });
 
         describe('loginStrategy', function() {
 
-            var postRes;
-
             beforeEach(function() {
-                req = {params: {token: uuid.v4()}};
-                postRes = {json: jasmine.createSpy('post-json')};
+                req = {
+                    params: {token: uuid.v4()},
+                    user: anonymousUser
+                };
             });
 
             it('doesn\'t log in a non existent user.', function(done) {
-                ctrl.strategy(userOne.email, userOne.password,
+                ctrl.strategy(newUser1.email, newUser1.password,
                     function(err) {
                         expect(err).toEqual(jasmine.any(errors.LoginError));
                         done();
@@ -720,52 +538,25 @@ describe('Users', function() {
 
             it('doesn\'t log in a user with a bad password.', function(done) {
 
-                postRes.json.and.callFake(function(response) {
-                    expect(response.data).toBeDefined();
-                    expect(response.data.id).toBeDefined();
-
-                    ctrl.strategy(userOne.email, 'BAD PASSWORD!',
-                        function(err) {
-                            expect(err)
-                                .toEqual(jasmine.any(errors.LoginError));
-                            done();
-                        });
-                });
-
-                ctrl.users.post({
-                    body: userOne
-                }, postRes, callback);
+                ctrl.strategy(Users.verifiedUser.email, 'BAD PASSWORD!',
+                    function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.LoginError));
+                        done();
+                    });
             });
 
             it('logs in a valid user.', function(done) {
 
-                postRes.json.and.callFake(function(response) {
-                    expect(response.data).toBeDefined();
-                    expect(response.data.id).toBeDefined();
+                ctrl.strategy(
+                    Users.verifiedUser.email,
+                    Users.verifiedUser.password,
+                    function(err, user) {
+                        expect(err).toBeNull();
+                        expect(user.id).toEqual(Users.verifiedUser.id);
+                        done();
+                    });
 
-                    ctrl.strategy(userOne.email, userOne.password,
-                        function(err, user) {
-                            expect(err).toBeNull();
-                            expect(user).toEqual({
-                                email: userOne.email,
-                                name: userOne.name,
-                                salt: jasmine.any(String),
-                                hash: jasmine.any(String),
-                                secret: jasmine.any(String),
-                                id: response.data.id,
-                                created: jasmine.any(String),
-                                updated: jasmine.any(String),
-                                permission: 30,
-                                _id: 'user/' + response.data.id,
-                                _rev: jasmine.any(String)
-                            });
-                            done();
-                        });
-                });
-
-                ctrl.users.post({
-                    body: userOne
-                }, postRes, callback);
             });
         });
 

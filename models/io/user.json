@@ -9,8 +9,9 @@
             "format": "email",
             "chance": "email",
             "permission": {
-                "read": 19,
-                "write": 19
+                "read": 10,
+                "write": 10,
+                "owner": true
             },
             "unique": true
         },
@@ -19,7 +20,8 @@
             "chance": "name",
             "permission": {
                 "read": 100,
-                "write": 19
+                "write": 10,
+                "owner": true
             }
         },
         "permission": {
@@ -37,7 +39,8 @@
             "type": "string",
             "permission": {
                 "read": -1,
-                "write": 19
+                "write": 10,
+                "owner": true
             }
         }
     },

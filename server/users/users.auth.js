@@ -2,16 +2,10 @@
 
 var passport = require('passport');
 var BasicStrategy = require('passport-http').BasicStrategy;
-var controller = require('./users.ctrl');
+var AnonymousStrategy = require('passport-anonymous').Strategy;
+var ctrl = require('./users.ctrl');
 
-passport.use(new BasicStrategy(controller.strategy));
-
-passport.serializeUser(function(user, done) {
-    done(null, user);
-});
-
-passport.deserializeUser(function(user, done) {
-    done(null, user);
-});
+passport.use(new BasicStrategy(ctrl.strategy));
+passport.use(new AnonymousStrategy());
 
 module.exports = passport;
