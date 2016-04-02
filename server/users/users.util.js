@@ -10,11 +10,9 @@ var models = require('../../models');
  * @param {object} params - Request body to process.
  */
 function processPassword(params) {
-    if (params.password) {
-        params.salt = secureRandom.randomBuffer(256).toString('hex');
-        params.hash = getHash(params.password, params.salt);
-        delete params.password;
-    }
+    params.salt = secureRandom.randomBuffer(256).toString('hex');
+    params.hash = getHash(params.password, params.salt);
+    delete params.password;
 }
 
 /**
@@ -53,15 +51,19 @@ function getHash(password, salt) {
 function userCan(permLevel, model, prop, write, owner) {
     var permissions = model[prop].permission;
     var propLevel = write ? permissions.write : permissions.read;
+
+    if (typeof permLevel !== 'number') {
+        return false;
+    }
+
     if (owner && permissions.owner) {
         return true;
     }
-    if (typeof permLevel === 'number') {
-        permLevel = Math.ceil(permLevel);
-        permLevel = Math.min(permLevel, 101);
-        permLevel = Math.max(permLevel, -1);
-        return permLevel <= propLevel;
-    }
+
+    permLevel = Math.ceil(permLevel);
+    permLevel = Math.min(permLevel, 101);
+    permLevel = Math.max(permLevel, -1);
+    return permLevel <= propLevel;
 }
 
 /**

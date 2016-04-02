@@ -69,13 +69,13 @@ LoginError.prototype = Object.create(Error.prototype);
 /**
  * A custom error to handle unauthorized actions.
  *
- * @param {string} [message] - Custom login error message.
+ * @param {string} message - Custom login error message.
  * @constructor
  */
 function ForbiddenError(message) {
     this.status = 403;
     this.name = 'ForbiddenError';
-    this.message = (message || 'Account is forbidden.');
+    this.message = message;
 }
 ForbiddenError.prototype = Object.create(Error.prototype);
 

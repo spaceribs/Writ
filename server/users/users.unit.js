@@ -2,7 +2,6 @@
 
 var jsf = require('json-schema-faker');
 var userModel = require('../../models').io.user;
-var userDbModel = require('../../models').db.user;
 var _ = require('lodash');
 var mockery = require('mockery');
 var uuid = require('node-uuid');
@@ -13,9 +12,13 @@ var Users = require('./users.db.mock');
 
 describe('Users', function() {
 
-    var newUser1;
-    var newUser2;
-    var newDbUser;
+    var newUser;
+
+    var adminUser;
+    var verifiedUser;
+    var unverifiedUser;
+    var invalidUser;
+
     var util;
     var ctrl;
     var mail;
@@ -50,32 +53,58 @@ describe('Users', function() {
         mockery.disable();
     });
 
-    beforeEach(function(done) {
+    beforeEach(
+        /**
+         * Initialize request, response and callbacks for the Express
+         * controllers we'll be testing.
+         */
+        function expressSetup() {
 
-        req = {
-            user: anonymousUser,
-            accepts: jasmine.createSpy('accepts')
-        };
+            req = {
+                user: anonymousUser,
+                accepts: jasmine.createSpy('accepts')
+            };
 
-        res = {
-            json: jasmine.createSpy('json')
-        };
+            res = {
+                json: jasmine.createSpy('json')
+            };
 
-        callback = jasmine.createSpy('callback');
+            callback = jasmine.createSpy('callback');
 
-        newUser1 = jsf(userModel);
-        newUser2 = jsf(userModel);
+        }
+    );
 
-        newDbUser = jsf(userDbModel);
-        newDbUser.permission = 20;
-        newDbUser.secret = uuid.v4();
-        newDbUser.id = newDbUser._id.match(/^user\/([a-z0-9-]+)$/)[1];
-        delete newDbUser._rev;
+    beforeEach(
+        /**
+         * For each test, create a new set of all users that
+         * could be used in these tests. Also create a fake brand new user.
+         *
+         * @param {function} done - Called when all users have been set up.
+         */
+        function userSetup(done) {
 
-        Users.put(newDbUser)
-            .then(done);
+            newUser = jsf(userModel);
 
-    });
+            Users.mockUser(10)
+                .then(function(user) {
+                    adminUser = user;
+                    return Users.mockUser(20);
+                })
+                .then(function(user) {
+                    verifiedUser = user;
+                    return Users.mockUser(30);
+                })
+                .then(function(user) {
+                    unverifiedUser = user;
+                    return Users.mockUser(20, true);
+                })
+                .then(function(user) {
+                    invalidUser = user;
+                    done();
+                });
+
+        }
+    );
 
     describe('Utilities', function() {
 
@@ -93,34 +122,37 @@ describe('Users', function() {
         describe('processPassword', function() {
 
             it('removes a password and generates a salt/hash.', function() {
-                util.processPassword(newUser1);
-                expect(newUser1.password).toBeUndefined();
-                expect(newUser1.salt).toEqual(jasmine.any(String));
-                expect(newUser1.hash).toEqual(jasmine.any(String));
+                util.processPassword(newUser);
+                expect(newUser.password).toBeUndefined();
+                expect(newUser.salt).toEqual(jasmine.any(String));
+                expect(newUser.hash).toEqual(jasmine.any(String));
             });
 
             it('makes a valid hash.', function() {
-                util.processPassword(newUser1);
-                expect(newUser1.hash).toMatch(/^[a-f0-9]{128}$/);
+                util.processPassword(newUser);
+                expect(newUser.hash).toMatch(/^[a-f0-9]{128}$/);
             });
 
-            it('checks that no collisions exist between users.', function() {
-                util.processPassword(newUser1);
-                util.processPassword(newUser2);
+            it('checks that no collisions could exist between users.',
+            function() {
+                var anotherUser = jsf(userModel);
 
-                expect(newUser1.salt).not.toEqual(newUser2.salt);
-                expect(newUser1.hash).not.toEqual(newUser2.hash);
+                util.processPassword(newUser);
+                util.processPassword(anotherUser);
+
+                expect(newUser.salt).not.toEqual(anotherUser.salt);
+                expect(newUser.hash).not.toEqual(anotherUser.hash);
             });
 
             it('checks that no collisions exist even with the same password.',
             function() {
-                var newUser11 = _.clone(newUser1);
+                var newUser11 = _.clone(newUser);
 
-                util.processPassword(newUser1);
+                util.processPassword(newUser);
                 util.processPassword(newUser11);
 
-                expect(newUser1.salt).not.toEqual(newUser11.salt);
-                expect(newUser1.hash).not.toEqual(newUser11.hash);
+                expect(newUser.salt).not.toEqual(newUser11.salt);
+                expect(newUser.hash).not.toEqual(newUser11.hash);
             });
 
         });
@@ -128,11 +160,11 @@ describe('Users', function() {
         describe('checkPassword', function() {
 
             it('validates a matching password correctly.', function() {
-                var processedUserOne = _.clone(newUser1);
+                var processedUserOne = _.clone(newUser);
                 util.processPassword(processedUserOne);
 
                 var userOneCheck = util
-                    .checkPassword(newUser1.password,
+                    .checkPassword(newUser.password,
                         processedUserOne.salt,
                         processedUserOne.hash);
 
@@ -140,7 +172,7 @@ describe('Users', function() {
             });
 
             it('validates that incorrect passwords fail to match.', function() {
-                var processedUserOne = _.clone(newUser1);
+                var processedUserOne = _.clone(newUser);
                 util.processPassword(processedUserOne);
 
                 var userOneCheck = util
@@ -153,9 +185,73 @@ describe('Users', function() {
 
         });
 
+        describe('userCan', function() {
+
+            var model;
+
+            beforeEach(function() {
+                model = {
+                    'test': {
+                        'permission': {
+                            read: 20,
+                            write: 10,
+                            owner: true
+                        }
+                    }
+                };
+            });
+
+            it('allows an admin user to read.', function() {
+                var can = util.userCan(10, model, 'test', false, false);
+                expect(can).toBe(true);
+            });
+
+            it('allows a verified user to read.', function() {
+                var can = util.userCan(20, model, 'test', false, false);
+                expect(can).toBe(true);
+            });
+
+            it('disallows a unverified user to read.', function() {
+                var can = util.userCan(30, model, 'test', false, false);
+                expect(can).toBe(false);
+            });
+
+            it('disallows an anonymous user to read.', function() {
+                var can = util.userCan(100, model, 'test', false, false);
+                expect(can).toBe(false);
+            });
+
+            it('allows an unverified user to read if they are the owner.',
+            function() {
+                var can = util.userCan(30, model, 'test', false, true);
+                expect(can).toBe(true);
+            });
+
+            it('allows an admin user to write.', function() {
+                var can = util.userCan(10, model, 'test', true, false);
+                expect(can).toBe(true);
+            });
+
+            it('disallows a verified user to write.', function() {
+                var can = util.userCan(20, model, 'test', true, false);
+                expect(can).toBe(false);
+            });
+
+            it('only accepts numbers', function() {
+                //noinspection JSCheckFunctionSignatures
+                var can = util.userCan('admin', model, 'test', true, true);
+                expect(can).toBe(false);
+            });
+
+        });
+
     });
 
     describe('Controller', function() {
+
+        afterEach(function() {
+            mail.testError = false;
+        });
 
         describe('usersOptions', function() {
 
@@ -187,16 +283,16 @@ describe('Users', function() {
 
             it('returns the decorated profile of the current user.',
             function() {
-                req.user = Users.verifiedUser;
+                req.user = verifiedUser;
                 ctrl.users.get(req, res);
 
                 expect(res.json).toHaveBeenCalled();
                 expect(res.json.calls.mostRecent().args[0])
                     .toEqual(new SuccessMessage('Your credentials are valid.', {
-                        id: Users.verifiedUser.id,
-                        email: Users.verifiedUser.email,
-                        name: Users.verifiedUser.name,
-                        permission: Users.verifiedUser.permission
+                        id: verifiedUser.id,
+                        email: verifiedUser.email,
+                        name: verifiedUser.name,
+                        permission: verifiedUser.permission
                     }));
             });
 
@@ -205,8 +301,7 @@ describe('Users', function() {
         describe('usersPost', function() {
 
             beforeEach(function() {
-                req.body = newUser1;
-                mail.testError = false;
+                req.body = newUser;
             });
 
             it('creates a new user with the post body.', function(done) {
@@ -217,11 +312,66 @@ describe('Users', function() {
                             'Please check your email to ' +
                             'verify your account.', {
                                 id   : jasmine.any(String),
-                                email: newUser1.email
+                                email: newUser.email
                             }));
                     done();
                 });
 
+                ctrl.users.post(req, res, callback);
+            });
+
+            it('updates an existing user with a new name.', function(done) {
+                res.json.and.callFake(function() {
+                    expect(res.json).toHaveBeenCalled();
+                    expect(res.json.calls.mostRecent().args[0])
+                        .toEqual(new SuccessMessage(
+                            'User has been successfully updated.', {
+                                email: verifiedUser.email,
+                                name: newUser.name,
+                                permission: 20
+                            }));
+                    done();
+                });
+
+                req.user = verifiedUser;
+                req.body = {name: newUser.name};
+                ctrl.users.post(req, res, callback);
+            });
+
+            it('updates an existing user with a new email.', function(done) {
+                res.json.and.callFake(function() {
+                    expect(res.json).toHaveBeenCalled();
+                    expect(res.json.calls.mostRecent().args[0])
+                        .toEqual(new SuccessMessage(
+                            'User has been updated, and an email ' +
+                            'has been sent to the new address.', {
+                                email: newUser.email,
+                                name: verifiedUser.name,
+                                permission: 30
+                            }));
+                    done();
+                });
+
+                req.user = verifiedUser;
+                req.body = {email: newUser.email};
+                ctrl.users.post(req, res, callback);
+            });
+
+            it('updates an existing user with a new password.', function(done) {
+                res.json.and.callFake(function() {
+                    expect(res.json).toHaveBeenCalled();
+                    expect(res.json.calls.mostRecent().args[0])
+                        .toEqual(new SuccessMessage(
+                            'User has been successfully updated.', {
+                                email: verifiedUser.email,
+                                name: verifiedUser.name,
+                                permission: 20
+                            }));
+                    done();
+                });
+
+                req.user = verifiedUser;
+                req.body = {password: newUser.password};
                 ctrl.users.post(req, res, callback);
             });
 
@@ -232,7 +382,6 @@ describe('Users', function() {
                 });
 
                 mail.testError = true;
-
                 ctrl.users.post(req, res, callback);
             });
 
@@ -251,10 +400,8 @@ describe('Users', function() {
                 ctrl.users.post(req, res, callback);
             });
 
-            it('checks if the schema is valid.',
+            it('checks if the user schema is valid.',
             function(done) {
-
-                req.body.name = 12;
 
                 callback.and.callFake(function(err) {
                     expect(err).toEqual(
@@ -264,6 +411,24 @@ describe('Users', function() {
                     done();
                 });
 
+                req.body.name = 12;
+                ctrl.users.post(req, res, callback);
+
+            });
+
+            it('checks if the user is valid before updating.',
+            function(done) {
+
+                callback.and.callFake(function(err) {
+                    expect(err).toEqual(
+                        jasmine.any(errors.JsonSchemaValidationError));
+                    expect(err.errors[0].message)
+                        .toBe('Additional properties not allowed');
+                    done();
+                });
+
+                req.user = invalidUser;
+                req.body = {name: newUser.name};
                 ctrl.users.post(req, res, callback);
 
             });
@@ -293,7 +458,7 @@ describe('Users', function() {
 
             beforeEach(function() {
                 req.params = {
-                    userId: newDbUser.id
+                    userId: verifiedUser.id
                 };
             });
 
@@ -301,9 +466,9 @@ describe('Users', function() {
 
                 res.json.and.callFake(function(response) {
                     expect(response).toEqual({
-                        id: newDbUser.id,
-                        name: newDbUser.name,
-                        permission: newDbUser.permission
+                        id: verifiedUser.id,
+                        name: verifiedUser.name,
+                        permission: verifiedUser.permission
                     });
                     done();
                 });
@@ -331,15 +496,15 @@ describe('Users', function() {
 
                 res.json.and.callFake(function(response) {
                     expect(response).toEqual({
-                        id: newDbUser.id,
-                        name: newDbUser.name,
-                        email: newDbUser.email,
-                        permission: newDbUser.permission
+                        id: verifiedUser.id,
+                        name: verifiedUser.name,
+                        email: verifiedUser.email,
+                        permission: verifiedUser.permission
                     });
                     done();
                 });
 
-                req.user = Users.adminUser;
+                req.user = adminUser;
                 ctrl.user.get(req, res, callback);
 
             });
@@ -349,22 +514,11 @@ describe('Users', function() {
         describe('userPost', function() {
 
             beforeEach(function initRequest() {
-                req.user = Users.adminUser;
+                req.user = adminUser;
                 req.params = {
-                    userId: Users.verifiedUser.id
+                    userId: verifiedUser.id
                 };
                 req.body = {};
-            });
-
-            afterEach(function resetUser() {
-                Users.get('user/' + Users.verifiedUser.id)
-                    .then(function(result) {
-                        result.email = Users.verifiedUser.email;
-                        result.name = Users.verifiedUser.name;
-                        result.permission = 20;
-                        util.processPassword(result);
-                        Users.put(result);
-                    });
             });
 
             it('returns a 404 error if no user exists.', function(done) {
@@ -388,15 +542,15 @@ describe('Users', function() {
                 res.json.and.callFake(function(response) {
                     expect(response).toEqual(new SuccessMessage(
                         'User has been successfully updated.', {
-                            email: Users.verifiedUser.email,
-                            name: newUser1.name,
+                            email: verifiedUser.email,
+                            name: newUser.name,
                             permission: 20
                         }));
                     done();
 
                 });
 
-                req.body.name = newUser1.name;
+                req.body.name = newUser.name;
                 ctrl.user.post(req, res, callback);
 
             });
@@ -411,7 +565,7 @@ describe('Users', function() {
                     done();
                 });
 
-                req.body.email = Users.unverifiedUser.email;
+                req.body.email = unverifiedUser.email;
                 ctrl.user.post(req, res, callback);
 
             });
@@ -422,15 +576,14 @@ describe('Users', function() {
                     expect(response).toEqual(new SuccessMessage(
                         'User has been updated, and an ' +
                         'email has been sent to the new address.', {
-                            email: newUser1.email,
-                            name: Users.verifiedUser.name,
+                            email: newUser.email,
+                            name: verifiedUser.name,
                             permission: 30
                         }));
-                    Users.verifiedUser.email = newUser1.email;
                     done();
                 });
 
-                req.body.email = newUser1.email;
+                req.body.email = newUser.email;
                 ctrl.user.post(req, res, callback);
 
             });
@@ -440,16 +593,15 @@ describe('Users', function() {
                 res.json.and.callFake(function(response) {
                     expect(response).toEqual(new SuccessMessage(
                         'User has been successfully updated.', {
-                            email: Users.verifiedUser.email,
-                            name: Users.verifiedUser.name,
+                            email: verifiedUser.email,
+                            name: verifiedUser.name,
                             permission: 20
                         }));
-                    Users.verifiedUser.password = newUser1.password;
                     done();
 
                 });
 
-                req.body.password = newUser1.password;
+                req.body.password = newUser.password;
                 ctrl.user.post(req, res, callback);
 
             });
@@ -459,7 +611,7 @@ describe('Users', function() {
         describe('userDelete', function() {
 
             beforeEach(function() {
-                req.user = Users.adminUser;
+                req.user = adminUser;
                 req.params = {};
             });
 
@@ -482,7 +634,7 @@ describe('Users', function() {
                     done();
                 });
 
-                req.params.userId = newDbUser.id;
+                req.params.userId = verifiedUser.id;
                 ctrl.user.delete(req, res, callback);
             });
 
@@ -513,8 +665,23 @@ describe('Users', function() {
                     done();
                 });
 
-                req.params.token = newDbUser.secret;
+                req.params.token = unverifiedUser.secret;
                 ctrl.user.verify(req, res, callback);
+            });
+
+            it('checks if the user is valid before verifying.', function(done) {
+
+                callback.and.callFake(function(err) {
+                    expect(err).toEqual(
+                        jasmine.any(errors.JsonSchemaValidationError));
+                    expect(err.errors[0].message)
+                        .toBe('Additional properties not allowed');
+                    done();
+                });
+
+                req.params.token = invalidUser.secret;
+                ctrl.user.verify(req, res, callback);
+
             });
 
         });
@@ -529,7 +696,7 @@ describe('Users', function() {
             });
 
             it('doesn\'t log in a non existent user.', function(done) {
-                ctrl.strategy(newUser1.email, newUser1.password,
+                ctrl.strategy(newUser.email, newUser.password,
                     function(err) {
                         expect(err).toEqual(jasmine.any(errors.LoginError));
                         done();
@@ -538,7 +705,7 @@ describe('Users', function() {
 
             it('doesn\'t log in a user with a bad password.', function(done) {
 
-                ctrl.strategy(Users.verifiedUser.email, 'BAD PASSWORD!',
+                ctrl.strategy(verifiedUser.email, 'BAD PASSWORD!',
                     function(err) {
                         expect(err)
                             .toEqual(jasmine.any(errors.LoginError));
@@ -549,11 +716,11 @@ describe('Users', function() {
             it('logs in a valid user.', function(done) {
 
                 ctrl.strategy(
-                    Users.verifiedUser.email,
-                    Users.verifiedUser.password,
+                    verifiedUser.email,
+                    verifiedUser.password,
                     function(err, user) {
                         expect(err).toBeNull();
-                        expect(user.id).toEqual(Users.verifiedUser.id);
+                        expect(user.id).toEqual(verifiedUser.id);
                         done();
                     });
 
