@@ -1,0 +1,48 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "/writ/io/passage",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "faker": "lorem.sentence",
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
+        },
+        "desc": {
+            "type": "string",
+            "faker": "lorem.paragraph",
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
+        },
+        "from": {
+            "$ref": "/writ/db/place/id",
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
+        },
+        "to": {
+            "$ref": "/writ/db/place/id",
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
+        }
+    },
+    "required": [
+        "id",
+        "from",
+        "to",
+        "title",
+        "desc"
+    ]
+}

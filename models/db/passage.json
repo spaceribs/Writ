@@ -1,13 +1,12 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "/writ/db/user",
+    "id": "/writ/db/passage",
     "type": "object",
-    "description": "A writ user",
     "properties": {
         "_id": {
-            "id": "/writ/db/user/id",
+            "id": "/writ/db/passage/id",
             "type": "string",
-            "pattern": "^user\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "pattern": "^place\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "permission": {
                 "read": 0,
                 "write": 0
@@ -47,73 +46,33 @@
                 "write": 0
             }
         },
-        "secret": {
-            "type": "string",
-            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
-            "faker": "random.uuid",
+        "creator": {
+            "$ref": "/writ/db/user/id",
             "permission": {
-                "read": 0,
+                "read": 100,
                 "write": 0
-            }
-        },
-        "email": {
-            "type": "string",
-            "format": "email",
-            "chance": "email",
-            "unique": true,
-            "permission": {
-                "read": 10,
-                "write": 10,
-                "owner": true
             }
         },
         "name": {
             "type": "string",
-            "chance": "name",
-            "permission": {
-                "read": 100,
-                "write": 10,
-                "owner": true
-            }
+            "faker": "lorem.sentence"
         },
-        "permission": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 100,
-            "exclusiveMinimum": true,
-            "default": 30,
-            "permission": {
-                "read": 100,
-                "write": 10,
-                "owner": true
-            }
-        },
-        "salt": {
+        "desc": {
             "type": "string",
-            "pattern": "^[a-f0-9]{512}$",
-            "permission": {
-                "read": 0,
-                "write": 0
-            }
+            "faker": "lorem.paragraph"
         },
-        "hash": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{128}$",
-            "permission": {
-                "read": 0,
-                "write": 0
-            }
+        "from": {
+            "$ref": "/writ/db/place/id"
+        },
+        "to": {
+            "$ref": "/writ/db/place/id"
         }
     },
-    "additionalProperties": false,
     "required": [
-        "_id",
-        "email",
-        "name",
-        "permission",
-        "salt",
-        "hash",
-        "created",
-        "updated"
+        "id",
+        "from",
+        "to",
+        "title",
+        "desc"
     ]
 }

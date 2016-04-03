@@ -4,7 +4,7 @@ var Database = require('../../db');
 var userModel = require('../../models').db.user;
 var jsf = require('json-schema-faker');
 var uuid = require('node-uuid');
-var util = require('./users.util');
+var util = require('../app/app.util');
 var memdown = require('memdown');
 
 var Users = new Database('Mock-Users', {
@@ -12,7 +12,7 @@ var Users = new Database('Mock-Users', {
 });
 
 /**
- *
+ * Create a mock user for testing.
  *
  * @param {int} permission - Permission level to set for this user.
  * @param {boolean} invalid - Put some strange parameters in for validation.

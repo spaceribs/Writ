@@ -1,7 +1,6 @@
 'use strict';
 
 var express = require('express');
-var router = express.Router();
 var passport = require('./users.auth');
 var controller = require('./users.ctrl');
 var restrict = require('../middleware/middleware.restrict');
@@ -10,6 +9,8 @@ var roles = require('../roles');
 var authOptions = {
     session: false
 };
+
+var router = express.Router();
 
 router.route('/verify/:token')
     .get(controller.user.verify);

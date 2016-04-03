@@ -1,13 +1,13 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "/writ/db/user",
+    "id": "/writ/db/place",
     "type": "object",
-    "description": "A writ user",
+    "description": "A writ place",
     "properties": {
         "_id": {
-            "id": "/writ/db/user/id",
+            "id": "/writ/db/place/id",
             "type": "string",
-            "pattern": "^user\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "pattern": "^place\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "permission": {
                 "read": 0,
                 "write": 0
@@ -47,24 +47,11 @@
                 "write": 0
             }
         },
-        "secret": {
-            "type": "string",
-            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
-            "faker": "random.uuid",
+        "creator": {
+            "$ref": "/writ/db/user/id",
             "permission": {
-                "read": 0,
+                "read": 100,
                 "write": 0
-            }
-        },
-        "email": {
-            "type": "string",
-            "format": "email",
-            "chance": "email",
-            "unique": true,
-            "permission": {
-                "read": 10,
-                "write": 10,
-                "owner": true
             }
         },
         "name": {
@@ -76,32 +63,80 @@
                 "owner": true
             }
         },
-        "permission": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 100,
-            "exclusiveMinimum": true,
-            "default": 30,
+        "pos": {
+            "description": "Position of the place in the world.",
+            "type": "object",
+            "properties": {
+                "x": {
+                    "type": "integer"
+                },
+                "y": {
+                    "type": "integer"
+                },
+                "z": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ],
             "permission": {
                 "read": 100,
                 "write": 10,
                 "owner": true
             }
         },
-        "salt": {
+        "desc": {
             "type": "string",
-            "pattern": "^[a-f0-9]{512}$",
+            "faker": "lorem.paragraph",
             "permission": {
-                "read": 0,
-                "write": 0
+                "read": 100,
+                "write": 10,
+                "owner": true
             }
         },
-        "hash": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{128}$",
+        "items": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "$ref": "/writ/db/item/id"
+            },
             "permission": {
-                "read": 0,
-                "write": 0
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
+        },
+        "passages": {
+            "description": "Passages connecting this place to other places.",
+            "type": "object",
+            "minProperties": 2,
+            "properties": {
+                "north": {
+                    "$ref": "/writ/db/passage/id"
+                },
+                "east": {
+                    "$ref": "/writ/db/passage/id"
+                },
+                "south": {
+                    "$ref": "/writ/db/passage/id"
+                },
+                "west": {
+                    "$ref": "/writ/db/passage/id"
+                },
+                "up": {
+                    "$ref": "/writ/db/passage/id"
+                },
+                "down": {
+                    "$ref": "/writ/db/passage/id"
+                }
+            },
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
             }
         }
     },

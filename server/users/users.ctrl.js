@@ -8,9 +8,9 @@ var models = require('../../models');
 var config = require('../config');
 var roles = require('../roles');
 var errors = require('../app/app.errors');
+var util = require('../app/app.util');
 var SuccessMessage = require('../app/app.successes').SuccessMessage;
 var Users = require('./users.db');
-var util = require('./users.util');
 var mail = require('../mail/mail.ctrl');
 
 /**

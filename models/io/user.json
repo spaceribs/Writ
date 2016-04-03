@@ -5,6 +5,7 @@
     "description": "A writ user validated from the server",
     "properties": {
         "email": {
+            "id": "/writ/io/user/email",
             "type": "string",
             "format": "email",
             "chance": "email",
@@ -16,6 +17,7 @@
             "unique": true
         },
         "name": {
+            "id": "/writ/io/user/name",
             "type": "string",
             "chance": "name",
             "permission": {
@@ -25,6 +27,7 @@
             }
         },
         "permission": {
+            "id": "/writ/io/user/permission",
             "type": "integer",
             "minimum": 0,
             "maximum": 100,
