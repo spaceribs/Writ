@@ -60,6 +60,8 @@
             "type": "string",
             "format": "email",
             "chance": "email",
+            "minLength": 3,
+            "maxLength": 128,
             "unique": true,
             "permission": {
                 "read": 10,
@@ -70,6 +72,8 @@
         "name": {
             "type": "string",
             "chance": "name",
+            "minLength": 3,
+            "maxLength": 128,
             "permission": {
                 "read": 100,
                 "write": 10,

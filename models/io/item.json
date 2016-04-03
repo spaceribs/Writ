@@ -33,14 +33,14 @@
         },
         "title": {
             "type": "string",
-            "maxLength": 512,
-            "minLength": 5,
+            "minLength": 3,
+            "maxLength": 128,
             "faker": "commerce.productName"
         },
         "desc": {
             "type": "string",
-            "maxLength": 1024,
-            "minLength": 10,
+            "minLength": 3,
+            "maxLength": 2048,
             "faker": "lorem.paragraph"
         },
         "hints": {
@@ -50,12 +50,8 @@
                     "description": "Is item useful only in this room?",
                     "type": "boolean"
                 },
-                "take": {
+                "usable": {
                     "description": "Is this item useful to put into to my inventory?",
-                    "type": "boolean"
-                },
-                "apply": {
-                    "description": "Is this item useful to apply to other items?",
                     "type": "boolean"
                 }
             }

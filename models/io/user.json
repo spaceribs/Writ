@@ -7,6 +7,8 @@
         "email": {
             "id": "/writ/io/user/email",
             "type": "string",
+            "minLength": 3,
+            "maxLength": 128,
             "format": "email",
             "chance": "email",
             "permission": {
@@ -19,6 +21,8 @@
         "name": {
             "id": "/writ/io/user/name",
             "type": "string",
+            "minLength": 3,
+            "maxLength": 128,
             "chance": "name",
             "permission": {
                 "read": 100,
@@ -40,6 +44,8 @@
         },
         "password": {
             "type": "string",
+            "minLength": 3,
+            "maxLength": 128,
             "permission": {
                 "read": -1,
                 "write": 10,

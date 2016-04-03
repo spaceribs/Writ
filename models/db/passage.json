@@ -55,10 +55,14 @@
         },
         "name": {
             "type": "string",
+            "minLength": 3,
+            "maxLength": 128,
             "faker": "lorem.sentence"
         },
         "desc": {
             "type": "string",
+            "minLength": 3,
+            "maxLength": 2048,
             "faker": "lorem.paragraph"
         },
         "from": {

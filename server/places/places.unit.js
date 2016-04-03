@@ -14,6 +14,42 @@ describe('Places', function() {
 
     describe('Controller', function() {
 
+        describe('placesOptions()', function() {
+            xit('returns a json-schema when requesting options.', function() {
+                req.accepts.and.returnValue(true);
+
+                ctrl.users.options(req, res, callback);
+
+                expect(req.accepts).toHaveBeenCalled();
+                expect(req.accepts).toHaveBeenCalledWith('json');
+                expect(res.json).toHaveBeenCalled();
+                expect(res.json.calls.mostRecent().args[0])
+                    .toEqual(userModel);
+            });
+
+            xit('passes through if json isn\'t accepted.', function() {
+                req.accepts.and.returnValue(false);
+
+                ctrl.users.options(req, res, callback);
+
+                expect(req.accepts).toHaveBeenCalled();
+                expect(res.json).not.toHaveBeenCalled();
+                expect(callback).toHaveBeenCalled();
+            });
+        });
+
+        xdescribe('placesGet()', function() {});
+
+        xdescribe('placesPost()', function() {});
+
+        xdescribe('placesList()', function() {});
+
+        xdescribe('placeGet()', function() {});
+
+        xdescribe('placePost()', function() {});
+
+        xdescribe('placeDelete()', function() {});
+
     });
 
 });

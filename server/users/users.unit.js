@@ -109,7 +109,7 @@ describe('Users', function() {
             mail.testError = false;
         });
 
-        describe('usersOptions', function() {
+        describe('usersOptions()', function() {
 
             it('returns a json-schema when requesting options.', function() {
                 req.accepts.and.returnValue(true);
@@ -135,7 +135,7 @@ describe('Users', function() {
 
         });
 
-        describe('usersGet', function() {
+        describe('usersGet()', function() {
 
             it('returns the decorated profile of the current user.',
             function() {
@@ -154,7 +154,7 @@ describe('Users', function() {
 
         });
 
-        describe('usersPost', function() {
+        describe('usersPost()', function() {
 
             beforeEach(function() {
                 req.body = newUser;
@@ -291,7 +291,7 @@ describe('Users', function() {
 
         });
 
-        describe('usersList', function() {
+        describe('usersList()', function() {
 
             it('returns an array of users.', function(done) {
 
@@ -310,7 +310,7 @@ describe('Users', function() {
 
         });
 
-        describe('userGet', function() {
+        describe('userGet()', function() {
 
             beforeEach(function() {
                 req.params = {
@@ -367,7 +367,7 @@ describe('Users', function() {
 
         });
 
-        describe('userPost', function() {
+        describe('userPost()', function() {
 
             beforeEach(function initRequest() {
                 req.user = adminUser;
@@ -464,7 +464,7 @@ describe('Users', function() {
 
         });
 
-        describe('userDelete', function() {
+        describe('userDelete()', function() {
 
             beforeEach(function() {
                 req.user = adminUser;
@@ -496,7 +496,7 @@ describe('Users', function() {
 
         });
 
-        describe('userVerify', function() {
+        describe('userVerify()', function() {
 
             beforeEach(function() {
                 req = {params: {token: uuid.v4()}};
@@ -542,7 +542,7 @@ describe('Users', function() {
 
         });
 
-        describe('loginStrategy', function() {
+        describe('loginStrategy()', function() {
 
             beforeEach(function() {
                 req = {
