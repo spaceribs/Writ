@@ -1,7 +1,7 @@
 'use strict';
 
 var jsf = require('json-schema-faker');
-var userModel = require('../../models').io.user;
+var models = require('../../models');
 var _ = require('lodash');
 
 describe('App Unit Tests', function() {
@@ -19,8 +19,7 @@ describe('App Unit Tests', function() {
          * could be used in these tests. Also create a fake brand new user.
          */
         function userSetup() {
-            newUser = jsf(userModel);
-
+            newUser = jsf(models.io.user, models.refs);
         }
     );
 
@@ -53,7 +52,7 @@ describe('App Unit Tests', function() {
 
             it('checks that no collisions could exist between users.',
                 function() {
-                    var anotherUser = jsf(userModel);
+                    var anotherUser = jsf(models.io.user, models.refs);
 
                     util.processPassword(newUser);
                     util.processPassword(anotherUser);

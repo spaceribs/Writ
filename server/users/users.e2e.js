@@ -1,7 +1,7 @@
 'use strict';
 
 var jsf = require('json-schema-faker');
-var userModel = require('../../models').io.user;
+var models = require('../../models');
 var supertest = require('supertest');
 var mockery = require('mockery');
 var util = require('../../test/util');
@@ -44,7 +44,7 @@ describe('Users Endpoint', function() {
          */
         function userSetup(done) {
 
-            newUser = jsf(userModel);
+            newUser = jsf(models.io.user, models.refs);
 
             Users.mockUser(10)
                 .then(function(user) {
@@ -64,7 +64,7 @@ describe('Users Endpoint', function() {
     );
 
     beforeEach(function() {
-        newUser = jsf(userModel);
+        newUser = jsf(models.io.user, models.refs);
     });
 
     describe('"/user/" POST', function() {
@@ -250,7 +250,7 @@ describe('Users Endpoint', function() {
                 .options('/user/')
                 .expect('Content-Type', /json/)
                 .expect(function(res) {
-                    expect(res.body).toEqual(userModel);
+                    expect(res.body).toEqual(models.io.user);
                 })
                 .expect(200)
                 .end(util.handleSupertest(done));

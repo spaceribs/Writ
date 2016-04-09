@@ -1,7 +1,7 @@
 'use strict';
 
 var jsf = require('json-schema-faker');
-var userModel = require('../../models').io.user;
+var models = require('../../models');
 var mockery = require('mockery');
 var uuid = require('node-uuid');
 var errors = require('../app/app.errors');
@@ -80,25 +80,14 @@ describe('Users', function() {
          */
         function userSetup(done) {
 
-            newUser = jsf(userModel);
+            newUser = jsf(models.io.user, models.refs);
 
-            Users.mockUser(10)
-                .then(function(user) {
-                    adminUser = user;
-                    return Users.mockUser(20);
-                })
-                .then(function(user) {
-                    verifiedUser = user;
-                    return Users.mockUser(30);
-                })
-                .then(function(user) {
-                    unverifiedUser = user;
-                    return Users.mockUser(20, true);
-                })
-                .then(function(user) {
-                    invalidUser = user;
-                    done();
-                });
+            Users.mockUsers().then(function(users) {
+                adminUser = users.adminUser;
+                verifiedUser = users.verifiedUser;
+                unverifiedUser = users.unverifiedUser;
+                invalidUser = users.invalidUser;
+            }).then(done);
 
         }
     );
@@ -120,7 +109,7 @@ describe('Users', function() {
                 expect(req.accepts).toHaveBeenCalledWith('json');
                 expect(res.json).toHaveBeenCalled();
                 expect(res.json.calls.mostRecent().args[0])
-                    .toEqual(userModel);
+                    .toEqual(models.io.user);
             });
 
             it('passes through if json isn\'t accepted.', function() {

@@ -8,7 +8,7 @@
             "type": "string",
             "minLength": 3,
             "maxLength": 128,
-            "chance": "name",
+            "faker": "random.words",
             "permission": {
                 "read": 100,
                 "write": 10,
@@ -95,7 +95,6 @@
         }
     },
     "required": [
-        "creator",
         "id",
         "pos",
         "name",

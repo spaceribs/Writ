@@ -19,10 +19,8 @@ function mockPlace(owner) {
 
     var place = jsf(placeModel);
 
-    return Places.put(user)
+    return Places.put(place)
         .then(function() {
-            user.password = password;
-            return user;
         });
 
 }
