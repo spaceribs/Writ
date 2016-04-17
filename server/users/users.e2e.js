@@ -20,7 +20,6 @@ describe('Users Endpoint', function() {
     var mail;
 
     beforeAll(function() {
-
         mockery.enable({
             warnOnReplace     : false,
             warnOnUnregistered: false
@@ -33,6 +32,10 @@ describe('Users Endpoint', function() {
 
         mail = require('../mail/mail.ctrl');
         app = require('../app/app');
+    });
+
+    afterAll(function() {
+        mockery.disable();
     });
 
     beforeEach(

@@ -278,6 +278,23 @@ describe('Places', function() {
                         done();
                     });
                 });
+
+            it('doesn\'t create an invalid place.', function(done) {
+                req.user = users.verifiedUser;
+                newPlace.invalid = true;
+                req.body = newPlace;
+                req.body.pos = {x: 1, y: 2, z: 0};
+                ctrl.places.post(req, res, callback);
+
+                callback.and.callFake(function(err) {
+                    expect(err)
+                        .toEqual(jasmine.any(errors.JsonSchemaValidationError));
+                    expect(err.errors[0].message)
+                        .toBe('Additional properties not allowed');
+                    done();
+                });
+
+            });
         });
 
         describe('placesList()', function() {
