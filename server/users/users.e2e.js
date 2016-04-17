@@ -26,6 +26,8 @@ describe('Users Endpoint', function() {
         });
 
         mockery.registerSubstitute(
+            './places.db', '../places/places.db.mock');
+        mockery.registerSubstitute(
             './users.db', './users.db.mock');
         mockery.registerSubstitute(
             '../mail/mail.ctrl', '../mail/mail.ctrl.mock');
