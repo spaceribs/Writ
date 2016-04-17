@@ -6,7 +6,7 @@
         "_id": {
             "id": "/writ/db/item/id",
             "type": "string",
-            "pattern": "^place\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "pattern": "^item\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "permission": {
                 "read": 0,
                 "write": 0

@@ -13,11 +13,7 @@ describe('Users', function() {
 
     var newUser;
 
-    var adminUser;
-    var verifiedUser;
-    var unverifiedUser;
-    var invalidUser;
-
+    var users;
     var ctrl;
     var mail;
 
@@ -82,15 +78,16 @@ describe('Users', function() {
 
             newUser = jsf(models.io.user, models.refs);
 
-            Users.mockUsers().then(function(users) {
-                adminUser = users.adminUser;
-                verifiedUser = users.verifiedUser;
-                unverifiedUser = users.unverifiedUser;
-                invalidUser = users.invalidUser;
+            Users.mockUsers().then(function(mockUsers) {
+                users = mockUsers;
             }).then(done);
 
         }
     );
+
+    afterEach(function(done) {
+        Users.erase().then(done);
+    });
 
     describe('Controller', function() {
 
@@ -128,16 +125,16 @@ describe('Users', function() {
 
             it('returns the decorated profile of the current user.',
             function() {
-                req.user = verifiedUser;
+                req.user = users.verifiedUser;
                 ctrl.users.get(req, res);
 
                 expect(res.json).toHaveBeenCalled();
                 expect(res.json.calls.mostRecent().args[0])
                     .toEqual(new SuccessMessage('Your credentials are valid.', {
-                        id: verifiedUser.id,
-                        email: verifiedUser.email,
-                        name: verifiedUser.name,
-                        permission: verifiedUser.permission
+                        id: users.verifiedUser.id,
+                        email: users.verifiedUser.email,
+                        name: users.verifiedUser.name,
+                        permission: users.verifiedUser.permission
                     }));
             });
 
@@ -171,14 +168,14 @@ describe('Users', function() {
                     expect(res.json.calls.mostRecent().args[0])
                         .toEqual(new SuccessMessage(
                             'User has been successfully updated.', {
-                                email: verifiedUser.email,
+                                email: users.verifiedUser.email,
                                 name: newUser.name,
                                 permission: 20
                             }));
                     done();
                 });
 
-                req.user = verifiedUser;
+                req.user = users.verifiedUser;
                 req.body = {name: newUser.name};
                 ctrl.users.post(req, res, callback);
             });
@@ -191,13 +188,13 @@ describe('Users', function() {
                             'User has been updated, and an email ' +
                             'has been sent to the new address.', {
                                 email: newUser.email,
-                                name: verifiedUser.name,
+                                name: users.verifiedUser.name,
                                 permission: 30
                             }));
                     done();
                 });
 
-                req.user = verifiedUser;
+                req.user = users.verifiedUser;
                 req.body = {email: newUser.email};
                 ctrl.users.post(req, res, callback);
             });
@@ -208,14 +205,14 @@ describe('Users', function() {
                     expect(res.json.calls.mostRecent().args[0])
                         .toEqual(new SuccessMessage(
                             'User has been successfully updated.', {
-                                email: verifiedUser.email,
-                                name: verifiedUser.name,
+                                email: users.verifiedUser.email,
+                                name: users.verifiedUser.name,
                                 permission: 20
                             }));
                     done();
                 });
 
-                req.user = verifiedUser;
+                req.user = users.verifiedUser;
                 req.body = {password: newUser.password};
                 ctrl.users.post(req, res, callback);
             });
@@ -272,7 +269,7 @@ describe('Users', function() {
                     done();
                 });
 
-                req.user = invalidUser;
+                req.user = users.invalidUser;
                 req.body = {name: newUser.name};
                 ctrl.users.post(req, res, callback);
 
@@ -303,18 +300,14 @@ describe('Users', function() {
 
             beforeEach(function() {
                 req.params = {
-                    userId: verifiedUser.id
+                    userId: users.verifiedUser.id
                 };
             });
 
             it('gets a user by their id.', function(done) {
 
                 res.json.and.callFake(function(response) {
-                    expect(response).toEqual({
-                        id: verifiedUser.id,
-                        name: verifiedUser.name,
-                        permission: verifiedUser.permission
-                    });
+                    expect(response).toEqual(jasmine.any(SuccessMessage));
                     done();
                 });
 
@@ -326,10 +319,7 @@ describe('Users', function() {
                 callback.and.callFake(function() {
                     expect(callback).toHaveBeenCalled();
                     expect(callback.calls.mostRecent().args[0])
-                        .toEqual({
-                            status: 'DATABASE_ERROR',
-                            message: 'missing'
-                        });
+                        .toEqual(jasmine.any(errors.UserNotFoundError));
                     done();
                 });
 
@@ -340,16 +330,14 @@ describe('Users', function() {
             it('returns more information if you are an admin.', function(done) {
 
                 res.json.and.callFake(function(response) {
-                    expect(response).toEqual({
-                        id: verifiedUser.id,
-                        name: verifiedUser.name,
-                        email: verifiedUser.email,
-                        permission: verifiedUser.permission
-                    });
+                    expect(response)
+                        .toEqual(jasmine.any(SuccessMessage));
+                    expect(response.data.email)
+                        .toEqual(users.verifiedUser.email);
                     done();
                 });
 
-                req.user = adminUser;
+                req.user = users.adminUser;
                 ctrl.user.get(req, res, callback);
 
             });
@@ -359,9 +347,9 @@ describe('Users', function() {
         describe('userPost()', function() {
 
             beforeEach(function initRequest() {
-                req.user = adminUser;
+                req.user = users.adminUser;
                 req.params = {
-                    userId: verifiedUser.id
+                    userId: users.verifiedUser.id
                 };
                 req.body = {};
             });
@@ -371,10 +359,7 @@ describe('Users', function() {
                 callback.and.callFake(function() {
                     expect(callback).toHaveBeenCalled();
                     expect(callback.calls.mostRecent().args[0])
-                        .toEqual({
-                            status: 'DATABASE_ERROR',
-                            message: 'missing'
-                        });
+                        .toEqual(jasmine.any(errors.UserNotFoundError));
                     done();
                 });
 
@@ -387,7 +372,7 @@ describe('Users', function() {
                 res.json.and.callFake(function(response) {
                     expect(response).toEqual(new SuccessMessage(
                         'User has been successfully updated.', {
-                            email: verifiedUser.email,
+                            email: users.verifiedUser.email,
                             name: newUser.name,
                             permission: 20
                         }));
@@ -410,7 +395,7 @@ describe('Users', function() {
                     done();
                 });
 
-                req.body.email = unverifiedUser.email;
+                req.body.email = users.unverifiedUser.email;
                 ctrl.user.post(req, res, callback);
 
             });
@@ -422,7 +407,7 @@ describe('Users', function() {
                         'User has been updated, and an ' +
                         'email has been sent to the new address.', {
                             email: newUser.email,
-                            name: verifiedUser.name,
+                            name: users.verifiedUser.name,
                             permission: 30
                         }));
                     done();
@@ -438,8 +423,8 @@ describe('Users', function() {
                 res.json.and.callFake(function(response) {
                     expect(response).toEqual(new SuccessMessage(
                         'User has been successfully updated.', {
-                            email: verifiedUser.email,
-                            name: verifiedUser.name,
+                            email: users.verifiedUser.email,
+                            name: users.verifiedUser.name,
                             permission: 20
                         }));
                     done();
@@ -456,7 +441,7 @@ describe('Users', function() {
         describe('userDelete()', function() {
 
             beforeEach(function() {
-                req.user = adminUser;
+                req.user = users.adminUser;
                 req.params = {};
             });
 
@@ -479,7 +464,7 @@ describe('Users', function() {
                     done();
                 });
 
-                req.params.userId = verifiedUser.id;
+                req.params.userId = users.verifiedUser.id;
                 ctrl.user.delete(req, res, callback);
             });
 
@@ -510,7 +495,7 @@ describe('Users', function() {
                     done();
                 });
 
-                req.params.token = unverifiedUser.secret;
+                req.params.token = users.unverifiedUser.secret;
                 ctrl.user.verify(req, res, callback);
             });
 
@@ -524,7 +509,7 @@ describe('Users', function() {
                     done();
                 });
 
-                req.params.token = invalidUser.secret;
+                req.params.token = users.invalidUser.secret;
                 ctrl.user.verify(req, res, callback);
 
             });
@@ -550,7 +535,7 @@ describe('Users', function() {
 
             it('doesn\'t log in a user with a bad password.', function(done) {
 
-                ctrl.strategy(verifiedUser.email, 'BAD PASSWORD!',
+                ctrl.strategy(users.verifiedUser.email, 'BAD PASSWORD!',
                     function(err) {
                         expect(err)
                             .toEqual(jasmine.any(errors.LoginError));
@@ -561,11 +546,11 @@ describe('Users', function() {
             it('logs in a valid user.', function(done) {
 
                 ctrl.strategy(
-                    verifiedUser.email,
-                    verifiedUser.password,
+                    users.verifiedUser.email,
+                    users.verifiedUser.password,
                     function(err, user) {
                         expect(err).toBeNull();
-                        expect(user.id).toEqual(verifiedUser.id);
+                        expect(user.id).toEqual(users.verifiedUser.id);
                         done();
                     });
 

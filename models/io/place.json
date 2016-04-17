@@ -15,6 +15,13 @@
                 "owner": true
             }
         },
+        "owner": {
+            "$ref": "/writ/db/user/id",
+            "permission": {
+                "read": 100,
+                "write": 10
+            }
+        },
         "pos": {
             "description": "Position of the place in the world.",
             "type": "object",
@@ -95,9 +102,9 @@
         }
     },
     "required": [
-        "id",
         "pos",
         "name",
+        "desc",
         "items",
         "passages"
     ]

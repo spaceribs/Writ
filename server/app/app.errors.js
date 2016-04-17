@@ -54,6 +54,20 @@ function SecretNotFoundError(message, token) {
 SecretNotFoundError.prototype = Object.create(Error.prototype);
 
 /**
+ * A custom error to handle if a user cannot be found.
+ *
+ * @param {?string} [message] - Custom user error message.
+ * @param {string} token - Token that was searched.
+ * @constructor
+ */
+function UserNotFoundError(message) {
+    this.status = 404;
+    this.name = 'UserNotFoundError';
+    this.message = (message || 'No user found.');
+}
+UserNotFoundError.prototype = Object.create(Error.prototype);
+
+/**
  * A custom error to handle login issues.
  *
  * @param {string} [message] - Custom login error message.
@@ -79,11 +93,57 @@ function ForbiddenError(message) {
 }
 ForbiddenError.prototype = Object.create(Error.prototype);
 
+/**
+ * A custom error to handle any places which cannot be found.
+ *
+ * @param {?string} [message] - Custom user error message.
+ * @param {string} token - Token that was searched.
+ * @constructor
+ */
+function PlacesNotFoundError(message) {
+    this.status = 404;
+    this.name = 'PlacesNotFoundError';
+    this.message = (message || 'No places found.');
+}
+PlacesNotFoundError.prototype = Object.create(Error.prototype);
+
+/**
+ * A custom error to handle any places which cannot be found.
+ *
+ * @param {?string} [message] - Custom user error message.
+ * @param {string} token - Token that was searched.
+ * @constructor
+ */
+function PlaceNotFoundError(message) {
+    this.status = 404;
+    this.name = 'PlaceNotFoundError';
+    this.message = (message || 'No place found at this address.');
+}
+PlaceNotFoundError.prototype = Object.create(Error.prototype);
+
+/**
+ * A custom error to handle when a new place is invalid
+ *
+ * @param {?string} [message] - Custom user error message.
+ * @param {string} token - Token that was searched.
+ * @constructor
+ */
+function PlaceInvalidError(message) {
+    this.status = 400;
+    this.name = 'PlaceInvalidError';
+    this.message = (message || 'Invalid place.');
+}
+PlaceInvalidError.prototype = Object.create(Error.prototype);
+
 module.exports = {
     SyntaxError              : SyntaxError,
     JsonSchemaValidationError: JsonSchemaValidationError,
     EmailUsedError           : EmailUsedError,
     SecretNotFoundError      : SecretNotFoundError,
+    UserNotFoundError        : UserNotFoundError,
+    PlacesNotFoundError      : PlacesNotFoundError,
+    PlaceNotFoundError       : PlaceNotFoundError,
     LoginError               : LoginError,
-    ForbiddenError           : ForbiddenError
+    ForbiddenError           : ForbiddenError,
+    PlaceInvalidError        : PlaceInvalidError
 };
