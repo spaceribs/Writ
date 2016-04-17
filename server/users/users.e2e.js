@@ -6,7 +6,7 @@ var supertest = require('supertest');
 var mockery = require('mockery');
 var util = require('../../test/util');
 
-var Users = require('./users.db.mock');
+var Users = require('../users/users.db.mock');
 
 describe('Users Endpoint', function() {
 
@@ -35,6 +35,7 @@ describe('Users Endpoint', function() {
     });
 
     afterAll(function() {
+        mockery.deregisterAll();
         mockery.disable();
     });
 

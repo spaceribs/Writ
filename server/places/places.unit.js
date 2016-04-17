@@ -7,8 +7,8 @@ var uuid = require('node-uuid');
 var errors = require('../app/app.errors');
 var SuccessMessage = require('../app/app.successes').SuccessMessage;
 
-var Places = require('./places.db.mock');
 var Users = require('../users/users.db.mock');
+var Places = require('../places/places.db.mock');
 
 describe('Places', function() {
 
@@ -42,6 +42,7 @@ describe('Places', function() {
     });
 
     afterAll(function() {
+        mockery.deregisterAll();
         mockery.disable();
     });
 
@@ -493,19 +494,20 @@ describe('Places', function() {
                 });
             });
 
-            it('doesn\'t delete anything if the place doesn\'t exist', function(done) {
-                req.user = users.adminUser;
-                req.params = {
-                    placeId: uuid.v4()
-                };
-                ctrl.place.delete(req, res, callback);
+            it('doesn\'t delete anything if the place doesn\'t exist',
+                function(done) {
+                    req.user = users.adminUser;
+                    req.params = {
+                        placeId: uuid.v4()
+                    };
+                    ctrl.place.delete(req, res, callback);
 
-                callback.and.callFake(function(err) {
-                    expect(err)
-                        .toEqual(jasmine.any(errors.PlaceNotFoundError));
-                    done();
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PlaceNotFoundError));
+                        done();
+                    });
                 });
-            });
         });
 
     });

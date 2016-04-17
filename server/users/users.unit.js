@@ -7,7 +7,7 @@ var uuid = require('node-uuid');
 var errors = require('../app/app.errors');
 var SuccessMessage = require('../app/app.successes').SuccessMessage;
 
-var Users = require('./users.db.mock');
+var Users = require('../users/users.db.mock');
 
 describe('Users', function() {
 
@@ -43,6 +43,7 @@ describe('Users', function() {
     });
 
     afterAll(function() {
+        mockery.deregisterAll();
         mockery.disable();
     });
 
