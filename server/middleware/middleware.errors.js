@@ -56,6 +56,27 @@ function errorHandler(err, req, res, next) {
         };
         res.status(err.status).json(responseData);
 
+    } else if (err instanceof errors.PlaceInvalidError) {
+        responseData = {
+            status: 'PLACE_INVALID',
+            message: err.message
+        };
+        res.status(err.status).json(responseData);
+
+    } else if (err instanceof errors.PlaceNotFoundError) {
+        responseData = {
+            status: 'PLACE_NOT_FOUND',
+            message: err.message
+        };
+        res.status(err.status).json(responseData);
+
+    } else if (err instanceof errors.PlacesNotFoundError) {
+        responseData = {
+            status: 'PLACES_NOT_FOUND',
+            message: err.message
+        };
+        res.status(err.status).json(responseData);
+
     } else {
         next(err);
 

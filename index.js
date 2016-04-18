@@ -6,4 +6,4 @@ var util = require('util');
 
 var models = require('./models');
 
-util.log(prettyjson.render(jsf(models.item, [models])));
+util.log('\n' + prettyjson.render(jsf(models.db.place, models.refs)));

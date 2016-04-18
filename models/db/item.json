@@ -1,46 +1,64 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "/writ/item",
+    "id": "/writ/db/item",
     "type": "object",
     "properties": {
+        "_id": {
+            "id": "/writ/db/item/id",
+            "type": "string",
+            "pattern": "^item\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "permission": {
+                "read": 0,
+                "write": 0
+            }
+        },
+        "_rev": {
+            "type": "string",
+            "permission": {
+                "read": 0,
+                "write": 0
+            }
+        },
         "id": {
-            "id": "/writ/item/id",
             "type": "string",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "faker": "random.uuid"
         },
-        "meta": {
-            "properties": {
-                "creator": {
-                    "$ref": "/writ/db/user/id"
-                },
-                "created_at": {
-                    "type": "string",
-                    "pattern": "^([\\+-]?\\d{4}(?!\\d{2}\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?$",
-                    "faker": "date.past"
-                },
-                "updated_at": {
-                    "type": "string",
-                    "pattern": "^([\\+-]?\\d{4}(?!\\d{2}\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?$",
-                    "faker": "date.recent"
-                }
-            },
-            "required": [
-                "creator",
-                "created_at",
-                "updated_at"
-            ]
+        "owner": {
+            "$ref": "/writ/db/user/id",
+            "permission": {
+                "read": 100,
+                "write": 0
+            }
+        },
+        "created": {
+            "type": "string",
+            "pattern": "^([\\+-]?\\d{4}(?!\\d{2}\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?$",
+            "faker": "date.past",
+            "permission": {
+                "read": 0,
+                "write": 0
+            }
+        },
+        "updated": {
+            "type": "string",
+            "pattern": "^([\\+-]?\\d{4}(?!\\d{2}\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?$",
+            "faker": "date.recent",
+            "permission": {
+                "read": 0,
+                "write": 0
+            }
         },
         "title": {
             "type": "string",
-            "maxLength": 512,
-            "minLength": 5,
+            "minLength": 3,
+            "maxLength": 128,
             "faker": "commerce.productName"
         },
         "desc": {
             "type": "string",
-            "maxLength": 1024,
-            "minLength": 10,
+            "minLength": 3,
+            "maxLength": 2048,
             "faker": "lorem.paragraph"
         },
         "hints": {
@@ -50,12 +68,8 @@
                     "description": "Is item useful only in this room?",
                     "type": "boolean"
                 },
-                "take": {
+                "usable": {
                     "description": "Is this item useful to put into to my inventory?",
-                    "type": "boolean"
-                },
-                "apply": {
-                    "description": "Is this item useful to apply to other items?",
                     "type": "boolean"
                 }
             }
@@ -121,7 +135,11 @@
         }
     },
     "required": [
+        "_id",
         "id",
+        "owner",
+        "created",
+        "updated",
         "email",
         "title",
         "desc",

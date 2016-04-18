@@ -1,10 +1,10 @@
 'use strict';
 
 var Database = require('../../db');
-var userModel = require('../../models').db.user;
+var models = require('../../models');
 var jsf = require('json-schema-faker');
 var uuid = require('node-uuid');
-var util = require('./users.util');
+var util = require('../app/app.util');
 var memdown = require('memdown');
 
 var Users = new Database('Mock-Users', {
@@ -12,15 +12,15 @@ var Users = new Database('Mock-Users', {
 });
 
 /**
- *
+ * Create a mock user for testing.
  *
  * @param {int} permission - Permission level to set for this user.
- * @param {boolean} invalid - Put some strange parameters in for validation.
+ * @param {boolean=} invalid - Put some strange parameters in for validation.
  * @returns {Promise}
  */
 function mockUser(permission, invalid) {
 
-    var user = jsf(userModel);
+    var user = jsf(models.db.user, models.refs);
     var password = 'test_password';
 
     user.password = password;
@@ -44,5 +44,39 @@ function mockUser(permission, invalid) {
 
 }
 
+/**
+ * Create mock users for testing.
+ *
+ * @returns {Promise}
+ */
+function mockUsers() {
+
+    var users = {};
+
+    return mockUser(10)
+        .then(function(adminUser) {
+            users.adminUser = adminUser;
+            return mockUser(20);
+        })
+        .then(function(verifiedUser) {
+            users.verifiedUser = verifiedUser;
+            return mockUser(20);
+        })
+        .then(function(newUser) {
+            users.newUser = newUser;
+            return mockUser(30);
+        })
+        .then(function(unverifiedUser) {
+            users.unverifiedUser = unverifiedUser;
+            return mockUser(20, true);
+        })
+        .then(function(invalidUser) {
+            users.invalidUser = invalidUser;
+            return users;
+        });
+
+}
+
 module.exports = Users;
 module.exports.mockUser = mockUser;
+module.exports.mockUsers = mockUsers;

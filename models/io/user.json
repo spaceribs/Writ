@@ -5,7 +5,10 @@
     "description": "A writ user validated from the server",
     "properties": {
         "email": {
+            "id": "/writ/io/user/email",
             "type": "string",
+            "minLength": 3,
+            "maxLength": 128,
             "format": "email",
             "chance": "email",
             "permission": {
@@ -16,7 +19,10 @@
             "unique": true
         },
         "name": {
+            "id": "/writ/io/user/name",
             "type": "string",
+            "minLength": 3,
+            "maxLength": 128,
             "chance": "name",
             "permission": {
                 "read": 100,
@@ -25,6 +31,7 @@
             }
         },
         "permission": {
+            "id": "/writ/io/user/permission",
             "type": "integer",
             "minimum": 0,
             "maximum": 100,
@@ -37,6 +44,8 @@
         },
         "password": {
             "type": "string",
+            "minLength": 3,
+            "maxLength": 128,
             "permission": {
                 "read": -1,
                 "write": 10,
