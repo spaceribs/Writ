@@ -1,12 +1,12 @@
 'use strict';
 
 var jsf = require('json-schema-faker');
-var userModel = require('../../models').io.user;
+var models = require('../../models');
 var supertest = require('supertest');
 var mockery = require('mockery');
 var util = require('../../test/util');
 
-var Users = require('./users.db.mock');
+var Users = require('../users/users.db.mock');
 
 describe('Users Endpoint', function() {
 
@@ -20,19 +20,25 @@ describe('Users Endpoint', function() {
     var mail;
 
     beforeAll(function() {
-
         mockery.enable({
             warnOnReplace     : false,
             warnOnUnregistered: false
         });
 
         mockery.registerSubstitute(
-            './users.db', './users.db.mock');
+            './places.db', '../places/places.db.mock');
+        mockery.registerSubstitute(
+            './users.db', '../users/users.db.mock');
         mockery.registerSubstitute(
             '../mail/mail.ctrl', '../mail/mail.ctrl.mock');
 
         mail = require('../mail/mail.ctrl');
         app = require('../app/app');
+    });
+
+    afterAll(function() {
+        mockery.deregisterAll();
+        mockery.disable();
     });
 
     beforeEach(
@@ -44,7 +50,7 @@ describe('Users Endpoint', function() {
          */
         function userSetup(done) {
 
-            newUser = jsf(userModel);
+            newUser = jsf(models.io.user, models.refs);
 
             Users.mockUser(10)
                 .then(function(user) {
@@ -64,7 +70,7 @@ describe('Users Endpoint', function() {
     );
 
     beforeEach(function() {
-        newUser = jsf(userModel);
+        newUser = jsf(models.io.user, models.refs);
     });
 
     describe('"/user/" POST', function() {
@@ -152,9 +158,13 @@ describe('Users Endpoint', function() {
                         .expect('Content-Type', /json/)
                         .expect(function(res) {
                             expect(res.body).toEqual({
-                                id: verifiedUser.id,
-                                name: newUser.name,
-                                permission: 20
+                                message: 'User found.',
+                                status: 'SUCCESS',
+                                data: {
+                                    id: verifiedUser.id,
+                                    name: newUser.name,
+                                    permission: 20
+                                }
                             });
                         })
                         .expect(200)
@@ -195,10 +205,14 @@ describe('Users Endpoint', function() {
                         .expect('Content-Type', /json/)
                         .expect(function(res) {
                             expect(res.body).toEqual({
-                                id: verifiedUser.id,
-                                email: newUser.email,
-                                name: verifiedUser.name,
-                                permission: 30
+                                message: 'User found.',
+                                status: 'SUCCESS',
+                                data: {
+                                    id: verifiedUser.id,
+                                    email: newUser.email,
+                                    name: verifiedUser.name,
+                                    permission: 30
+                                }
                             });
                         })
                         .expect(200)
@@ -250,7 +264,7 @@ describe('Users Endpoint', function() {
                 .options('/user/')
                 .expect('Content-Type', /json/)
                 .expect(function(res) {
-                    expect(res.body).toEqual(userModel);
+                    expect(res.body).toEqual(models.io.user);
                 })
                 .expect(200)
                 .end(util.handleSupertest(done));
@@ -375,9 +389,13 @@ describe('Users Endpoint', function() {
                 .expect('Content-Type', /json/)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        'id'        : verifiedUser.id,
-                        'name'      : verifiedUser.name,
-                        'permission': verifiedUser.permission
+                        message: 'User found.',
+                        status: 'SUCCESS',
+                        data: {
+                            'id'        : verifiedUser.id,
+                            'name'      : verifiedUser.name,
+                            'permission': verifiedUser.permission
+                        }
                     });
                 })
                 .expect(200)
@@ -393,10 +411,14 @@ describe('Users Endpoint', function() {
                 .expect('Content-Type', /json/)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        'id'        : verifiedUser.id,
-                        'email'     : verifiedUser.email,
-                        'name'      : verifiedUser.name,
-                        'permission': verifiedUser.permission
+                        message: 'User found.',
+                        status: 'SUCCESS',
+                        data: {
+                            'id'        : verifiedUser.id,
+                            'email'     : verifiedUser.email,
+                            'name'      : verifiedUser.name,
+                            'permission': verifiedUser.permission
+                        }
                     });
                 })
                 .expect(200)
@@ -489,7 +511,7 @@ describe('Users Endpoint', function() {
                     supertest(app).get('/user/' + verifiedUser.id)
                         .expect('Content-Type', /json/)
                         .expect(function(res) {
-                            expect(res.body.name).toBe('Good Name');
+                            expect(res.body.data.name).toBe('Good Name');
                         })
                         .expect(200)
                         .end(util.handleSupertest(done));
@@ -527,7 +549,7 @@ describe('Users Endpoint', function() {
                         .auth(adminUser.email, adminUser.password)
                         .expect('Content-Type', /json/)
                         .expect(function(res) {
-                            expect(res.body.email).toBe('test@test.com');
+                            expect(res.body.data.email).toBe('test@test.com');
                         })
                         .expect(200)
                         .end(util.handleSupertest(done));

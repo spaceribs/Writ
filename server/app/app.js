@@ -9,6 +9,7 @@ app.use(bodyParser.json());
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(require('../users/users.router'));
+app.use(require('../places/places.router'));
 app.use(require('../middleware/middleware.errors.js'));
 
 module.exports = app;

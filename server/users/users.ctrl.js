@@ -8,10 +8,14 @@ var models = require('../../models');
 var config = require('../config');
 var roles = require('../roles');
 var errors = require('../app/app.errors');
+var util = require('../app/app.util');
 var SuccessMessage = require('../app/app.successes').SuccessMessage;
 var Users = require('./users.db');
-var util = require('./users.util');
 var mail = require('../mail/mail.ctrl');
+
+for (var i = 0; i < models.refs.length; i++) {
+    tv4.addSchema(models.refs[i]);
+}
 
 /**
  * Passport uses this to validate provided credentials.
@@ -28,7 +32,8 @@ function loginStrategy(email, password, cb) {
         }
     }).then(function() {
         return Users.find({
-            selector: {email: email}
+            selector: {email: email},
+            limit: 1
         });
 
     }).then(function(users) {
@@ -115,7 +120,8 @@ function createUser(userData, res, next) {
         }
     }).then(function() {
         return Users.find({
-            selector: {email: userData.email}
+            selector: {email: userData.email},
+            limit: 1
         }).then(function(result) {
             if (result.docs.length) {
                 throw new errors.EmailUsedError(
@@ -128,7 +134,7 @@ function createUser(userData, res, next) {
 
     }).then(function() {
 
-        //TODO: This is very verbose, but could also be done using ioFilter
+        //TODO: This is very verbose, should be done using ioFilter eventually
         userData.secret = uuid.v4();
         userData.id = uuid.v4();
         userData._id = 'user/' + userData.id;
@@ -222,12 +228,10 @@ function userGet(req, res, next) {
         .then(function(result) {
             var filtered = util.dbFilter(
                 req.user.permission, 'user', result, false, false);
-            res.json(filtered);
-        }).catch(function(err) {
-            next({
-                status: 'DATABASE_ERROR',
-                message: err.message
-            });
+            res.json(new SuccessMessage(
+                'User found.', filtered));
+        }).catch(function() {
+            next(new errors.UserNotFoundError());
         });
 }
 
@@ -258,9 +262,8 @@ function updateUser(editor, userId, userData, res, next) {
             userData.permission = 30;
 
             return Users.find({
-                selector: {
-                    email: userData.email
-                }
+                selector: {email: userData.email},
+                limit: 1
             }).then(function(result) {
                 if (result.docs.length && result.docs[0].id !== userId) {
                     throw new errors.EmailUsedError(
@@ -391,7 +394,8 @@ function userVerify(req, res, next) {
         }
     }).then(function() {
         return Users.find({
-            selector: {secret: req.params.token}
+            selector: {secret: req.params.token},
+            limit: 1
         });
 
     }).then(function(results) {

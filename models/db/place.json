@@ -1,0 +1,160 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "/writ/db/place",
+    "type": "object",
+    "description": "A writ place",
+    "properties": {
+        "_id": {
+            "id": "/writ/db/place/id",
+            "type": "string",
+            "pattern": "^place\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "permission": {
+                "read": 0,
+                "write": 0
+            }
+        },
+        "_rev": {
+            "type": "string",
+            "permission": {
+                "read": 0,
+                "write": 0
+            }
+        },
+        "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "faker": "random.uuid",
+            "permission": {
+                "read": 100,
+                "write": 0
+            }
+        },
+        "owner": {
+            "$ref": "/writ/db/user/id",
+            "permission": {
+                "read": 100,
+                "write": 10
+            }
+        },
+        "created": {
+            "type": "string",
+            "pattern": "^([\\+-]?\\d{4}(?!\\d{2}\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?$",
+            "faker": "date.past",
+            "permission": {
+                "read": 10,
+                "write": 0
+            }
+        },
+        "updated": {
+            "type": "string",
+            "pattern": "^([\\+-]?\\d{4}(?!\\d{2}\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?$",
+            "faker": "date.recent",
+            "permission": {
+                "read": 10,
+                "write": 0
+            }
+        },
+        "name": {
+            "type": "string",
+            "faker": "random.words",
+            "minLength": 3,
+            "maxLength": 128,
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
+        },
+        "pos": {
+            "description": "Position of the place in the world.",
+            "type": "object",
+            "properties": {
+                "x": {
+                    "type": "integer"
+                },
+                "y": {
+                    "type": "integer"
+                },
+                "z": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ],
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
+        },
+        "desc": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 2048,
+            "faker": "lorem.paragraph",
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
+        },
+        "items": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "$ref": "/writ/db/item/id"
+            },
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
+        },
+        "passages": {
+            "description": "Passages connecting this place to other places.",
+            "type": "object",
+            "minProperties": 2,
+            "properties": {
+                "north": {
+                    "$ref": "/writ/db/passage/id"
+                },
+                "east": {
+                    "$ref": "/writ/db/passage/id"
+                },
+                "south": {
+                    "$ref": "/writ/db/passage/id"
+                },
+                "west": {
+                    "$ref": "/writ/db/passage/id"
+                },
+                "up": {
+                    "$ref": "/writ/db/passage/id"
+                },
+                "down": {
+                    "$ref": "/writ/db/passage/id"
+                }
+            },
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
+        }
+    },
+    "additionalProperties": false,
+    "required": [
+        "_id",
+        "id",
+        "owner",
+        "created",
+        "updated",
+        "name",
+        "desc",
+        "pos",
+        "passages",
+        "items"
+    ]
+}
