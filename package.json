@@ -1,7 +1,8 @@
 {
   "name": "writ.game",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "The main package for the writ application.",
+  "repository": "https://github.com/spaceribs/Writ",
   "main": "index.js",
   "scripts": {
     "test": "istanbul cover test -x='**/*.unit.js, **/*.e2e.js'"
