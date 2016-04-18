@@ -15,7 +15,7 @@
 
 ## Currently Under Construction:
 - [x] Users Endpoint
-- [ ] Places Endpoint
+- [x] Places Endpoint
 - [ ] Passages Endpoint
 - [ ] Items Endpoint
 
