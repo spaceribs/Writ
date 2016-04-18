@@ -65,10 +65,12 @@ describe('Places', function() {
             callback = jasmine.createSpy('callback');
 
             /*eslint-disable */
+            /* istanbul ignore next */
             res.json.and.callFake(function(response) {
                 console.error('UNEXPECTED RESPONSE: \n', response);
             });
 
+            /* istanbul ignore next */
             callback.and.callFake(function(err) {
                 console.error('UNEXPECTED ERROR: \n', err);
             });
@@ -474,6 +476,24 @@ describe('Places', function() {
                 callback.and.callFake(function(err) {
                     expect(err)
                         .toEqual(jasmine.any(errors.PlaceNotFoundError));
+                    done();
+                });
+            });
+
+            it('doesn\'t update anything if the place ' +
+                'is invalid.', function(done) {
+                req.user = users.adminUser;
+                req.params = {
+                    placeId: places.invalidRoom.id
+                };
+                req.body = {
+                    name: newPlace.name
+                };
+                ctrl.place.post(req, res, callback);
+
+                callback.and.callFake(function(err) {
+                    expect(err)
+                        .toEqual(jasmine.any(errors.JsonSchemaValidationError));
                     done();
                 });
             });

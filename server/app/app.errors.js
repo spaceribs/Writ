@@ -96,14 +96,13 @@ ForbiddenError.prototype = Object.create(Error.prototype);
 /**
  * A custom error to handle any places which cannot be found.
  *
- * @param {?string} [message] - Custom user error message.
- * @param {string} token - Token that was searched.
+ * @param {string} [message] - Custom user error message.
  * @constructor
  */
 function PlacesNotFoundError(message) {
     this.status = 404;
     this.name = 'PlacesNotFoundError';
-    this.message = (message || 'No places found.');
+    this.message = message;
 }
 PlacesNotFoundError.prototype = Object.create(Error.prototype);
 
@@ -111,7 +110,6 @@ PlacesNotFoundError.prototype = Object.create(Error.prototype);
  * A custom error to handle any places which cannot be found.
  *
  * @param {?string} [message] - Custom user error message.
- * @param {string} token - Token that was searched.
  * @constructor
  */
 function PlaceNotFoundError(message) {
@@ -124,14 +122,13 @@ PlaceNotFoundError.prototype = Object.create(Error.prototype);
 /**
  * A custom error to handle when a new place is invalid
  *
- * @param {?string} [message] - Custom user error message.
- * @param {string} token - Token that was searched.
+ * @param {string} [message] - Custom user error message.
  * @constructor
  */
 function PlaceInvalidError(message) {
     this.status = 400;
     this.name = 'PlaceInvalidError';
-    this.message = (message || 'Invalid place.');
+    this.message = message;
 }
 PlaceInvalidError.prototype = Object.create(Error.prototype);
 

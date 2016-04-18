@@ -25,10 +25,7 @@ function mockPlace(owner, pos, invalid) {
     place.owner = owner._id;
     place.id = place._id.match(/^place\/([a-z0-9-]+)$/)[1];
     delete place._rev;
-
-    if (pos) {
-        place.pos = pos;
-    }
+    place.pos = pos;
 
     if (invalid) {
         place.weird = 'yep';

@@ -54,12 +54,16 @@ function mockUsers() {
     var users = {};
 
     return mockUser(10)
-        .then(function(verifiedUser) {
-            users.adminUser = verifiedUser;
+        .then(function(adminUser) {
+            users.adminUser = adminUser;
             return mockUser(20);
         })
         .then(function(verifiedUser) {
             users.verifiedUser = verifiedUser;
+            return mockUser(20);
+        })
+        .then(function(newUser) {
+            users.newUser = newUser;
             return mockUser(30);
         })
         .then(function(unverifiedUser) {

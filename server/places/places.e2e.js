@@ -118,6 +118,26 @@ describe('Places Endpoint', function() {
 
         });
 
+        it('should return an error if ' +
+            'you don\'t own any places.', function(done) {
+            supertest(app)
+                .get('/place/')
+                .auth(
+                    users.newUser.email,
+                    users.newUser.password
+                )
+                .expect('Content-Type', /json/)
+                .expect(function(res) {
+                    expect(res.body).toEqual({
+                        status : 'PLACES_NOT_FOUND',
+                        message: 'You do not own any places.'
+                    });
+                })
+                .expect(404)
+                .end(util.handleSupertest(done));
+
+        });
+
         it('should return more information ' +
             'when authenticated as an admin.', function(done) {
             supertest(app)

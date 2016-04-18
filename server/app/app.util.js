@@ -101,10 +101,6 @@ function ioFilter(permLevel, modelName, result, write, owner) {
  * @returns {object} - Filtered object
  */
 function dbFilter(permLevel, modelName, result, write, owner) {
-    if (!models.db[modelName]) {
-        throw Error('"' + modelName + '" is not a valid schema name.');
-    }
-
     var model = models.db[modelName].properties;
     var keys = Object.keys(model);
     var output = {};
