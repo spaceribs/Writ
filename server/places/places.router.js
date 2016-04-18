@@ -34,7 +34,7 @@ router.route('/place/:placeId')
         restrict(roles.user),
         controller.place.post)
     .delete(passport.authenticate('basic', authOptions),
-        restrict(roles.user),
+        restrict(roles.admin),
         controller.place.delete);
 
 module.exports = router;

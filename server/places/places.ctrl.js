@@ -97,6 +97,13 @@ function placesGet(req, res, next) {
  */
 function placesPost(req, res, next) {
 
+    var validation = tv4.validateMultiple(req.body, models.io.place);
+    if (!validation.valid) {
+        next(new errors.JsonSchemaValidationError(
+            validation.errors, validation.missing));
+        return false;
+    }
+
     var posX = _.get(req, 'body.pos.x');
     var posY = _.get(req, 'body.pos.y');
     var posZ = _.get(req, 'body.pos.z');

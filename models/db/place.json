@@ -154,6 +154,7 @@
         "name",
         "desc",
         "pos",
-        "passages"
+        "passages",
+        "items"
     ]
 }
