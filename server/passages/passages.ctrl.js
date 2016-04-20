@@ -6,7 +6,7 @@ var _ = require('lodash');
 var tv4 = require('tv4');
 
 var models = require('../../models');
-var Places = require('./places.db');
+var Passages = require('./passages.db');
 var errors = require('../app/app.errors');
 var SuccessMessage = require('../app/app.successes').SuccessMessage;
 var util = require('../app/app.util');
@@ -25,7 +25,7 @@ for (var i = 0; i < models.refs.length; i++) {
  */
 function placesOptions(req, res, next) {
     if (req.accepts('json')) {
-        res.json(models.io.place);
+        res.json(models.io.passage);
     } else {
         next();
     }
