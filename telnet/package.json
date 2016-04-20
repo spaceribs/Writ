@@ -1,0 +1,11 @@
+{
+  "name": "writ.game.telnet",
+  "version": "0.0.0",
+  "description": "The telnet server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "spaceribs",
+  "license": "MIT"
+}
