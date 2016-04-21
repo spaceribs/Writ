@@ -1,4 +1,16 @@
+"use strict";
+
 var telnet = require('telnet');
+var fs = require('fs');
+
+function readModuleFile(path, callback) {
+    try {
+        var filename = require.resolve(path);
+        fs.readFile(filename, 'utf8', callback);
+    } catch (e) {
+        callback(e);
+    }
+}
 
 telnet.createServer(function(client) {
 
@@ -15,22 +27,34 @@ telnet.createServer(function(client) {
         }
     });
 
+    var currentBuffer;
     // listen for the actual data from the client
     client.on('data', function(b) {
-        console.log(b.toJSON());
-        client.write('\n\nhello\n\n> ');
+        switch (b.readUInt8()) {
+        case 13:
+            client.write(
+                '\x08\x08\x7f\x7f\n\n' +
+                currentBuffer.toString() +
+                '\n> '
+            );
+            currentBuffer = null;
+            break;
+        default:
+            if (currentBuffer) {
+                currentBuffer = Buffer.concat([currentBuffer, b]);
+            } else {
+                currentBuffer = b;
+            }
+            break;
+        }
     });
 
-    client.write('\n' +
-        '▓▓      ▓▓  ' + '              ' + '      ▓▓      ' + '    ▓▓        ' + '\n' +
-        '▓▓      ▓▓  ' + '              ' + '              ' + '    ▓▓        ' + '\n' +
-        '▓▓      ▓▓  ' + '  ▓▓  ▓▓▓▓▓▓  ' + '    ▓▓▓▓      ' + '  ▓▓▓▓▓▓▓▓    ' + '\n' +
-        '▓▓  ▓▓  ▓▓  ' + '  ▓▓▓▓        ' + '      ▓▓      ' + '    ▓▓        ' + '\n' +
-        '▓▓  ▓▓  ▓▓  ' + '  ▓▓          ' + '      ▓▓      ' + '    ▓▓        ' + '\n' +
-        '▓▓▓▓  ▓▓▓▓  ' + '  ▓▓          ' + '      ▓▓      ' + '    ▓▓    ▓▓  ' + '\n' +
-        '▓▓      ▓▓  ' + '  ▓▓          ' + '    ▓▓▓▓▓▓    ' + '      ▓▓▓▓    ' + '\n' +
-        '\n' +
-        'Session Started' +
-        '\n> ');
+    readModuleFile('./banner.txt', function(err, banner) {
+        client.write('\n' +
+            banner +
+            '\n\n' +
+            'Session Started' +
+            '\n> ');
+    });
 
 }).listen(23);
