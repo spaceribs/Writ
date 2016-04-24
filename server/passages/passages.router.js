@@ -2,7 +2,7 @@
 
 var express = require('express');
 var passport = require('../users/users.auth');
-var controller = require('./places.ctrl');
+var controller = require('./passages.ctrl');
 var restrict = require('../middleware/middleware.restrict');
 var roles = require('../roles');
 
@@ -12,29 +12,29 @@ var authOptions = {
 
 var router = express.Router();
 
-router.route('/place/')
-    .options(controller.places.options)
+router.route('/passage/')
+    .options(controller.passages.options)
     .get(passport.authenticate('basic', authOptions),
         restrict(roles.user),
-        controller.places.get)
+        controller.passages.get)
     .post(passport.authenticate('basic', authOptions),
         restrict(roles.user),
-        controller.places.post);
+        controller.passages.post);
 
-router.route('/place/list')
+router.route('/passage/list')
     .get(passport.authenticate('basic', authOptions),
         restrict(roles.admin),
-        controller.places.list);
+        controller.passages.list);
 
-router.route('/place/:placeId')
+router.route('/passage/:passageId')
     .get(passport.authenticate(['basic', 'anonymous'], authOptions),
         restrict(roles.anonymous),
-        controller.place.get)
+        controller.passage.get)
     .post(passport.authenticate('basic', authOptions),
         restrict(roles.user),
-        controller.place.post)
+        controller.passage.post)
     .delete(passport.authenticate('basic', authOptions),
         restrict(roles.admin),
-        controller.place.delete);
+        controller.passage.delete);
 
 module.exports = router;

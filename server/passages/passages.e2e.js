@@ -8,13 +8,15 @@ var util = require('../../test/util');
 
 var Users = require('../users/users.db.mock');
 var Places = require('../places/places.db.mock');
+var Passages = require('../passages/passages.db.mock');
 
-describe('Places Endpoint', function() {
+fdescribe('Passages Endpoint', function() {
 
     var app;
-    var newPlace;
+    var newPassage;
     var places;
     var users;
+    var passages;
 
     beforeAll(function() {
         mockery.enable({
@@ -27,7 +29,7 @@ describe('Places Endpoint', function() {
         mockery.registerSubstitute(
             './users.db', '../users/users.db.mock');
         mockery.registerSubstitute(
-            '../mail/mail.ctrl', '../mail/mail.ctrl.mock');
+            './passages.db', '../passages/passages.db.mock');
 
         app = require('../app/app');
     });
@@ -43,9 +45,9 @@ describe('Places Endpoint', function() {
          *
          * @param {function} done - Called when all users have been set up.
          */
-        function placesSetup(done) {
+        function passagesSetup(done) {
 
-            newPlace = jsf(models.io.place, models.refs);
+            newPassage = jsf(models.io.passage, models.refs);
 
             Users.mockUsers()
                 .then(function(mockUsers) {
@@ -53,6 +55,9 @@ describe('Places Endpoint', function() {
                     return Places.mockPlaces(users);
                 }).then(function(mockPlaces) {
                     places = mockPlaces;
+                    return Passages.mockPassages(places);
+                }).then(function(mockPassages) {
+                    passages = mockPassages;
                 }).then(done);
 
         }
@@ -64,16 +69,19 @@ describe('Places Endpoint', function() {
             .then(function() {
                 return Places.erase();
             })
+            .then(function() {
+                return Passages.erase();
+            })
             .then(done);
 
     });
 
-    describe('"/place/" OPTIONS', function() {
+    describe('"/passage/" OPTIONS', function() {
 
         it('should return the JSON schema for places.',
             function(done) {
                 supertest(app)
-                    .options('/place/')
+                    .options('/passage/')
                     .expect('Content-Type', /json/)
                     .expect(function(res) {
                         expect(res.body).toEqual(models.io.place);
@@ -84,7 +92,7 @@ describe('Places Endpoint', function() {
 
     });
 
-    describe('"/place/" GET', function() {
+    xdescribe('"/passage/" GET', function() {
 
         it('should return an error when ' +
             'you don\'t authenticate.', function(done) {
@@ -160,7 +168,7 @@ describe('Places Endpoint', function() {
 
     });
 
-    describe('"/place/" POST', function() {
+    xdescribe('"/passage/" POST', function() {
 
         it('should return an error when ' +
             'you don\'t authenticate.', function(done) {
@@ -311,7 +319,7 @@ describe('Places Endpoint', function() {
 
     });
 
-    describe('"/place/list" GET', function() {
+    xdescribe('"/passage/list" GET', function() {
 
         it('should return an error when ' +
             'you don\'t authenticate.', function(done) {
@@ -370,7 +378,7 @@ describe('Places Endpoint', function() {
 
     });
 
-    describe('"/place/:placeId" GET', function() {
+    xdescribe('"/passage/:passageId" GET', function() {
 
         it('should return basic information if ' +
             'you are not authenticated', function(done) {
@@ -422,7 +430,7 @@ describe('Places Endpoint', function() {
 
     });
 
-    describe('"/place/:placeId" POST', function() {
+    xdescribe('"/passage/:passageId" POST', function() {
 
         it('should not allow anonymous users ' +
             'to make changes to places.', function(done) {
@@ -552,7 +560,7 @@ describe('Places Endpoint', function() {
 
     });
 
-    describe('"/place/:placeId" DELETE', function() {
+    xdescribe('"/passage/:passageId" DELETE', function() {
 
         it('should not allow anonymous users ' +
             'to delete places.', function(done) {

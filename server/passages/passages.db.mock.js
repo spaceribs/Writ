@@ -5,7 +5,7 @@ var models = require('../../models');
 var memdown = require('memdown');
 var jsf = require('json-schema-faker');
 
-var Places = new Database('Mock-Passages', {
+var Passages = new Database('Mock-Passages', {
     db: memdown
 });
 
@@ -15,67 +15,84 @@ var Places = new Database('Mock-Passages', {
  * @param {object} owner - User ID of the
  * @param {{x: int, y: int, z: int}} pos - set a specific position for the
  * mock place.
- * @param {string} from - Room the passage comes from
- * @param {string} to - Room the passage goes to
+ * @param {string} from - Room id the passage comes from
+ * @param {string=} to - Room id the passage goes to
  * @param {boolean=} invalid - Put some strange parameters in for validation.
  * @returns {Promise}
  */
 function mockPassage(owner, pos, from, to, invalid) {
 
-    var place = jsf(models.db.place, models.refs);
+    var passage = jsf(models.db.passage, models.refs);
 
-    place.owner = owner._id;
-    place.id = place._id.match(/^place\/([a-z0-9-]+)$/)[1];
-    delete place._rev;
-    place.pos = pos;
+    passage.owner = owner._id;
+    passage.id = passage._id.match(/^passage\/([a-z0-9-]+)$/)[1];
+    delete passage._rev;
+    passage.pos = pos;
+    passage.from = from;
+    passage.to = to;
 
     if (invalid) {
-        place.weird = 'yep';
-        place.odd = true;
+        passage.weird = 'yep';
+        passage.odd = true;
     }
 
-    return Places.put(place)
+    return Passages.put(passage)
         .then(function() {
-            return place;
+            return passage;
         });
 
 }
 
 /**
  *
- * Create mock places for testing.
+ * Create mock passages for testing.
  *
- * @param {object} users - Users to assign as owners.
+ * @param {object} places - Places to connect.
  * @returns {Promise}
  */
-function mockPlaces(users) {
+function mockPassages(places) {
 
-    var places = {};
+    var passages = {};
 
-    return mockPlace(users.adminUser, {x: 0, y: 0, z: 0})
-        .then(function(lobby) {
-            places.lobby = lobby;
-            return mockPlace(users.verifiedUser, {x: 0, y: 1, z: 0});
+    return mockPassage(
+            places.lobby.owner,
+            {x: 0, y: 0.5, z: 0},
+            places.lobby._id,
+            places.northRoom._id
+        )
+        .then(function(northDoor) {
+            passages.northDoor = northDoor;
+            return mockPassage(places.lobby.owner,
+                {x: 0, y: 0, z: -0.5},
+                places.lobby._id,
+                places.basement._id
+            );
         })
-        .then(function(northRoom) {
-            places.northRoom = northRoom;
-            return mockPlace(users.verifiedUser, {x: -1, y: -1, z: 0});
+        .then(function(basementDoor) {
+            passages.basementDoor = basementDoor;
+            return mockPassage(
+                places.lobby.owner,
+                {x: -0.5, y: 0, z: 0},
+                places.lobby._id
+            );
         })
-        .then(function(southWestRoom) {
-            places.southWestRoom = southWestRoom;
-            return mockPlace(users.verifiedUser, {x: 0, y: 0, z: -1});
+        .then(function(openDoor) {
+            places.openWestDoor = openDoor;
+            return mockPassage(
+                places.invalidRoom.owner,
+                {x: 666, y: 666, z: 666},
+                places.lobby._id,
+                places.invalidRoom._id,
+                true
+            );
         })
-        .then(function(basement) {
-            places.basement = basement;
-            return mockPlace(users.invalidUser, {x: 666, y: 666, z: 666}, true);
-        })
-        .then(function(invalidRoom) {
-            places.invalidRoom = invalidRoom;
-            return places;
+        .then(function(invalidPassage) {
+            places.invalidPassage = invalidPassage;
+            return passages;
         });
 
 }
 
-module.exports = Places;
-module.exports.mockPlace = mockPlace;
-module.exports.mockPlaces = mockPlaces;
+module.exports = Passages;
+module.exports.mockPassage = mockPassage;
+module.exports.mockPassages = mockPassages;

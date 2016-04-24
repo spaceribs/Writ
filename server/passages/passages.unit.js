@@ -9,12 +9,14 @@ var SuccessMessage = require('../app/app.successes').SuccessMessage;
 
 var Users = require('../users/users.db.mock');
 var Places = require('../places/places.db.mock');
+var Passages = require('../passages/passage.db.mock');
 
-describe('Places', function() {
+fdescribe('Passages', function() {
 
-    var newPlace;
+    var newPassage;
     var users;
     var places;
+    var passages;
     var ctrl;
 
     var req;
@@ -37,8 +39,10 @@ describe('Places', function() {
             './users.db', './users.db.mock');
         mockery.registerSubstitute(
             './places.db', './places.db.mock');
+        mockery.registerSubstitute(
+            './passages.db', './passages.db.mock');
 
-        ctrl = require('./places.ctrl');
+        ctrl = require('./passages.ctrl');
     });
 
     afterAll(function() {
@@ -87,7 +91,7 @@ describe('Places', function() {
          */
         function placesSetup(done) {
 
-            newPlace = jsf(models.io.place, models.refs);
+            newPassage = jsf(models.io.passage, models.refs);
 
             Users.mockUsers()
                 .then(function(mockUsers) {
@@ -95,6 +99,9 @@ describe('Places', function() {
                     return Places.mockPlaces(users);
                 }).then(function(mockPlaces) {
                     places = mockPlaces;
+                    return Passages.mockPassages(places);
+                }).then(function(mockPassages) {
+                    passages = mockPassages;
                 }).then(done);
 
         }
@@ -106,13 +113,16 @@ describe('Places', function() {
             .then(function() {
                 return Places.erase();
             })
+            .then(function() {
+                return Passages.erase();
+            })
             .then(done);
 
     });
 
     describe('Controller', function() {
 
-        describe('placesOptions()', function() {
+        describe('passagesOptions()', function() {
 
             it('returns a json-schema when requesting options.',
                 function(done) {
@@ -122,11 +132,11 @@ describe('Places', function() {
                         expect(req.accepts).toHaveBeenCalled();
                         expect(req.accepts).toHaveBeenCalledWith('json');
                         expect(response)
-                            .toEqual(models.io.place);
+                            .toEqual(models.io.passage);
                         done();
                     });
 
-                    ctrl.places.options(req, res, callback);
+                    ctrl.passages.options(req, res, callback);
 
                 });
 
@@ -140,11 +150,11 @@ describe('Places', function() {
                     done();
                 });
 
-                ctrl.places.options(req, res, callback);
+                ctrl.passages.options(req, res, callback);
             });
         });
 
-        describe('placesGet()', function() {
+        xdescribe('passagesGet()', function() {
             it('returns authenticated users\' owned places.', function(done) {
                 req.user = users.verifiedUser;
                 ctrl.places.get(req, res, callback);
@@ -193,7 +203,7 @@ describe('Places', function() {
                 });
         });
 
-        describe('placesPost()', function() {
+        xdescribe('passagesPost()', function() {
             it('creates a new place owned by the current user.',
                 function(done) {
                     req.user = users.verifiedUser;
@@ -300,7 +310,7 @@ describe('Places', function() {
             });
         });
 
-        describe('placesList()', function() {
+        xdescribe('passagesList()', function() {
             it('lists all places.', function(done) {
                 req.user = users.adminUser;
                 ctrl.places.list(req, res);
@@ -318,7 +328,7 @@ describe('Places', function() {
             });
         });
 
-        describe('placeGet()', function() {
+        xdescribe('passagesGet()', function() {
             it('gets the details of a specific place.',
                 function(done) {
                     req.params = {
@@ -366,7 +376,7 @@ describe('Places', function() {
                 });
         });
 
-        describe('placePost()', function() {
+        xdescribe('passagesPost()', function() {
             it('allows normal users to make updates ' +
                 'to places they own.', function(done) {
                 req.user = users.verifiedUser;
@@ -499,7 +509,7 @@ describe('Places', function() {
             });
         });
 
-        describe('placeDelete()', function() {
+        xdescribe('passagesDelete()', function() {
             it('deletes a specific place.', function(done) {
                 req.user = users.adminUser;
                 req.params = {

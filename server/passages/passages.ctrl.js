@@ -23,7 +23,7 @@ for (var i = 0; i < models.refs.length; i++) {
  * @param {object} res - Express response object.
  * @param {function} next - Callback for the response.
  */
-function placesOptions(req, res, next) {
+function passagesOptions(req, res, next) {
     if (req.accepts('json')) {
         res.json(models.io.passage);
     } else {
@@ -39,7 +39,7 @@ function placesOptions(req, res, next) {
  * @param {object} res - Express response object.
  * @param {function} next - Callback for the response.
  */
-function placesGet(req, res, next) {
+function passagesGet(req, res, next) {
 
     Places.createIndex({
         'index': {
@@ -93,7 +93,7 @@ function placesGet(req, res, next) {
  * @param {object} res - Express response object.
  * @param {function} next - Callback for the response.
  */
-function placesPost(req, res, next) {
+function passagesPost(req, res, next) {
 
     var validation = tv4.validateMultiple(req.body, models.io.place);
     if (!validation.valid) {
@@ -204,7 +204,7 @@ function placesPost(req, res, next) {
  * @param {object} req - Express request object.
  * @param {object} res - Express response object.
  */
-function placesList(req, res) {
+function passagesList(req, res) {
 
     Places.allDocs({
         startkey    : 'place/',
@@ -233,7 +233,7 @@ function placesList(req, res) {
  * @param {object} res - Express response object.
  * @param {function} next - Callback for the response.
  */
-function placeGet(req, res, next) {
+function passageGet(req, res, next) {
 
     var placeId = req.params.placeId;
     Places.get('place/' + placeId)
@@ -257,7 +257,7 @@ function placeGet(req, res, next) {
  * @param {object} res - Express response object.
  * @param {function} next - Callback for the response.
  */
-function placePost(req, res, next) {
+function passagePost(req, res, next) {
 
     var newPlaceData;
     var placeId = req.params.placeId;
@@ -314,7 +314,7 @@ function placePost(req, res, next) {
  * @param {object} res - Express response object.
  * @param {function} next - Callback for the response.
  */
-function placeDelete(req, res, next) {
+function passageDelete(req, res, next) {
 
     var placeId = req.params.placeId;
 
@@ -332,15 +332,15 @@ function placeDelete(req, res, next) {
 }
 
 module.exports = {
-    places   : {
-        options: placesOptions,
-        get    : placesGet,
-        post   : placesPost,
-        list   : placesList
+    passages   : {
+        options: passagesOptions,
+        get    : passagesGet,
+        post   : passagesPost,
+        list   : passagesList
     },
-    place    : {
-        get   : placeGet,
-        post  : placePost,
-        delete: placeDelete
+    passage    : {
+        get   : passageGet,
+        post  : passagePost,
+        delete: passageDelete
     }
 };
