@@ -9,9 +9,9 @@ var SuccessMessage = require('../app/app.successes').SuccessMessage;
 
 var Users = require('../users/users.db.mock');
 var Places = require('../places/places.db.mock');
-var Passages = require('../passages/passage.db.mock');
+var Passages = require('../passages/passages.db.mock');
 
-fdescribe('Passages', function() {
+describe('Passages', function() {
 
     var newPassage;
     var users;
@@ -97,12 +97,21 @@ fdescribe('Passages', function() {
                 .then(function(mockUsers) {
                     users = mockUsers;
                     return Places.mockPlaces(users);
-                }).then(function(mockPlaces) {
+                })
+                .then(function(mockPlaces) {
                     places = mockPlaces;
                     return Passages.mockPassages(places);
-                }).then(function(mockPassages) {
+                })
+                .then(function(mockPassages) {
                     passages = mockPassages;
-                }).then(done);
+                })
+                .then(done)
+            /*eslint-disable */
+            /* istanbul ignore next */
+                .catch(function(err) {
+                    console.error(err.stack);
+                });
+            /*eslint-enable */
 
         }
     );
@@ -116,7 +125,13 @@ fdescribe('Passages', function() {
             .then(function() {
                 return Passages.erase();
             })
-            .then(done);
+            .then(done)
+        /*eslint-disable */
+        /* istanbul ignore next */
+            .catch(function(err) {
+                console.error(err);
+            });
+        /*eslint-enable */
 
     });
 

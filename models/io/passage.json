@@ -43,10 +43,9 @@
         }
     },
     "required": [
-        "id",
+        "name",
+        "desc",
         "from",
-        "to",
-        "title",
-        "desc"
+        "to"
     ]
 }

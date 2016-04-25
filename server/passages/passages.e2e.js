@@ -10,7 +10,7 @@ var Users = require('../users/users.db.mock');
 var Places = require('../places/places.db.mock');
 var Passages = require('../passages/passages.db.mock');
 
-fdescribe('Passages Endpoint', function() {
+describe('Passages Endpoint', function() {
 
     var app;
     var newPassage;
@@ -30,6 +30,8 @@ fdescribe('Passages Endpoint', function() {
             './users.db', '../users/users.db.mock');
         mockery.registerSubstitute(
             './passages.db', '../passages/passages.db.mock');
+        mockery.registerSubstitute(
+            '../mail/mail.ctrl', '../mail/mail.ctrl.mock');
 
         app = require('../app/app');
     });
@@ -41,7 +43,7 @@ fdescribe('Passages Endpoint', function() {
 
     beforeEach(
         /**
-         * For each test, create a new set of places for testing.
+         * For each test, create a new set of passages for testing.
          *
          * @param {function} done - Called when all users have been set up.
          */
@@ -53,12 +55,21 @@ fdescribe('Passages Endpoint', function() {
                 .then(function(mockUsers) {
                     users = mockUsers;
                     return Places.mockPlaces(users);
-                }).then(function(mockPlaces) {
+                })
+                .then(function(mockPlaces) {
                     places = mockPlaces;
                     return Passages.mockPassages(places);
-                }).then(function(mockPassages) {
+                })
+                .then(function(mockPassages) {
                     passages = mockPassages;
-                }).then(done);
+                })
+                .then(done)
+            /*eslint-disable */
+            /* istanbul ignore next */
+                .catch(function(err) {
+                    console.error(err.stack);
+                });
+            /*eslint-enable */
 
         }
     );
@@ -72,19 +83,25 @@ fdescribe('Passages Endpoint', function() {
             .then(function() {
                 return Passages.erase();
             })
-            .then(done);
+            .then(done)
+        /*eslint-disable */
+        /* istanbul ignore next */
+            .catch(function(err) {
+                console.error(err.stack);
+            });
+        /*eslint-enable */
 
     });
 
     describe('"/passage/" OPTIONS', function() {
 
-        it('should return the JSON schema for places.',
+        it('should return the JSON schema for passages.',
             function(done) {
                 supertest(app)
                     .options('/passage/')
                     .expect('Content-Type', /json/)
                     .expect(function(res) {
-                        expect(res.body).toEqual(models.io.place);
+                        expect(res.body).toEqual(models.io.passage);
                     })
                     .expect(200)
                     .end(util.handleSupertest(done));

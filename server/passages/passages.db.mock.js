@@ -10,11 +10,11 @@ var Passages = new Database('Mock-Passages', {
 });
 
 /**
- * Create a mock place for testing.
+ * Create a mock passage for testing.
  *
  * @param {object} owner - User ID of the
  * @param {{x: int, y: int, z: int}} pos - set a specific position for the
- * mock place.
+ * mock passage.
  * @param {string} from - Room id the passage comes from
  * @param {string=} to - Room id the passage goes to
  * @param {boolean=} invalid - Put some strange parameters in for validation.

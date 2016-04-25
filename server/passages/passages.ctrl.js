@@ -16,8 +16,8 @@ for (var i = 0; i < models.refs.length; i++) {
 }
 
 /**
- * Called when a user makes an OPTIONS request to "/places/".
- * Returns the json-schema used to validate/update places.
+ * Called when a user makes an OPTIONS request to "/passage/".
+ * Returns the json-schema used to validate/update passages.
  *
  * @param {object} req - Express request object.
  * @param {object} res - Express response object.
@@ -41,7 +41,7 @@ function passagesOptions(req, res, next) {
  */
 function passagesGet(req, res, next) {
 
-    Places.createIndex({
+    /*Places.createIndex({
         'index': {
             'fields': ['owner']
         }
@@ -81,7 +81,7 @@ function passagesGet(req, res, next) {
     }).catch(function(err) {
         next(err);
 
-    });
+    });*/
 
 }
 
@@ -95,7 +95,7 @@ function passagesGet(req, res, next) {
  */
 function passagesPost(req, res, next) {
 
-    var validation = tv4.validateMultiple(req.body, models.io.place);
+    /*var validation = tv4.validateMultiple(req.body, models.io.place);
     if (!validation.valid) {
         next(new errors.JsonSchemaValidationError(
             validation.errors, validation.missing));
@@ -191,7 +191,7 @@ function passagesPost(req, res, next) {
     }).catch(function(err) {
         next(err);
 
-    });
+    });*/
 
     // TODO: Check that a disconnected passage is referenced.
     // TODO: at least one new passage is always submitted with a new place.
@@ -206,7 +206,7 @@ function passagesPost(req, res, next) {
  */
 function passagesList(req, res) {
 
-    Places.allDocs({
+    /*Places.allDocs({
         startkey    : 'place/',
         endkey      : 'place/\uffff',
         include_docs: true
@@ -221,7 +221,7 @@ function passagesList(req, res) {
     }).then(function(results) {
         res.json(results);
 
-    });
+    });*/
 
 }
 
@@ -235,7 +235,7 @@ function passagesList(req, res) {
  */
 function passageGet(req, res, next) {
 
-    var placeId = req.params.placeId;
+    /*var placeId = req.params.placeId;
     Places.get('place/' + placeId)
         .then(function(result) {
             var filtered = util.dbFilter(
@@ -245,7 +245,7 @@ function passageGet(req, res, next) {
 
         }).catch(function() {
             next(new errors.PlaceNotFoundError());
-        });
+        });*/
 
 }
 
@@ -259,7 +259,7 @@ function passageGet(req, res, next) {
  */
 function passagePost(req, res, next) {
 
-    var newPlaceData;
+    /*var newPlaceData;
     var placeId = req.params.placeId;
 
     Places.get('place/' + placeId)
@@ -302,7 +302,7 @@ function passagePost(req, res, next) {
                 next(err);
             }
 
-        });
+        });*/
 
 }
 
@@ -316,7 +316,7 @@ function passagePost(req, res, next) {
  */
 function passageDelete(req, res, next) {
 
-    var placeId = req.params.placeId;
+    /*var placeId = req.params.placeId;
 
     Places.get('place/' + placeId).then(function(doc) {
         return Places.remove(doc);
@@ -327,7 +327,7 @@ function passageDelete(req, res, next) {
     }).catch(function() {
         next(new errors.PlaceNotFoundError());
 
-    });
+    });*/
 
 }
 
