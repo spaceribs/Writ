@@ -109,12 +109,12 @@ describe('Passages Endpoint', function() {
 
     });
 
-    xdescribe('"/passage/" GET', function() {
+    describe('"/passage/" GET', function() {
 
         it('should return an error when ' +
             'you don\'t authenticate.', function(done) {
             supertest(app)
-                .get('/place/')
+                .get('/passage/')
                 .expect(401)
                 .end(util.handleSupertest(done));
 
@@ -123,7 +123,7 @@ describe('Passages Endpoint', function() {
         it('should return a list of owned places ' +
             'when basically authenticated.', function(done) {
             supertest(app)
-                .get('/place/')
+                .get('/passage/')
                 .auth(
                     users.verifiedUser.email,
                     users.verifiedUser.password
@@ -132,7 +132,7 @@ describe('Passages Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'SUCCESS',
-                        message: 'Owned places found.',
+                        message: 'Owned passages found.',
                         data   : jasmine.any(Array)
                     });
                     expect(res.body.data[0].owner)
@@ -144,9 +144,9 @@ describe('Passages Endpoint', function() {
         });
 
         it('should return an error if ' +
-            'you don\'t own any places.', function(done) {
+            'you don\'t own any passages.', function(done) {
             supertest(app)
-                .get('/place/')
+                .get('/passage/')
                 .auth(
                     users.newUser.email,
                     users.newUser.password
@@ -154,8 +154,8 @@ describe('Passages Endpoint', function() {
                 .expect('Content-Type', /json/)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status : 'PLACES_NOT_FOUND',
-                        message: 'You do not own any places.'
+                        status : 'PASSAGES_NOT_FOUND',
+                        message: 'You do not own any passages.'
                     });
                 })
                 .expect(404)
@@ -166,13 +166,13 @@ describe('Passages Endpoint', function() {
         it('should return more information ' +
             'when authenticated as an admin.', function(done) {
             supertest(app)
-                .get('/place/')
+                .get('/passage/')
                 .auth(users.adminUser.email, users.adminUser.password)
                 .expect('Content-Type', /json/)
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'SUCCESS',
-                        message: 'Owned places found.',
+                        message: 'Owned passages found.',
                         data   : jasmine.any(Array)
                     });
                     expect(res.body.data[0].created)
@@ -185,21 +185,37 @@ describe('Passages Endpoint', function() {
 
     });
 
-    xdescribe('"/passage/" POST', function() {
+    describe('"/passage/" POST', function() {
 
         it('should return an error when ' +
             'you don\'t authenticate.', function(done) {
             supertest(app)
-                .post('/place/')
+                .post('/passage/')
                 .expect(401)
                 .end(util.handleSupertest(done));
 
         });
 
+        xit('should return an error if ' +
+            'you are not the owner of ' +
+            'the originating room', function() {});
+
+        xit('should return an error if ' +
+            'you are not the owner of ' +
+            'the destination room', function() {});
+
+        xit('should return success if ' +
+            'you are an admin but not ' +
+            'the owner of the originating room', function() {});
+
+        xit('should return success if ' +
+            'you are an admin but not ' +
+            'the owner of the destination room', function() {});
+
         it('should return an error when trying to ' +
-            'create a place without information.', function(done) {
+            'create a passage without information.', function(done) {
             supertest(app)
-                .post('/place/')
+                .post('/passage/')
                 .auth(
                     users.verifiedUser.email,
                     users.verifiedUser.password
@@ -216,10 +232,10 @@ describe('Passages Endpoint', function() {
                 .end(util.handleSupertest(done));
         });
 
-        it('should return an error when ' +
-            'the submission doesn\'t match the JSON schema.', function(done) {
+        it('should return an error when the passage ' +
+            'submission doesn\'t match the JSON schema.', function(done) {
             supertest(app)
-                .post('/place/')
+                .post('/passage/')
                 .auth(
                     users.verifiedUser.email,
                     users.verifiedUser.password
@@ -238,23 +254,24 @@ describe('Passages Endpoint', function() {
         });
 
         it('should return an error when ' +
-            'the new place position is ' +
-            'the same as another room.', function(done) {
-            newPlace.pos = {x: 0, y: 0, z: 0};
+            'the new passage connection is ' +
+            'the same as another passage.', function(done) {
+            newPassage.from = places.lobby._id;
+            newPassage.to =  places.northRoom._id;
 
             supertest(app)
-                .post('/place/')
+                .post('/passage/')
                 .auth(
                     users.verifiedUser.email,
                     users.verifiedUser.password
                 )
-                .send(newPlace)
+                .send(newPassage)
                 .expect('Content-Type', /json/)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status : 'PLACE_INVALID',
-                        message: 'A place already exists ' +
-                        'in this location.'
+                        status : 'PASSAGE_INVALID',
+                        message: 'A passage already exists ' +
+                        'between these places.'
                     });
                 })
                 .expect(400)
@@ -262,23 +279,24 @@ describe('Passages Endpoint', function() {
         });
 
         it('should return an error when ' +
-            'the new above ground place ' +
-            'isn\'t supported by a room above it.', function(done) {
-            newPlace.pos = {x: 1, y: -1, z: 3};
+            'the new passage connection is ' +
+            'the same as another, just reversed.', function(done) {
+            newPassage.to = places.lobby._id;
+            newPassage.from =  places.northRoom._id;
 
             supertest(app)
-                .post('/place/')
+                .post('/passage/')
                 .auth(
                     users.verifiedUser.email,
                     users.verifiedUser.password
                 )
-                .send(newPlace)
+                .send(newPassage)
                 .expect('Content-Type', /json/)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status : 'PLACE_INVALID',
-                        message: 'You cannot add a place above ' +
-                        'ground level without a place below it.'
+                        status : 'PASSAGE_INVALID',
+                        message: 'A passage already exists ' +
+                        'between these places.'
                     });
                 })
                 .expect(400)
@@ -286,23 +304,49 @@ describe('Passages Endpoint', function() {
         });
 
         it('should return an error when ' +
-            'the new below ground place ' +
-            'isn\'t supported by a room above it.', function(done) {
-            newPlace.pos = {x: 1, y: -1, z: -3};
+            'the originating place isn\'t adjacent ' +
+            'to the destination place.' , function(done) {
+            newPassage.from = places.northRoom._id;
+            newPassage.to =  places.basement._id;
 
             supertest(app)
-                .post('/place/')
+                .post('/passage/')
                 .auth(
                     users.verifiedUser.email,
                     users.verifiedUser.password
                 )
-                .send(newPlace)
+                .send(newPassage)
+                .expect('Content-Type', /json/)
+                .expect(function(res) {
+                    expect(res.body).toEqual({
+                        status : 'PASSAGE_INVALID',
+                        message: 'The places you are trying ' +
+                        'to connect are not adjacent to one another.'
+                    });
+                })
+                .expect(400)
+                .end(util.handleSupertest(done));
+        });
+
+        it('should return an error when ' +
+            'trying to connect the same place ' +
+            'to itself.', function(done) {
+            newPassage.from = places.northRoom._id;
+            newPassage.to =  places.northRoom._id;
+
+            supertest(app)
+                .post('/passage/')
+                .auth(
+                    users.verifiedUser.email,
+                    users.verifiedUser.password
+                )
+                .send(newPassage)
                 .expect('Content-Type', /json/)
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'PLACE_INVALID',
-                        message: 'You cannot add a place underground ' +
-                        'without a place above it.'
+                        message: 'You cannot connect a place ' +
+                        'to itself.'
                     });
                 })
                 .expect(400)
@@ -310,21 +354,22 @@ describe('Passages Endpoint', function() {
         });
 
         it('should return success when ' +
-            'the new place submission is valid.', function(done) {
-            newPlace.pos = {x: 1, y: -1, z: 0};
+            'the new passage submission is valid.', function(done) {
+            newPassage.from = places.northRoom._id;
+            newPassage.to =  places.northWestRoom._id;
 
             supertest(app)
-                .post('/place/')
+                .post('/passage/')
                 .auth(
                     users.verifiedUser.email,
                     users.verifiedUser.password
                 )
-                .send(newPlace)
+                .send(newPassage)
                 .expect('Content-Type', /json/)
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'SUCCESS',
-                        message: 'Created new place.',
+                        message: 'Created new passage.',
                         data   : {
                             id: jasmine.any(String)
                         }
@@ -336,12 +381,12 @@ describe('Passages Endpoint', function() {
 
     });
 
-    xdescribe('"/passage/list" GET', function() {
+    describe('"/passage/list" GET', function() {
 
         it('should return an error when ' +
             'you don\'t authenticate.', function(done) {
             supertest(app)
-                .get('/place/list/')
+                .get('/passage/list/')
                 .expect(401)
                 .end(util.handleSupertest(done));
 
@@ -350,7 +395,7 @@ describe('Passages Endpoint', function() {
         it('should return an error when ' +
             'authenticated without admin privileges.', function(done) {
             supertest(app)
-                .get('/place/list/')
+                .get('/passage/list/')
                 .auth(
                     users.verifiedUser.email,
                     users.verifiedUser.password
@@ -368,14 +413,10 @@ describe('Passages Endpoint', function() {
 
         });
 
-        it('should return an admin user' +
-            'authenticated as an admin.', function(done) {
+        it('should return a list of passages ' +
+            'when authenticated as an admin.', function(done) {
             supertest(app)
-                .get('/place/list/')
-                .auth(
-                    users.verifiedUser.email,
-                    users.verifiedUser.password
-                )
+                .get('/passage/list/')
                 .auth(
                     users.adminUser.email,
                     users.adminUser.password
@@ -395,25 +436,22 @@ describe('Passages Endpoint', function() {
 
     });
 
-    xdescribe('"/passage/:passageId" GET', function() {
+    describe('"/passage/:passageId" GET', function() {
 
         it('should return basic information if ' +
             'you are not authenticated', function(done) {
             supertest(app)
-                .get('/place/' + places.lobby.id)
+                .get('/passage/' + passages.northDoor.id)
                 .expect('Content-Type', /json/)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        message: 'Place found.',
+                        message: 'Passage found.',
                         status : 'SUCCESS',
                         data   : {
-                            id: places.lobby.id,
+                            id: passages.northDoor.id,
                             owner: users.adminUser._id,
-                            name: places.lobby.name,
-                            pos: places.lobby.pos,
-                            desc: places.lobby.desc,
-                            passages: places.lobby.passages,
-                            items: places.lobby.items
+                            name: passages.northDoor.name,
+                            desc: passages.northDoor.desc
                         }
                     });
                 })
@@ -425,7 +463,7 @@ describe('Passages Endpoint', function() {
         it('should return more information if ' +
             'you are authenticated as an admin', function(done) {
             supertest(app)
-                .get('/place/' + places.lobby.id)
+                .get('/passage/' + passages.northDoor.id)
                 .auth(
                     users.adminUser.email,
                     users.adminUser.password
@@ -433,7 +471,7 @@ describe('Passages Endpoint', function() {
                 .expect('Content-Type', /json/)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        message: 'Place found.',
+                        message: 'Passage found.',
                         status: 'SUCCESS',
                         data: jasmine.any(Object)
                     });
@@ -447,12 +485,12 @@ describe('Passages Endpoint', function() {
 
     });
 
-    xdescribe('"/passage/:passageId" POST', function() {
+    describe('"/passage/:passageId" POST', function() {
 
         it('should not allow anonymous users ' +
-            'to make changes to places.', function(done) {
+            'to make changes to passages.', function(done) {
             supertest(app)
-                .post('/place/' + places.northRoom.id)
+                .post('/passage/' + passages.northDoor.id)
                 .send({name: 'Bad Name'})
                 .expect(401)
                 .end(function(err) {
@@ -460,7 +498,7 @@ describe('Passages Endpoint', function() {
                         done.fail(err);
                     }
 
-                    supertest(app).get('/place/' + places.northRoom.id)
+                    supertest(app).get('/passage/' + passages.northDoor.id)
                         .expect('Content-Type', /json/)
                         .expect(function(res) {
                             expect(res.body.data.name).not.toBe('Bad Name');
@@ -471,9 +509,9 @@ describe('Passages Endpoint', function() {
         });
 
         it('should allow normal users ' +
-            'to make changes to their own places.', function(done) {
+            'to make changes to their own passages.', function(done) {
             supertest(app)
-                .post('/place/' + places.northRoom.id)
+                .post('/passage/' + passages.northEastDoor.id)
                 .send({name: 'Good Name'})
                 .auth(
                     users.verifiedUser.email,
@@ -483,7 +521,7 @@ describe('Passages Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'SUCCESS',
-                        message: 'Place has been successfully updated.',
+                        message: 'Passage has been successfully updated.',
                         data   : jasmine.any(Object)
                     });
                 })
@@ -493,7 +531,7 @@ describe('Passages Endpoint', function() {
                         done.fail(err);
                     }
 
-                    supertest(app).get('/place/' + places.northRoom.id)
+                    supertest(app).get('/passage/' + passages.northEastDoor.id)
                         .expect('Content-Type', /json/)
                         .expect(function(res) {
                             expect(res.body.data.name).toBe('Good Name');
@@ -504,9 +542,9 @@ describe('Passages Endpoint', function() {
         });
 
         it('should not allow normal users ' +
-            'to make changes to admin owned places.', function(done) {
+            'to make changes to admin owned passages.', function(done) {
             supertest(app)
-                .post('/place/' + places.lobby.id)
+                .post('/passage/' + passages.northDoor.id)
                 .send({name: 'Bad Name'})
                 .auth(
                     users.verifiedUser.email,
@@ -518,7 +556,7 @@ describe('Passages Endpoint', function() {
                     expect(res.body).toEqual({
                         status : 'FORBIDDEN',
                         message: 'You are not allowed to make ' +
-                        'these updates to the room.'
+                        'these updates to the passage.'
                     });
                 })
                 .end(function(err) {
@@ -528,7 +566,7 @@ describe('Passages Endpoint', function() {
                     }
 
                     supertest(app)
-                        .get('/place/' + places.lobby.id)
+                        .get('/passage/' + passages.northDoor.id)
                         .expect('Content-Type', /json/)
                         .expect(function(res) {
                             expect(res.body.data.name).not.toBe('Bad Name');
@@ -540,9 +578,9 @@ describe('Passages Endpoint', function() {
         });
 
         it('should allow admin users ' +
-            'to make changes to other users\' places.', function(done) {
+            'to make changes to other users\' passages.', function(done) {
             supertest(app)
-                .post('/place/' + places.northRoom.id)
+                .post('/passage/' + passages.northEastDoor.id)
                 .send({name: 'Good Name'})
                 .auth(
                     users.adminUser.email,
@@ -552,7 +590,7 @@ describe('Passages Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'SUCCESS',
-                        message: 'Place has been successfully updated.',
+                        message: 'Passage has been successfully updated.',
                         data   : jasmine.any(Object)
                     });
                 })
@@ -564,7 +602,7 @@ describe('Passages Endpoint', function() {
                     }
 
                     supertest(app)
-                        .get('/place/' + places.northRoom.id)
+                        .get('/passage/' + passages.northEastDoor.id)
                         .expect('Content-Type', /json/)
                         .expect(function(res) {
                             expect(res.body.data.name).toBe('Good Name');
@@ -577,12 +615,12 @@ describe('Passages Endpoint', function() {
 
     });
 
-    xdescribe('"/passage/:passageId" DELETE', function() {
+    describe('"/passage/:passageId" DELETE', function() {
 
         it('should not allow anonymous users ' +
-            'to delete places.', function(done) {
+            'to delete passages.', function(done) {
             supertest(app)
-                .delete('/place/' + places.northRoom.id)
+                .delete('/passage/' + passages.northEastDoor.id)
                 .expect(401)
                 .end(function(err) {
                     if (err) {
@@ -590,17 +628,17 @@ describe('Passages Endpoint', function() {
                         return false;
                     }
 
-                    supertest(app).get('/place/' + places.northRoom.id)
+                    supertest(app).get('/passage/' + passages.northEastDoor.id)
                         .expect('Content-Type', /json/)
                         .expect(200)
                         .end(util.handleSupertest(done));
                 });
         });
 
-        it('should not allow normal users ' +
-            'to delete places.', function(done) {
+        xit('should not allow normal users ' +
+            'to delete passages.', function(done) {
             supertest(app)
-                .delete('/place/' + places.lobby.id)
+                .delete('/passage/' + passages.northEastDoor.id)
                 .auth(
                     users.verifiedUser.email,
                     users.verifiedUser.password
@@ -619,17 +657,17 @@ describe('Passages Endpoint', function() {
                         return false;
                     }
 
-                    supertest(app).get('/place/' + places.lobby.id)
+                    supertest(app).get('/passage/' + passages.northEastDoor.id)
                         .expect('Content-Type', /json/)
                         .expect(200)
                         .end(util.handleSupertest(done));
                 });
         });
 
-        it('should allow admin users ' +
-            'to delete places.', function(done) {
+        xit('should allow admin users ' +
+            'to delete passages.', function(done) {
             supertest(app)
-                .delete('/place/' + places.northRoom.id)
+                .delete('/passage/' + passages.northEastDoor.id)
                 .auth(
                     users.adminUser.email,
                     users.adminUser.password
@@ -638,7 +676,7 @@ describe('Passages Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'SUCCESS',
-                        message: 'User has been deleted.'
+                        message: 'Passage has been deleted.'
                     });
                 })
                 .expect(200)
@@ -648,7 +686,7 @@ describe('Passages Endpoint', function() {
                         return false;
                     }
 
-                    supertest(app).get('/place/' + places.northRoom.id)
+                    supertest(app).get('/passage/' + passages.northEastDoor.id)
                         .expect('Content-Type', /json/)
                         .expect(404)
                         .end(util.handleSupertest(done));

@@ -170,7 +170,7 @@ describe('Passages', function() {
         });
 
         xdescribe('passagesGet()', function() {
-            it('returns authenticated users\' owned places.', function(done) {
+            xit('returns authenticated users\' owned passages.', function(done) {
                 req.user = users.verifiedUser;
                 ctrl.places.get(req, res, callback);
 
@@ -181,7 +181,7 @@ describe('Passages', function() {
 
             });
 
-            it('returns a 404 error if there are no places found.',
+            xit('returns a 404 error if there are no passages found.',
                 function(done) {
                     req.user = users.unverifiedUser;
                     ctrl.places.get(req, res, callback);
@@ -195,7 +195,7 @@ describe('Passages', function() {
 
                 });
 
-            it('doesn\'t return some information to verified users.',
+            xit('doesn\'t return some information to verified users.',
                 function(done) {
                     req.user = users.verifiedUser;
                     ctrl.places.get(req, res, callback);
@@ -206,7 +206,7 @@ describe('Passages', function() {
                     });
                 });
 
-            it('returns more information to admin users.',
+            xit('returns more information to admin users.',
                 function(done) {
                     req.user = users.adminUser;
                     ctrl.places.get(req, res, callback);
@@ -219,7 +219,7 @@ describe('Passages', function() {
         });
 
         xdescribe('passagesPost()', function() {
-            it('creates a new place owned by the current user.',
+            xit('creates a new passage owned by the current user.',
                 function(done) {
                     req.user = users.verifiedUser;
                     req.body = newPlace;
@@ -233,7 +233,8 @@ describe('Passages', function() {
                     });
                 });
 
-            it('doesn\'t allow a place to be created at an existing position.',
+            xit('doesn\'t allow a passage to be created at ' +
+                'an existing position.',
                 function(done) {
                     req.user = users.verifiedUser;
                     req.body = newPlace;
@@ -247,7 +248,7 @@ describe('Passages', function() {
                     });
                 });
 
-            it('doesn\'t allow a place to be created below ground level ' +
+            xit('doesn\'t allow a passage to be created below ground level ' +
                 'without a place above.',
                 function(done) {
                     req.user = users.verifiedUser;
@@ -262,7 +263,7 @@ describe('Passages', function() {
                     });
                 });
 
-            it('doesn\'t allow a place to be created above ground level ' +
+            xit('doesn\'t allow a passage to be created above ground level ' +
                 'without a place below.',
                 function(done) {
                     req.user = users.verifiedUser;
@@ -277,8 +278,8 @@ describe('Passages', function() {
                     });
                 });
 
-            it('creates a new place above ground level if ' +
-                'there is a place below.',
+            xit('creates a new passage above ground level if ' +
+                'there is a passage below.',
                 function(done) {
                     req.user = users.verifiedUser;
                     req.body = newPlace;
@@ -292,8 +293,8 @@ describe('Passages', function() {
                     });
                 });
 
-            it('creates a new place below ground level if ' +
-                'there is a place above.',
+            xit('creates a new passage below ground level if ' +
+                'there is a passage above.',
                 function(done) {
                     req.user = users.verifiedUser;
                     req.body = newPlace;
@@ -307,7 +308,7 @@ describe('Passages', function() {
                     });
                 });
 
-            it('doesn\'t create an invalid place.', function(done) {
+            xit('doesn\'t create an invalid passage.', function(done) {
                 req.user = users.verifiedUser;
                 newPlace.invalid = true;
                 req.body = newPlace;
@@ -326,7 +327,7 @@ describe('Passages', function() {
         });
 
         xdescribe('passagesList()', function() {
-            it('lists all places.', function(done) {
+            xit('lists all passages.', function(done) {
                 req.user = users.adminUser;
                 ctrl.places.list(req, res);
 
@@ -343,8 +344,8 @@ describe('Passages', function() {
             });
         });
 
-        xdescribe('passagesGet()', function() {
-            it('gets the details of a specific place.',
+        xdescribe('passageGet()', function() {
+            xit('gets the details of a specific passage.',
                 function(done) {
                     req.params = {
                         placeId: places.lobby.id
@@ -359,7 +360,7 @@ describe('Passages', function() {
                     });
                 });
 
-            it('doesn\'t return anything if the place doesn\'t exist',
+            xit('doesn\'t return anything if the passage doesn\'t exist',
                 function(done) {
                     req.params = {
                         placeId: uuid.v4()
@@ -374,7 +375,7 @@ describe('Passages', function() {
 
                 });
 
-            it('gets more information if you are an admin.',
+            xit('gets more information if you are an admin.',
                 function(done) {
                     req.user = users.adminUser;
                     req.params = {
@@ -391,9 +392,9 @@ describe('Passages', function() {
                 });
         });
 
-        xdescribe('passagesPost()', function() {
-            it('allows normal users to make updates ' +
-                'to places they own.', function(done) {
+        xdescribe('passagePost()', function() {
+            xit('allows normal users to make updates ' +
+                'to passages they own.', function(done) {
                 req.user = users.verifiedUser;
                 req.params = {
                     placeId: places.northRoom.id
@@ -412,8 +413,8 @@ describe('Passages', function() {
                 });
             });
 
-            it('doesn\'t allow normal users to make changes ' +
-                'to rooms they don\'t own.', function(done) {
+            xit('doesn\'t allow normal users to make changes ' +
+                'to passages they don\'t own.', function(done) {
                 req.user = users.verifiedUser;
                 req.params = {
                     placeId: places.lobby.id
@@ -430,8 +431,8 @@ describe('Passages', function() {
                 ctrl.place.post(req, res, callback);
             });
 
-            it('allows admin users to make changes ' +
-                'to rooms they don\'t own.', function(done) {
+            xit('allows admin users to make changes ' +
+                'to passages they don\'t own.', function(done) {
                 req.user = users.adminUser;
                 req.params = {
                     placeId: places.lobby.id
@@ -450,7 +451,8 @@ describe('Passages', function() {
                 });
             });
 
-            it('allows admin users to change room owners.', function(done) {
+            xit('allows admin users to change passage owners.',
+                function(done) {
                 req.user = users.adminUser;
                 req.params = {
                     placeId: places.northRoom.id
@@ -469,8 +471,8 @@ describe('Passages', function() {
                 });
             });
 
-            it('doesn\'t allow normal users to change ' +
-                'room owners.', function(done) {
+            xit('doesn\'t allow normal users to change ' +
+                'passage owners.', function(done) {
                 req.user = users.verifiedUser;
                 req.params = {
                     placeId: places.northRoom.id
@@ -487,7 +489,7 @@ describe('Passages', function() {
                 });
             });
 
-            it('doesn\'t update anything if the place doesn\'t ' +
+            xit('doesn\'t update anything if the passage doesn\'t ' +
                 'exist.', function(done) {
                 req.user = users.verifiedUser;
                 req.params = {
@@ -505,7 +507,7 @@ describe('Passages', function() {
                 });
             });
 
-            it('doesn\'t update anything if the place ' +
+            xit('doesn\'t update anything if the passage ' +
                 'is invalid.', function(done) {
                 req.user = users.adminUser;
                 req.params = {
@@ -524,8 +526,8 @@ describe('Passages', function() {
             });
         });
 
-        xdescribe('passagesDelete()', function() {
-            it('deletes a specific place.', function(done) {
+        xdescribe('passageDelete()', function() {
+            xit('deletes a specific passage.', function(done) {
                 req.user = users.adminUser;
                 req.params = {
                     placeId: places.northRoom.id
@@ -539,7 +541,7 @@ describe('Passages', function() {
                 });
             });
 
-            it('doesn\'t delete anything if the place doesn\'t exist',
+            xit('doesn\'t delete anything if the passage doesn\'t exist',
                 function(done) {
                     req.user = users.adminUser;
                     req.params = {

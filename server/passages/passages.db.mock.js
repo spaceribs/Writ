@@ -62,6 +62,14 @@ function mockPassages(places) {
         )
         .then(function(northDoor) {
             passages.northDoor = northDoor;
+            return mockPassage(places.northRoom.owner,
+                {x: 0, y: 0, z: -0.5},
+                places.northRoom._id,
+                places.northEastRoom._id
+            );
+        })
+        .then(function(northEastDoor) {
+            passages.northEastDoor = northEastDoor;
             return mockPassage(places.lobby.owner,
                 {x: 0, y: 0, z: -0.5},
                 places.lobby._id,

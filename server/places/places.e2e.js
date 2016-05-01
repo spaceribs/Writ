@@ -343,14 +343,10 @@ describe('Places Endpoint', function() {
 
         });
 
-        it('should return an admin user' +
-            'authenticated as an admin.', function(done) {
+        it('should return a list of places ' +
+            'when authenticated as an admin.', function(done) {
             supertest(app)
                 .get('/place/list/')
-                .auth(
-                    users.verifiedUser.email,
-                    users.verifiedUser.password
-                )
                 .auth(
                     users.adminUser.email,
                     users.adminUser.password
@@ -613,7 +609,7 @@ describe('Places Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'SUCCESS',
-                        message: 'User has been deleted.'
+                        message: 'Place has been deleted.'
                     });
                 })
                 .expect(200)
