@@ -307,7 +307,7 @@ function placePost(req, res, next) {
 }
 
 /**
- * Called when a user makes an GET request to "/place/:placeId".
+ * Called when a user makes an DELETE request to "/place/:placeId".
  * Deletes a specific place from the world.
  *
  * @param {object} req - Express request object.
@@ -322,7 +322,7 @@ function placeDelete(req, res, next) {
         return Places.remove(doc);
 
     }).then(function() {
-        res.json(new SuccessMessage('User has been deleted.'));
+        res.json(new SuccessMessage('Place has been deleted.'));
 
     }).catch(function() {
         next(new errors.PlaceNotFoundError());

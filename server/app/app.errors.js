@@ -109,6 +109,19 @@ PlacesNotFoundError.prototype = Object.create(Error.prototype);
 /**
  * A custom error to handle any places which cannot be found.
  *
+ * @param {string} [message] - Custom user error message.
+ * @constructor
+ */
+function PassagesNotFoundError(message) {
+    this.status = 404;
+    this.name = 'PassagesNotFoundError';
+    this.message = message;
+}
+PassagesNotFoundError.prototype = Object.create(Error.prototype);
+
+/**
+ * A custom error to handle any place which cannot be found.
+ *
  * @param {?string} [message] - Custom user error message.
  * @constructor
  */
@@ -116,6 +129,19 @@ function PlaceNotFoundError(message) {
     this.status = 404;
     this.name = 'PlaceNotFoundError';
     this.message = (message || 'No place found at this address.');
+}
+PlaceNotFoundError.prototype = Object.create(Error.prototype);
+
+/**
+ * A custom error to handle any passage which cannot be found.
+ *
+ * @param {?string} [message] - Custom user error message.
+ * @constructor
+ */
+function PassageNotFoundError(message) {
+    this.status = 404;
+    this.name = 'PassageNotFoundError';
+    this.message = (message || 'No passage found at this address.');
 }
 PlaceNotFoundError.prototype = Object.create(Error.prototype);
 
@@ -132,6 +158,19 @@ function PlaceInvalidError(message) {
 }
 PlaceInvalidError.prototype = Object.create(Error.prototype);
 
+/**
+ * A custom error to handle when a new place is invalid
+ *
+ * @param {string} [message] - Custom user error message.
+ * @constructor
+ */
+function PassageInvalidError(message) {
+    this.status = 400;
+    this.name = 'PassageInvalidError';
+    this.message = message;
+}
+PassageInvalidError.prototype = Object.create(Error.prototype);
+
 module.exports = {
     SyntaxError              : SyntaxError,
     JsonSchemaValidationError: JsonSchemaValidationError,
@@ -139,8 +178,11 @@ module.exports = {
     SecretNotFoundError      : SecretNotFoundError,
     UserNotFoundError        : UserNotFoundError,
     PlacesNotFoundError      : PlacesNotFoundError,
+    PassagesNotFoundError    : PassagesNotFoundError,
     PlaceNotFoundError       : PlaceNotFoundError,
+    PassageNotFoundError     : PassageNotFoundError,
     LoginError               : LoginError,
     ForbiddenError           : ForbiddenError,
-    PlaceInvalidError        : PlaceInvalidError
+    PlaceInvalidError        : PlaceInvalidError,
+    PassageInvalidError      : PassageInvalidError
 };

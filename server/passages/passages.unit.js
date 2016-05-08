@@ -233,81 +233,6 @@ describe('Passages', function() {
                     });
                 });
 
-            xit('doesn\'t allow a passage to be created at ' +
-                'an existing position.',
-                function(done) {
-                    req.user = users.verifiedUser;
-                    req.body = newPlace;
-                    req.body.pos = places.lobby.pos;
-                    ctrl.places.post(req, res, callback);
-
-                    callback.and.callFake(function(err) {
-                        expect(err)
-                            .toEqual(jasmine.any(errors.PlaceInvalidError));
-                        done();
-                    });
-                });
-
-            xit('doesn\'t allow a passage to be created below ground level ' +
-                'without a place above.',
-                function(done) {
-                    req.user = users.verifiedUser;
-                    req.body = newPlace;
-                    req.body.pos = {x: 1, y: 2, z: -1};
-                    ctrl.places.post(req, res, callback);
-
-                    callback.and.callFake(function(err) {
-                        expect(err)
-                            .toEqual(jasmine.any(errors.PlaceInvalidError));
-                        done();
-                    });
-                });
-
-            xit('doesn\'t allow a passage to be created above ground level ' +
-                'without a place below.',
-                function(done) {
-                    req.user = users.verifiedUser;
-                    req.body = newPlace;
-                    req.body.pos = {x: 1, y: 2, z: 1};
-                    ctrl.places.post(req, res, callback);
-
-                    callback.and.callFake(function(err) {
-                        expect(err)
-                            .toEqual(jasmine.any(errors.PlaceInvalidError));
-                        done();
-                    });
-                });
-
-            xit('creates a new passage above ground level if ' +
-                'there is a passage below.',
-                function(done) {
-                    req.user = users.verifiedUser;
-                    req.body = newPlace;
-                    req.body.pos = {x: 0, y: 1, z: 1};
-                    ctrl.places.post(req, res, callback);
-
-                    res.json.and.callFake(function(response) {
-                        expect(response)
-                            .toEqual(jasmine.any(SuccessMessage));
-                        done();
-                    });
-                });
-
-            xit('creates a new passage below ground level if ' +
-                'there is a passage above.',
-                function(done) {
-                    req.user = users.verifiedUser;
-                    req.body = newPlace;
-                    req.body.pos = {x: 0, y: 1, z: -1};
-                    ctrl.places.post(req, res, callback);
-
-                    res.json.and.callFake(function(response) {
-                        expect(response)
-                            .toEqual(jasmine.any(SuccessMessage));
-                        done();
-                    });
-                });
-
             xit('doesn\'t create an invalid passage.', function(done) {
                 req.user = users.verifiedUser;
                 newPlace.invalid = true;
@@ -324,6 +249,81 @@ describe('Passages', function() {
                 });
 
             });
+
+            xit('doesn\'t allow a passage to be created ' +
+                'where one already exists.',
+                function(done) {
+                    req.user = users.verifiedUser;
+                    req.body = newPlace;
+                    req.body.pos = places.lobby.pos;
+                    ctrl.places.post(req, res, callback);
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PlaceInvalidError));
+                        done();
+                    });
+                });
+
+            xit('doesn\'t allow a passage to be created ' +
+                'if a normal user doesn\'t own the originating place.',
+                function(done) {
+                    req.user = users.verifiedUser;
+                    req.body = newPlace;
+                    req.body.pos = places.lobby.pos;
+                    ctrl.places.post(req, res, callback);
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PlaceInvalidError));
+                        done();
+                    });
+                });
+
+            xit('doesn\'t allow a passage to be created ' +
+                'if a normal user doesn\'t own the destination place.',
+                function(done) {
+                    req.user = users.verifiedUser;
+                    req.body = newPlace;
+                    req.body.pos = places.lobby.pos;
+                    ctrl.places.post(req, res, callback);
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PlaceInvalidError));
+                        done();
+                    });
+                });
+
+            xit('does allow a passage to be created ' +
+                'if an admin user doesn\'t own either places.',
+                function(done) {
+                    req.user = users.verifiedUser;
+                    req.body = newPlace;
+                    req.body.pos = places.lobby.pos;
+                    ctrl.places.post(req, res, callback);
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PlaceInvalidError));
+                        done();
+                    });
+                });
+
+            xit('doesn\'t allow a passage to be created ' +
+                'between places which aren\'t adjacent',
+                function(done) {
+                    req.user = users.verifiedUser;
+                    req.body = newPlace;
+                    req.body.pos = places.lobby.pos;
+                    ctrl.places.post(req, res, callback);
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PlaceInvalidError));
+                        done();
+                    });
+                });
         });
 
         xdescribe('passagesList()', function() {
