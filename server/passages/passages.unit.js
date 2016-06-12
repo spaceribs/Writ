@@ -40,6 +40,8 @@ describe('Passages', function() {
         mockery.registerSubstitute(
             './places.db', './places.db.mock');
         mockery.registerSubstitute(
+            '../places/places.db', '../places/places.db.mock');
+        mockery.registerSubstitute(
             './passages.db', './passages.db.mock');
 
         ctrl = require('./passages.ctrl');
@@ -85,11 +87,11 @@ describe('Passages', function() {
 
     beforeEach(
         /**
-         * For each test, create a new set of places for testing.
+         * For each test, create a new set of passages for testing.
          *
          * @param {function} done - Called when all users have been set up.
          */
-        function placesSetup(done) {
+        function passagesSetup(done) {
 
             newPassage = jsf(models.io.passage, models.refs);
 
@@ -224,8 +226,8 @@ describe('Passages', function() {
                 function(done) {
                     req.user = users.verifiedUser;
                     req.body = newPassage;
-                    req.body.pos = {x: 1, y: 1.5, z: 0};
-                    req.body.from = 
+                    req.body.pos = {x: -0.5, y: 1, z: 0};
+                    req.body.from = places.northRoom._id;
                     ctrl.passages.post(req, res, callback);
 
                     res.json.and.callFake(function(response) {

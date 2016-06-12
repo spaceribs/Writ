@@ -129,15 +129,27 @@ function passagesPost(req, res, next) {
         })]);
 
     }).then(function(passagesExist) {
-        console.log(passagesExist);
 
-        if (passageExists && _.get(passageExists, 'docs.length')) {
+        var passageExists = _.reduce(passagesExist, function(exists, result) {
+            return exists || !!result.docs.length;
+        }, false);
+
+        if (passageExists) {
             throw new errors.PassageInvalidError(
                 'A passage between these 2 places already exists.'
             );
         }
 
-        return Places.get(passageData.from);
+        return Places.get(passageData.from)
+            .catch(function(err) {
+                if (err.status === 404) {
+                    throw new errors.PlaceNotFoundError(
+                        'The originating place was not found.'
+                    );
+                } else {
+                    return err;
+                }
+            });
 
     }).then(function(fromResult) {
 
@@ -153,7 +165,16 @@ function passagesPost(req, res, next) {
             );
         }
 
-        return Places.get(passageData.to);
+        return Places.get(passageData.to)
+            .catch(function(err) {
+                if (err.status === 404) {
+                    throw new errors.PlaceNotFoundError(
+                        'The destination place was not found.'
+                    );
+                } else {
+                    return err;
+                }
+            });
 
     }).then(function(toResult) {
 
