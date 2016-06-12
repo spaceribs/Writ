@@ -167,38 +167,39 @@ describe('Passages', function() {
 
                 ctrl.passages.options(req, res, callback);
             });
+
         });
 
-        xdescribe('passagesGet()', function() {
-            xit('returns authenticated users\' owned passages.', function(done) {
+        describe('passagesGet()', function() {
+            it('returns authenticated users\' owned passages.', function(done) {
                 req.user = users.verifiedUser;
-                ctrl.places.get(req, res, callback);
+                ctrl.passages.get(req, res, callback);
 
                 res.json.and.callFake(function(response) {
-                    expect(response.data.length).toBe(3);
+                    expect(response.data.length).toBe(1);
                     done();
                 });
 
             });
 
-            xit('returns a 404 error if there are no passages found.',
+            it('returns a 404 error if there are no passages found.',
                 function(done) {
                     req.user = users.unverifiedUser;
-                    ctrl.places.get(req, res, callback);
+                    ctrl.passages.get(req, res, callback);
 
                     callback.and.callFake(function(err) {
                         expect(callback).toHaveBeenCalled();
                         expect(err)
-                            .toEqual(jasmine.any(errors.PlacesNotFoundError));
+                            .toEqual(jasmine.any(errors.PassagesNotFoundError));
                         done();
                     });
 
                 });
 
-            xit('doesn\'t return some information to verified users.',
+            it('doesn\'t return some information to verified users.',
                 function(done) {
                     req.user = users.verifiedUser;
-                    ctrl.places.get(req, res, callback);
+                    ctrl.passages.get(req, res, callback);
 
                     res.json.and.callFake(function(response) {
                         expect(response.data[0].created).toBeUndefined();
@@ -206,10 +207,10 @@ describe('Passages', function() {
                     });
                 });
 
-            xit('returns more information to admin users.',
+            it('returns more information to admin users.',
                 function(done) {
                     req.user = users.adminUser;
-                    ctrl.places.get(req, res, callback);
+                    ctrl.passages.get(req, res, callback);
 
                     res.json.and.callFake(function(response) {
                         expect(response.data[0].created).toBeDefined();
@@ -218,13 +219,14 @@ describe('Passages', function() {
                 });
         });
 
-        xdescribe('passagesPost()', function() {
-            xit('creates a new passage owned by the current user.',
+        describe('passagesPost()', function() {
+            fit('creates a new passage owned by the current user.',
                 function(done) {
                     req.user = users.verifiedUser;
-                    req.body = newPlace;
-                    req.body.pos = {x: 1, y: 2, z: 0};
-                    ctrl.places.post(req, res, callback);
+                    req.body = newPassage;
+                    req.body.pos = {x: 1, y: 1.5, z: 0};
+                    req.body.from = 
+                    ctrl.passages.post(req, res, callback);
 
                     res.json.and.callFake(function(response) {
                         expect(response)
@@ -233,7 +235,7 @@ describe('Passages', function() {
                     });
                 });
 
-            xit('doesn\'t create an invalid passage.', function(done) {
+            it('doesn\'t create an invalid passage.', function(done) {
                 req.user = users.verifiedUser;
                 newPlace.invalid = true;
                 req.body = newPlace;
@@ -250,7 +252,7 @@ describe('Passages', function() {
 
             });
 
-            xit('doesn\'t allow a passage to be created ' +
+            it('doesn\'t allow a passage to be created ' +
                 'where one already exists.',
                 function(done) {
                     req.user = users.verifiedUser;
@@ -265,7 +267,7 @@ describe('Passages', function() {
                     });
                 });
 
-            xit('doesn\'t allow a passage to be created ' +
+            it('doesn\'t allow a passage to be created ' +
                 'if a normal user doesn\'t own the originating place.',
                 function(done) {
                     req.user = users.verifiedUser;
@@ -280,7 +282,7 @@ describe('Passages', function() {
                     });
                 });
 
-            xit('doesn\'t allow a passage to be created ' +
+            it('doesn\'t allow a passage to be created ' +
                 'if a normal user doesn\'t own the destination place.',
                 function(done) {
                     req.user = users.verifiedUser;
@@ -295,7 +297,7 @@ describe('Passages', function() {
                     });
                 });
 
-            xit('does allow a passage to be created ' +
+            it('does allow a passage to be created ' +
                 'if an admin user doesn\'t own either places.',
                 function(done) {
                     req.user = users.verifiedUser;
@@ -310,7 +312,7 @@ describe('Passages', function() {
                     });
                 });
 
-            xit('doesn\'t allow a passage to be created ' +
+            it('doesn\'t allow a passage to be created ' +
                 'between places which aren\'t adjacent',
                 function(done) {
                     req.user = users.verifiedUser;
@@ -326,10 +328,10 @@ describe('Passages', function() {
                 });
         });
 
-        xdescribe('passagesList()', function() {
-            xit('lists all passages.', function(done) {
+        describe('passagesList()', function() {
+            it('lists all passages.', function(done) {
                 req.user = users.adminUser;
-                ctrl.places.list(req, res);
+                ctrl.passages.list(req, res);
 
                 res.json.and.callFake(function(response) {
                     expect(response)
@@ -344,8 +346,8 @@ describe('Passages', function() {
             });
         });
 
-        xdescribe('passageGet()', function() {
-            xit('gets the details of a specific passage.',
+        describe('passageGet()', function() {
+            it('gets the details of a specific passage.',
                 function(done) {
                     req.params = {
                         placeId: places.lobby.id
@@ -360,7 +362,7 @@ describe('Passages', function() {
                     });
                 });
 
-            xit('doesn\'t return anything if the passage doesn\'t exist',
+            it('doesn\'t return anything if the passage doesn\'t exist',
                 function(done) {
                     req.params = {
                         placeId: uuid.v4()
@@ -375,7 +377,7 @@ describe('Passages', function() {
 
                 });
 
-            xit('gets more information if you are an admin.',
+            it('gets more information if you are an admin.',
                 function(done) {
                     req.user = users.adminUser;
                     req.params = {
@@ -392,8 +394,8 @@ describe('Passages', function() {
                 });
         });
 
-        xdescribe('passagePost()', function() {
-            xit('allows normal users to make updates ' +
+        describe('passagePost()', function() {
+            it('allows normal users to make updates ' +
                 'to passages they own.', function(done) {
                 req.user = users.verifiedUser;
                 req.params = {
@@ -413,7 +415,7 @@ describe('Passages', function() {
                 });
             });
 
-            xit('doesn\'t allow normal users to make changes ' +
+            it('doesn\'t allow normal users to make changes ' +
                 'to passages they don\'t own.', function(done) {
                 req.user = users.verifiedUser;
                 req.params = {
@@ -431,7 +433,7 @@ describe('Passages', function() {
                 ctrl.place.post(req, res, callback);
             });
 
-            xit('allows admin users to make changes ' +
+            it('allows admin users to make changes ' +
                 'to passages they don\'t own.', function(done) {
                 req.user = users.adminUser;
                 req.params = {
@@ -451,7 +453,7 @@ describe('Passages', function() {
                 });
             });
 
-            xit('allows admin users to change passage owners.',
+            it('allows admin users to change passage owners.',
                 function(done) {
                 req.user = users.adminUser;
                 req.params = {
@@ -471,7 +473,7 @@ describe('Passages', function() {
                 });
             });
 
-            xit('doesn\'t allow normal users to change ' +
+            it('doesn\'t allow normal users to change ' +
                 'passage owners.', function(done) {
                 req.user = users.verifiedUser;
                 req.params = {
@@ -489,7 +491,7 @@ describe('Passages', function() {
                 });
             });
 
-            xit('doesn\'t update anything if the passage doesn\'t ' +
+            it('doesn\'t update anything if the passage doesn\'t ' +
                 'exist.', function(done) {
                 req.user = users.verifiedUser;
                 req.params = {
@@ -507,7 +509,7 @@ describe('Passages', function() {
                 });
             });
 
-            xit('doesn\'t update anything if the passage ' +
+            it('doesn\'t update anything if the passage ' +
                 'is invalid.', function(done) {
                 req.user = users.adminUser;
                 req.params = {
@@ -526,8 +528,8 @@ describe('Passages', function() {
             });
         });
 
-        xdescribe('passageDelete()', function() {
-            xit('deletes a specific passage.', function(done) {
+        describe('passageDelete()', function() {
+            it('deletes a specific passage.', function(done) {
                 req.user = users.adminUser;
                 req.params = {
                     placeId: places.northRoom.id
@@ -541,7 +543,7 @@ describe('Passages', function() {
                 });
             });
 
-            xit('doesn\'t delete anything if the passage doesn\'t exist',
+            it('doesn\'t delete anything if the passage doesn\'t exist',
                 function(done) {
                     req.user = users.adminUser;
                     req.params = {

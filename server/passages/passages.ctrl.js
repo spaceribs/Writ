@@ -5,6 +5,7 @@ var _ = require('lodash');
 var tv4 = require('tv4');
 
 var models = require('../../models');
+var Promise = require('lie');
 var roles = require('../roles.json');
 var Passages = require('./passages.db');
 var Places = require('../places/places.db');
@@ -55,8 +56,8 @@ function passagesGet(req, res, next) {
 
     }).then(function(results) {
         if (!results.docs || results.docs.length === 0) {
-            throw new errors.PlacesNotFoundError(
-                'You do not own any places.'
+            throw new errors.PassagesNotFoundError(
+                'You do not own any passages.'
             );
         } else {
             return results.docs;
@@ -75,7 +76,7 @@ function passagesGet(req, res, next) {
 
     }).then(function(passages) {
         res.json(new SuccessMessage(
-            'Owned places found.',
+            'Owned passages found.',
             passages)
         );
 
@@ -113,23 +114,22 @@ function passagesPost(req, res, next) {
         }
     }).then(function() {
 
-        return Passages.find({
+        return Promise.all([Passages.find({
             selector: {
-                '$or': [
-                    {
-                        'from': passageData.from,
-                        'to': passageData.to
-                    },
-                    {
-                        'to': passageData.from,
-                        'from': passageData.to
-                    }
-                ]
+                'from': passageData.from,
+                'to'  : passageData.to
             },
             limit: 1
-        });
+        }), Passages.find({
+            selector: {
+                'from': passageData.to,
+                'to'  : passageData.from
+            },
+            limit: 1
+        })]);
 
-    }).then(function(passageExists) {
+    }).then(function(passagesExist) {
+        console.log(passagesExist);
 
         if (passageExists && _.get(passageExists, 'docs.length')) {
             throw new errors.PassageInvalidError(
@@ -222,6 +222,8 @@ function passagesPost(req, res, next) {
  */
 function passagesList(req, res) {
 
+    console.log(req.user._id);
+
     Passages.allDocs({
         startkey    : 'passage/',
         endkey      : 'passage/\uffff',
@@ -266,7 +268,7 @@ function passageGet(req, res, next) {
 }
 
 /**
- * Called when a user makes an GET request to "/passage/:passageId".
+ * Called when a user makes an POST request to "/passage/:passageId".
  * Updates a specific passage.
  *
  * @param {object} req - Express request object.
@@ -396,7 +398,7 @@ function passagePost(req, res, next) {
 }
 
 /**
- * Called when a user makes an DELETE request to "/passages/:passageId".
+ * Called when a user makes an DELETE request to "/passage/:passageId".
  * Deletes a specific passage from the world.
  *
  * @param {object} req - Express request object.

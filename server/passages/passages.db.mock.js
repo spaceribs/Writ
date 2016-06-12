@@ -12,7 +12,7 @@ var Passages = new Database('Mock-Passages', {
 /**
  * Create a mock passage for testing.
  *
- * @param {object} owner - User ID of the
+ * @param {string} ownerId - User ID of the owner
  * @param {{x: int, y: int, z: int}} pos - set a specific position for the
  * mock passage.
  * @param {string} from - Room id the passage comes from
@@ -20,11 +20,11 @@ var Passages = new Database('Mock-Passages', {
  * @param {boolean=} invalid - Put some strange parameters in for validation.
  * @returns {Promise}
  */
-function mockPassage(owner, pos, from, to, invalid) {
+function mockPassage(ownerId, pos, from, to, invalid) {
 
     var passage = jsf(models.db.passage, models.refs);
 
-    passage.owner = owner._id;
+    passage.owner = ownerId;
     passage.id = passage._id.match(/^passage\/([a-z0-9-]+)$/)[1];
     delete passage._rev;
     passage.pos = pos;
@@ -63,7 +63,7 @@ function mockPassages(places) {
         .then(function(northDoor) {
             passages.northDoor = northDoor;
             return mockPassage(places.northRoom.owner,
-                {x: 0, y: 0, z: -0.5},
+                {x: 0.5, y: 0.5, z: 0},
                 places.northRoom._id,
                 places.northEastRoom._id
             );
@@ -78,16 +78,14 @@ function mockPassages(places) {
         })
         .then(function(basementDoor) {
             passages.basementDoor = basementDoor;
-            return mockPassage(
-                places.lobby.owner,
+            return mockPassage(places.lobby.owner,
                 {x: -0.5, y: 0, z: 0},
                 places.lobby._id
             );
         })
-        .then(function(openDoor) {
-            places.openWestDoor = openDoor;
-            return mockPassage(
-                places.invalidRoom.owner,
+        .then(function(openWestDoor) {
+            places.openWestDoor = openWestDoor;
+            return mockPassage(places.invalidRoom.owner,
                 {x: 666, y: 666, z: 666},
                 places.lobby._id,
                 places.invalidRoom._id,
