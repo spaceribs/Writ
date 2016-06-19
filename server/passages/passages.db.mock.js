@@ -63,6 +63,14 @@ function mockPassages(places) {
         .then(function(northDoor) {
             passages.northDoor = northDoor;
             return mockPassage(places.northRoom.owner,
+                {x: 0, y: 1.5, z: 0},
+                places.northRoom._id,
+                places.farNorthRoom._id
+            );
+        })
+        .then(function(farNorthDoor) {
+            passages.farNorthDoor = farNorthDoor;
+            return mockPassage(places.northRoom.owner,
                 {x: 0.5, y: 0.5, z: 0},
                 places.northRoom._id,
                 places.northEastRoom._id
@@ -84,7 +92,7 @@ function mockPassages(places) {
             );
         })
         .then(function(openWestDoor) {
-            places.openWestDoor = openWestDoor;
+            passages.openWestDoor = openWestDoor;
             return mockPassage(places.invalidRoom.owner,
                 {x: 666, y: 666, z: 666},
                 places.lobby._id,
@@ -93,7 +101,7 @@ function mockPassages(places) {
             );
         })
         .then(function(invalidPassage) {
-            places.invalidPassage = invalidPassage;
+            passages.invalidPassage = invalidPassage;
             return passages;
         });
 

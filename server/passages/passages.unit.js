@@ -36,13 +36,15 @@ describe('Passages', function() {
         });
 
         mockery.registerSubstitute(
-            './users.db', './users.db.mock');
-        mockery.registerSubstitute(
-            './places.db', './places.db.mock');
+            './passages.db', '../passages/passages.db.mock');
         mockery.registerSubstitute(
             '../places/places.db', '../places/places.db.mock');
         mockery.registerSubstitute(
-            './passages.db', './passages.db.mock');
+            './places.db', '../places/places.db.mock');
+        mockery.registerSubstitute(
+            './users.db', '../users/users.db.mock');
+        mockery.registerSubstitute(
+            '../mail/mail.ctrl', '../mail/mail.ctrl.mock');
 
         ctrl = require('./passages.ctrl');
     });
@@ -178,7 +180,7 @@ describe('Passages', function() {
                 ctrl.passages.get(req, res, callback);
 
                 res.json.and.callFake(function(response) {
-                    expect(response.data.length).toBe(1);
+                    expect(response.data.length).toBe(2);
                     done();
                 });
 
@@ -222,27 +224,28 @@ describe('Passages', function() {
         });
 
         describe('passagesPost()', function() {
-            fit('creates a new passage owned by the current user.',
+            it('creates a new passage owned by the current user.',
                 function(done) {
                     req.user = users.verifiedUser;
                     req.body = newPassage;
-                    req.body.pos = {x: -0.5, y: 1, z: 0};
                     req.body.from = places.northRoom._id;
-                    ctrl.passages.post(req, res, callback);
+                    req.body.to = places.northWestRoom._id;
 
                     res.json.and.callFake(function(response) {
                         expect(response)
                             .toEqual(jasmine.any(SuccessMessage));
                         done();
                     });
+
+                    ctrl.passages.post(req, res, callback);
                 });
 
             it('doesn\'t create an invalid passage.', function(done) {
                 req.user = users.verifiedUser;
-                newPlace.invalid = true;
-                req.body = newPlace;
-                req.body.pos = {x: 1, y: 2, z: 0};
-                ctrl.places.post(req, res, callback);
+                req.body = newPassage;
+                req.body.invalid = true;
+                req.body.from = places.northRoom._id;
+                req.body.to = places.northWestRoom._id;
 
                 callback.and.callFake(function(err) {
                     expect(err)
@@ -252,81 +255,102 @@ describe('Passages', function() {
                     done();
                 });
 
+                ctrl.passages.post(req, res, callback);
             });
 
             it('doesn\'t allow a passage to be created ' +
                 'where one already exists.',
                 function(done) {
                     req.user = users.verifiedUser;
-                    req.body = newPlace;
-                    req.body.pos = places.lobby.pos;
-                    ctrl.places.post(req, res, callback);
+                    req.body = newPassage;
+                    req.body.from = places.northRoom._id;
+                    req.body.to = places.lobby._id;
 
                     callback.and.callFake(function(err) {
                         expect(err)
-                            .toEqual(jasmine.any(errors.PlaceInvalidError));
+                            .toEqual(jasmine.any(errors.PassageInvalidError));
+                    });
+
+                    ctrl.passages.post(req, res, callback);
+
+                    req.body.to = places.northRoom._id;
+                    req.body.from = places.lobby._id;
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PassageInvalidError));
                         done();
                     });
+
+                    ctrl.passages.post(req, res, callback);
                 });
 
             it('doesn\'t allow a passage to be created ' +
                 'if a normal user doesn\'t own the originating place.',
                 function(done) {
-                    req.user = users.verifiedUser;
-                    req.body = newPlace;
-                    req.body.pos = places.lobby.pos;
-                    ctrl.places.post(req, res, callback);
+                    req.user = users.unverifiedUser;
+                    req.body = newPassage;
+                    req.body.from = places.northRoom._id;
+                    req.body.to = places.northWestRoom._id;
 
                     callback.and.callFake(function(err) {
                         expect(err)
-                            .toEqual(jasmine.any(errors.PlaceInvalidError));
+                            .toEqual(jasmine.any(errors.ForbiddenError));
                         done();
                     });
+
+                    ctrl.passages.post(req, res, callback);
                 });
 
             it('doesn\'t allow a passage to be created ' +
                 'if a normal user doesn\'t own the destination place.',
                 function(done) {
-                    req.user = users.verifiedUser;
-                    req.body = newPlace;
-                    req.body.pos = places.lobby.pos;
-                    ctrl.places.post(req, res, callback);
+                    req.user = users.unverifiedUser;
+                    req.body = newPassage;
+                    req.body.from = places.northWestRoom._id;
+                    req.body.to = places.northRoom._id;
 
                     callback.and.callFake(function(err) {
                         expect(err)
-                            .toEqual(jasmine.any(errors.PlaceInvalidError));
+                            .toEqual(jasmine.any(errors.ForbiddenError));
                         done();
                     });
+
+                    ctrl.passages.post(req, res, callback);
                 });
 
-            it('does allow a passage to be created ' +
+            it('allows a passage to be created ' +
                 'if an admin user doesn\'t own either places.',
                 function(done) {
-                    req.user = users.verifiedUser;
-                    req.body = newPlace;
-                    req.body.pos = places.lobby.pos;
-                    ctrl.places.post(req, res, callback);
+                    req.user = users.adminUser;
+                    req.body = newPassage;
+                    req.body.from = places.northRoom._id;
+                    req.body.to = places.northWestRoom._id;
 
-                    callback.and.callFake(function(err) {
-                        expect(err)
-                            .toEqual(jasmine.any(errors.PlaceInvalidError));
+                    res.json.and.callFake(function(response) {
+                        expect(response)
+                            .toEqual(jasmine.any(SuccessMessage));
                         done();
                     });
+
+                    ctrl.passages.post(req, res, callback);
                 });
 
             it('doesn\'t allow a passage to be created ' +
-                'between places which aren\'t adjacent',
+                'between places which aren\'t immediately adjacent.',
                 function(done) {
-                    req.user = users.verifiedUser;
-                    req.body = newPlace;
-                    req.body.pos = places.lobby.pos;
-                    ctrl.places.post(req, res, callback);
+                    req.user = users.adminUser;
+                    req.body = newPassage;
+                    req.body.from = places.lobby._id;
+                    req.body.to = places.southWestRoom._id;
 
                     callback.and.callFake(function(err) {
                         expect(err)
-                            .toEqual(jasmine.any(errors.PlaceInvalidError));
+                            .toEqual(jasmine.any(errors.PassageInvalidError));
                         done();
                     });
+
+                    ctrl.passages.post(req, res, callback);
                 });
         });
 
@@ -338,11 +362,11 @@ describe('Passages', function() {
                 res.json.and.callFake(function(response) {
                     expect(response)
                         .toEqual({
-                            total_rows: 5,
+                            total_rows: 6,
                             offset: 0,
                             rows: jasmine.any(Array)
                         });
-                    expect(response.rows.length).toEqual(5);
+                    expect(response.rows.length).toEqual(6);
                     done();
                 });
             });
@@ -352,9 +376,8 @@ describe('Passages', function() {
             it('gets the details of a specific passage.',
                 function(done) {
                     req.params = {
-                        placeId: places.lobby.id
+                        passageId: passages.northDoor.id
                     };
-                    ctrl.place.get(req, res, callback);
 
                     res.json.and.callFake(function(response) {
                         expect(response)
@@ -362,30 +385,32 @@ describe('Passages', function() {
                         expect(response.data.created).toBeUndefined();
                         done();
                     });
+
+                    ctrl.passage.get(req, res, callback);
                 });
 
             it('doesn\'t return anything if the passage doesn\'t exist',
                 function(done) {
                     req.params = {
-                        placeId: uuid.v4()
+                        passageId: uuid.v4()
                     };
-                    ctrl.place.get(req, res, callback);
 
                     callback.and.callFake(function(response) {
                         expect(response)
-                            .toEqual(jasmine.any(errors.PlaceNotFoundError));
+                            .toEqual(jasmine.any(errors.PassageNotFoundError));
                         done();
                     });
 
+                    ctrl.passage.get(req, res, callback);
                 });
 
             it('gets more information if you are an admin.',
                 function(done) {
                     req.user = users.adminUser;
                     req.params = {
-                        placeId: places.lobby.id
+                        passageId: passages.northDoor.id
                     };
-                    ctrl.place.get(req, res, callback);
+                    ctrl.passage.get(req, res, callback);
 
                     res.json.and.callFake(function(response) {
                         expect(response)
@@ -401,70 +426,72 @@ describe('Passages', function() {
                 'to passages they own.', function(done) {
                 req.user = users.verifiedUser;
                 req.params = {
-                    placeId: places.northRoom.id
+                    passageId: passages.farNorthDoor.id
                 };
                 req.body = {
-                    name: newPlace.name
+                    name: newPassage.name
                 };
-                ctrl.place.post(req, res, callback);
 
                 res.json.and.callFake(function(response) {
                     expect(response.data.name)
-                        .toBe(newPlace.name);
+                        .toBe(newPassage.name);
                     expect(response)
                         .toEqual(jasmine.any(SuccessMessage));
                     done();
                 });
+
+                ctrl.passage.post(req, res, callback);
             });
 
             it('doesn\'t allow normal users to make changes ' +
                 'to passages they don\'t own.', function(done) {
-                req.user = users.verifiedUser;
+                req.user = users.unverifiedUser;
                 req.params = {
-                    placeId: places.lobby.id
+                    passageId: passages.farNorthDoor.id
                 };
                 req.body = {
-                    name: newPlace.name
+                    name: newPassage.name
                 };
+
                 callback.and.callFake(function(err) {
                     expect(err)
                         .toEqual(jasmine.any(errors.ForbiddenError));
                     done();
                 });
 
-                ctrl.place.post(req, res, callback);
+                ctrl.passage.post(req, res, callback);
             });
 
             it('allows admin users to make changes ' +
                 'to passages they don\'t own.', function(done) {
                 req.user = users.adminUser;
                 req.params = {
-                    placeId: places.lobby.id
+                    passageId: passages.farNorthDoor.id
                 };
                 req.body = {
-                    name: newPlace.name
+                    name: newPassage.name
                 };
-                ctrl.place.post(req, res, callback);
 
                 res.json.and.callFake(function(response) {
                     expect(response.data.name)
-                        .toBe(newPlace.name);
+                        .toBe(newPassage.name);
                     expect(response)
                         .toEqual(jasmine.any(SuccessMessage));
                     done();
                 });
+
+                ctrl.passage.post(req, res, callback);
             });
 
             it('allows admin users to change passage owners.',
                 function(done) {
                 req.user = users.adminUser;
                 req.params = {
-                    placeId: places.northRoom.id
+                    passageId: passages.farNorthDoor.id
                 };
                 req.body = {
                     owner: users.unverifiedUser._id
                 };
-                ctrl.place.post(req, res, callback);
 
                 res.json.and.callFake(function(response) {
                     expect(response.data.owner)
@@ -473,60 +500,65 @@ describe('Passages', function() {
                         .toEqual(jasmine.any(SuccessMessage));
                     done();
                 });
+
+                ctrl.passage.post(req, res, callback);
             });
 
             it('doesn\'t allow normal users to change ' +
                 'passage owners.', function(done) {
                 req.user = users.verifiedUser;
                 req.params = {
-                    placeId: places.northRoom.id
+                    passageId: passages.farNorthDoor.id
                 };
                 req.body = {
-                    owner: users.unverifiedUser
+                    owner: users.unverifiedUser._id
                 };
-                ctrl.place.post(req, res, callback);
 
                 callback.and.callFake(function(err) {
                     expect(err)
                         .toEqual(jasmine.any(errors.ForbiddenError));
                     done();
                 });
+
+                ctrl.passage.post(req, res, callback);
             });
 
             it('doesn\'t update anything if the passage doesn\'t ' +
                 'exist.', function(done) {
                 req.user = users.verifiedUser;
                 req.params = {
-                    placeId: uuid.v4()
+                    passageId: uuid.v4()
                 };
                 req.body = {
-                    name: newPlace.name
+                    name: newPassage.name
                 };
-                ctrl.place.post(req, res, callback);
 
                 callback.and.callFake(function(err) {
                     expect(err)
-                        .toEqual(jasmine.any(errors.PlaceNotFoundError));
+                        .toEqual(jasmine.any(errors.PassageNotFoundError));
                     done();
                 });
+
+                ctrl.passage.post(req, res, callback);
             });
 
             it('doesn\'t update anything if the passage ' +
                 'is invalid.', function(done) {
                 req.user = users.adminUser;
                 req.params = {
-                    placeId: places.invalidRoom.id
+                    passageId: passages.invalidPassage.id
                 };
                 req.body = {
-                    name: newPlace.name
+                    name: newPassage.name
                 };
-                ctrl.place.post(req, res, callback);
 
                 callback.and.callFake(function(err) {
                     expect(err)
                         .toEqual(jasmine.any(errors.JsonSchemaValidationError));
                     done();
                 });
+
+                ctrl.passage.post(req, res, callback);
             });
         });
 
@@ -534,9 +566,10 @@ describe('Passages', function() {
             it('deletes a specific passage.', function(done) {
                 req.user = users.adminUser;
                 req.params = {
-                    placeId: places.northRoom.id
+                    passageId: passages.northDoor.id
                 };
-                ctrl.place.delete(req, res, callback);
+
+                ctrl.passage.delete(req, res, callback);
 
                 res.json.and.callFake(function(response) {
                     expect(response)
@@ -549,15 +582,16 @@ describe('Passages', function() {
                 function(done) {
                     req.user = users.adminUser;
                     req.params = {
-                        placeId: uuid.v4()
+                        passageId: uuid.v4()
                     };
-                    ctrl.place.delete(req, res, callback);
 
                     callback.and.callFake(function(err) {
                         expect(err)
-                            .toEqual(jasmine.any(errors.PlaceNotFoundError));
+                            .toEqual(jasmine.any(errors.PassageNotFoundError));
                         done();
                     });
+
+                    ctrl.passage.delete(req, res, callback);
                 });
         });
 

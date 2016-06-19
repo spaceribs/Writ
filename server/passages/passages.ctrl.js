@@ -98,6 +98,7 @@ function passagesGet(req, res, next) {
 function passagesPost(req, res, next) {
 
     var validation = tv4.validateMultiple(req.body, models.io.passage);
+
     if (!validation.valid) {
         next(new errors.JsonSchemaValidationError(
             validation.errors, validation.missing));
@@ -157,11 +158,12 @@ function passagesPost(req, res, next) {
 
         // Check if user is an admin or the owner of the originating place
         var isOwner = passageFrom.owner === req.user._id;
-        var isAdmin = req.user.permission > roles.admin;
+        var isAdmin = req.user.permission <= roles.admin;
 
         if (!isAdmin && !isOwner) {
             throw new errors.ForbiddenError(
-                'You are not allowed to connect from a place you do not own.'
+                'You are not allowed to connect a passage ' +
+                'from a place you do not own.'
             );
         }
 
@@ -182,35 +184,58 @@ function passagesPost(req, res, next) {
 
         // Check if user is an admin or the owner of the originating place
         var isOwner = passageTo.owner === req.user._id;
-        var isAdmin = req.user.permission > roles.admin;
+        var isAdmin = req.user.permission <= roles.admin;
 
         if (!isAdmin && !isOwner) {
             throw new errors.ForbiddenError(
-                'You are not allowed to connect to a place you do not own.'
+                'You are not allowed to connect a passage ' +
+                'to a place you do not own.'
             );
         }
 
-        // Check if the rooms are adjacent to one another.
-        var xOff = Math.abs(passageFrom.pos.x - passageTo.pos.x);
-        var yOff = Math.abs(passageFrom.pos.y - passageTo.pos.y);
-        var zOff = Math.abs(passageFrom.pos.z - passageTo.pos.z);
+        // Generate the offset between the connecting places
+        var offsets = _.reduce(passageFrom.pos,
+            function(offsets, coord, axis) {
+                offsets[axis] = coord - passageTo.pos[axis];
+                return offsets;
+            }, {});
 
-        if (xOff > 1 || yOff > 1 || zOff > 1) {
+        // Get the distance between the connecting places
+        var vicinity = _.reduce(offsets, function(distance, offset) {
+            if (distance !== false && Math.abs(offset) <= 1) {
+                return Math.abs(offset) + distance;
+            } else {
+                return false;
+            }
+        }, 0);
+
+        // Make sure that the passage is only connecting places which
+        // are directly adjacent to each other by checking the vicinity.
+        var adjacent = (vicinity <= 1);
+
+        if (!vicinity || !adjacent) {
             throw new errors.PassageInvalidError(
                 'A passage cannot connect two non-adjacent places.'
             );
         }
 
-    }).then(function() {
+        return _.reduce(passageFrom.pos,
+            function(pos, coord, axis) {
+                pos[axis] = coord + (offsets[axis] / 2);
+                return pos;
+            }, {});
 
+    }).then(function(pos) {
+
+        passageData.pos = pos;
         passageData.id = uuid.v4();
-        passageData._id = 'place/' + passageData.id;
+        passageData._id = 'passage/' + passageData.id;
         passageData.owner = req.user._id;
         passageData.created = new Date().toISOString();
         passageData.updated = new Date().toISOString();
 
         var validate = tv4.validateMultiple(
-            passageData, models.db.place);
+            passageData, models.db.passage);
 
         if (!validate.valid) {
             throw new errors.JsonSchemaValidationError(
@@ -303,119 +328,181 @@ function passagePost(req, res, next) {
     var passageFrom;
     var passageTo;
 
-    Passages.get('passage/' + passageId)
-        .then(function(result) {
-            var passageUpdates = util.ioFilter(
-                req.user.permission, 'passage', req.body, true,
-                result.owner === req.user._id);
+    Passages.createIndex({
+        'index': {
+            'fields': ['from', 'to']
+        }
+    }).then(function() {
+        return Passages.get('passage/' + passageId);
+    })
+    .then(function(result) {
+        var passageUpdates = util.ioFilter(
+            req.user.permission, 'passage', req.body, true,
+            result.owner === req.user._id);
 
-            if (_.isEmpty(passageUpdates)) {
-                throw new errors.ForbiddenError(
-                    'You are not allowed to make these updates to the room.');
-            }
+        if (_.isEmpty(passageUpdates)) {
+            throw new errors.ForbiddenError(
+                'You are not allowed to make these updates to this passage.');
+        }
 
-            newPassageData = _.extend({}, result, passageUpdates);
-            newPassageData.updated = new Date().toISOString();
+        newPassageData = _.extend({}, result, passageUpdates);
+        newPassageData.updated = new Date().toISOString();
 
-            var validate = tv4.validateMultiple(
-                newPassageData, models.db.passage);
+        var validate = tv4.validateMultiple(
+            newPassageData, models.db.passage);
 
-            if (!validate.valid) {
-                throw new errors.JsonSchemaValidationError(
-                    validate.errors, validate.missing
-                );
-            }
+        if (!validate.valid) {
+            throw new errors.JsonSchemaValidationError(
+                validate.errors, validate.missing
+            );
+        }
 
-            return Passages.find({
-                selector: {
-                    '$or': [
-                        {
-                            'from': newPassageData.from,
-                            'to': newPassageData.to
-                        },
-                        {
-                            'to': newPassageData.from,
-                            'from': newPassageData.to
-                        }
-                    ]
-                },
-                limit: 1
+        return Promise.all([Passages.find({
+            selector: {
+                'from': newPassageData.from,
+                'to'  : newPassageData.to
+            },
+            limit: 1
+        }), Passages.find({
+            selector: {
+                'from': newPassageData.to,
+                'to'  : newPassageData.from
+            },
+            limit: 1
+        })]);
+
+    }).then(function(passagesExist) {
+
+        var passageExists = _.reduce(passagesExist,
+            function(exists, result) {
+                if (_.get(result, 'docs[0].id') === passageId) {
+                    return false;
+                }
+                return exists || !!result.docs.length;
+            }, false);
+
+        if (passageExists) {
+            throw new errors.PassageInvalidError(
+                'A passage between these 2 places already exists.'
+            );
+        }
+
+        return Places.get(newPassageData.from)
+            .catch(function(err) {
+                if (err.status === 404) {
+                    throw new errors.PlaceNotFoundError(
+                        'The originating place was not found.'
+                    );
+                } else {
+                    return err;
+                }
             });
 
-        }).then(function(passageExists) {
+    }).then(function(fromResult) {
 
-            if (passageExists && _.get(passageExists, 'docs.length')) {
-                throw new errors.PassageInvalidError(
-                    'A passage between these 2 places already exists.'
-                );
-            }
+        passageFrom = fromResult;
 
-            return Places.get(newPassageData.from);
+        // Check if user is an admin or the owner of the originating place
+        var isOwner = passageFrom.owner === req.user._id;
+        var isAdmin = req.user.permission <= roles.admin;
 
-        }).then(function(fromResult) {
+        if (!isAdmin && !isOwner) {
+            throw new errors.ForbiddenError(
+                'You are not allowed to connect a passage ' +
+                'from a place you do not own.'
+            );
+        }
 
-            passageFrom = fromResult;
+        return Places.get(newPassageData.to)
+            .catch(function(err) {
+                if (err.status === 404) {
+                    throw new errors.PlaceNotFoundError(
+                        'The destination place was not found.'
+                    );
+                } else {
+                    return err;
+                }
+            });
 
-            // Check if user is an admin or the owner of the originating place
-            var isOwner = passageFrom.owner === req.user._id;
-            var isAdmin = req.user.permission > roles.admin;
+    }).then(function(toResult) {
 
-            if (!isAdmin && !isOwner) {
-                throw new errors.ForbiddenError(
-                    'You are not allowed to create a passage ' +
-                    'from a place you do not own.'
-                );
-            }
+        passageTo = toResult;
 
-            return Places.get(newPassageData.to);
+        // Check if user is an admin or the owner of the originating place
+        var isOwner = passageTo.owner === req.user._id;
+        var isAdmin = req.user.permission <= roles.admin;
 
-        }).then(function(toResult) {
+        if (!isAdmin && !isOwner) {
+            throw new errors.ForbiddenError(
+                'You are not allowed to connect a passage ' +
+                'to a place you do not own.'
+            );
+        }
 
-            passageTo = toResult;
+        // Generate the offset between the connecting places
+        var offsets = _.reduce(passageFrom.pos,
+            function(offsets, coord, axis) {
+                offsets[axis] = coord - passageTo.pos[axis];
+                return offsets;
+            }, {});
 
-            // Check if user is an admin or the owner of the originating place
-            var isOwner = passageTo.owner === req.user._id;
-            var isAdmin = req.user.permission > roles.admin;
-
-            if (!isAdmin && !isOwner) {
-                throw new errors.ForbiddenError(
-                    'You are not allowed to create a passage ' +
-                    'to a place you do not own.'
-                );
-            }
-
-            // Check if the rooms are adjacent to one another.
-            var xOff = Math.abs(passageFrom.pos.x - passageTo.pos.x);
-            var yOff = Math.abs(passageFrom.pos.y - passageTo.pos.y);
-            var zOff = Math.abs(passageFrom.pos.z - passageTo.pos.z);
-
-            if (xOff > 1 || yOff > 1 || zOff > 1) {
-                throw new errors.PassageInvalidError(
-                    'A passage cannot connect two non-adjacent places.'
-                );
-            }
-
-            return Passages.put(newPassageData);
-
-        }).then(function() {
-            var passageData = util.ioFilter(
-                req.user.permission, 'passage',
-                newPassageData, false, req.user._id === newPassageData.owner);
-
-            res.json(new SuccessMessage(
-                'Passage has been successfully updated.',
-                passageData
-            ));
-
-        }).catch(function(err) {
-            if (err.status === 404) {
-                next(new errors.PassagesNotFoundError());
+        // Get the distance between the connecting places
+        var vicinity = _.reduce(offsets, function(distance, offset) {
+            if (distance !== false && Math.abs(offset) <= 1) {
+                return Math.abs(offset) + distance;
             } else {
-                next(err);
+                return false;
             }
+        }, 0);
 
-        });
+        // Make sure that the passage is only connecting places which
+        // are directly adjacent to each other by checking the vicinity.
+        var adjacent = (vicinity <= 1);
 
+        if (!vicinity || !adjacent) {
+            throw new errors.PassageInvalidError(
+                'A passage cannot connect two non-adjacent places.'
+            );
+        }
+
+        return _.reduce(passageFrom.pos,
+            function(pos, coord, axis) {
+                pos[axis] = coord + (offsets[axis] / 2);
+                return pos;
+            }, {});
+
+    }).then(function(pos) {
+
+        newPassageData.pos = pos;
+        newPassageData.updated = new Date().toISOString();
+
+        var validate = tv4.validateMultiple(
+            newPassageData, models.db.passage);
+
+        if (!validate.valid) {
+            throw new errors.JsonSchemaValidationError(
+                validate.errors, validate.missing);
+        }
+
+        return Passages.put(newPassageData);
+
+    }).then(function() {
+        var filtered = util.dbFilter(
+            req.user.permission, 'passage', newPassageData, false,
+            newPassageData.owner === req.user._id);
+
+        res.json(
+            new SuccessMessage('Updated passage.', filtered)
+        );
+
+    }).catch(function(err) {
+        if (err.status === 404) {
+            next(new errors.PassageNotFoundError());
+        } else {
+            next(err);
+        }
+
+    });
 }
 
 /**
@@ -430,7 +517,7 @@ function passageDelete(req, res, next) {
 
     var passageId = req.params.passageId;
 
-    Passages.get('passages/' + passageId).then(function(doc) {
+    Passages.get('passage/' + passageId).then(function(doc) {
         return Passages.remove(doc);
 
     }).then(function() {

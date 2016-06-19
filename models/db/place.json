@@ -3,6 +3,7 @@
     "id": "/writ/db/place",
     "type": "object",
     "description": "A writ place",
+    "additionalProperties": false,
     "properties": {
         "_id": {
             "id": "/writ/db/place/id",
@@ -144,7 +145,6 @@
             }
         }
     },
-    "additionalProperties": false,
     "required": [
         "_id",
         "id",

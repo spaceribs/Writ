@@ -2,6 +2,7 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "id": "/writ/db/passage",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
         "_id": {
             "id": "/writ/db/passage/id",
@@ -90,6 +91,32 @@
                 "write": 10,
                 "owner": true
             }
+        },
+        "pos": {
+            "id": "/writ/db/passage/pos",
+            "description": "Position of the passage in the world.",
+            "type": "object",
+            "properties": {
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "z": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ],
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
         }
     },
     "required": [
@@ -100,7 +127,8 @@
         "updated",
         "from",
         "to",
-        "title",
+        "pos",
+        "name",
         "desc"
     ]
 }
