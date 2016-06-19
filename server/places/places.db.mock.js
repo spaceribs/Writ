@@ -57,6 +57,18 @@ function mockPlaces(users) {
         })
         .then(function(northRoom) {
             places.northRoom = northRoom;
+            return mockPlace(users.verifiedUser, {x: 0, y: 2, z: 0});
+        })
+        .then(function(farNorthRoom) {
+            places.farNorthRoom = farNorthRoom;
+            return mockPlace(users.verifiedUser, {x: 1, y: 1, z: 0});
+        })
+        .then(function(northWestRoom) {
+            places.northWestRoom = northWestRoom;
+            return mockPlace(users.unverifiedUser, {x: -1, y: 1, z: 0});
+        })
+        .then(function(northEastRoom) {
+            places.northEastRoom = northEastRoom;
             return mockPlace(users.verifiedUser, {x: -1, y: -1, z: 0});
         })
         .then(function(southWestRoom) {

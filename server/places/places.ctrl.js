@@ -1,6 +1,5 @@
 'use strict';
 
-//var tv4 = require('tv4');
 var Promise = require('lie');
 var uuid = require('node-uuid');
 var _ = require('lodash');
@@ -8,7 +7,6 @@ var tv4 = require('tv4');
 
 var models = require('../../models');
 var Places = require('./places.db');
-//var Users = require('../users/users.db');
 var errors = require('../app/app.errors');
 var SuccessMessage = require('../app/app.successes').SuccessMessage;
 var util = require('../app/app.util');
@@ -309,7 +307,7 @@ function placePost(req, res, next) {
 }
 
 /**
- * Called when a user makes an GET request to "/place/:placeId".
+ * Called when a user makes an DELETE request to "/place/:placeId".
  * Deletes a specific place from the world.
  *
  * @param {object} req - Express request object.
@@ -324,7 +322,7 @@ function placeDelete(req, res, next) {
         return Places.remove(doc);
 
     }).then(function() {
-        res.json(new SuccessMessage('User has been deleted.'));
+        res.json(new SuccessMessage('Place has been deleted.'));
 
     }).catch(function() {
         next(new errors.PlaceNotFoundError());
