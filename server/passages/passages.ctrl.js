@@ -268,8 +268,6 @@ function passagesPost(req, res, next) {
  */
 function passagesList(req, res) {
 
-    console.log(req.user._id);
-
     Passages.allDocs({
         startkey    : 'passage/',
         endkey      : 'passage/\uffff',
@@ -491,9 +489,7 @@ function passagePost(req, res, next) {
             req.user.permission, 'passage', newPassageData, false,
             newPassageData.owner === req.user._id);
 
-        res.json(
-            new SuccessMessage('Updated passage.', filtered)
-        );
+        res.json(new SuccessMessage('Updated passage.', filtered));
 
     }).catch(function(err) {
         if (err.status === 404) {

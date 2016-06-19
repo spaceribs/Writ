@@ -485,43 +485,43 @@ describe('Passages', function() {
 
             it('allows admin users to change passage owners.',
                 function(done) {
-                req.user = users.adminUser;
-                req.params = {
-                    passageId: passages.farNorthDoor.id
-                };
-                req.body = {
-                    owner: users.unverifiedUser._id
-                };
+                    req.user = users.adminUser;
+                    req.params = {
+                        passageId: passages.farNorthDoor.id
+                    };
+                    req.body = {
+                        owner: users.unverifiedUser._id
+                    };
 
-                res.json.and.callFake(function(response) {
-                    expect(response.data.owner)
-                        .toBe(users.unverifiedUser._id);
-                    expect(response)
-                        .toEqual(jasmine.any(SuccessMessage));
-                    done();
+                    res.json.and.callFake(function(response) {
+                        expect(response.data.owner)
+                            .toBe(users.unverifiedUser._id);
+                        expect(response)
+                            .toEqual(jasmine.any(SuccessMessage));
+                        done();
+                    });
+
+                    ctrl.passage.post(req, res, callback);
                 });
-
-                ctrl.passage.post(req, res, callback);
-            });
 
             it('doesn\'t allow normal users to change ' +
                 'passage owners.', function(done) {
-                req.user = users.verifiedUser;
-                req.params = {
-                    passageId: passages.farNorthDoor.id
-                };
-                req.body = {
-                    owner: users.unverifiedUser._id
-                };
+                    req.user = users.verifiedUser;
+                    req.params = {
+                        passageId: passages.farNorthDoor.id
+                    };
+                    req.body = {
+                        owner: users.unverifiedUser._id
+                    };
 
-                callback.and.callFake(function(err) {
-                    expect(err)
-                        .toEqual(jasmine.any(errors.ForbiddenError));
-                    done();
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.ForbiddenError));
+                        done();
+                    });
+
+                    ctrl.passage.post(req, res, callback);
                 });
-
-                ctrl.passage.post(req, res, callback);
-            });
 
             it('doesn\'t update anything if the passage doesn\'t ' +
                 'exist.', function(done) {
