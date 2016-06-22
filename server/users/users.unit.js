@@ -238,7 +238,7 @@ describe('Users', function() {
             function(done) {
 
                 callback.and.callFake(function(err) {
-                    expect(err).toEqual(jasmine.any(errors.EmailUsedError));
+                    expect(err).toEqual(jasmine.any(errors.EmailInUseError));
                     done();
                 });
 
@@ -398,7 +398,7 @@ describe('Users', function() {
                 callback.and.callFake(function() {
                     expect(callback).toHaveBeenCalled();
                     expect(callback.calls.mostRecent().args[0])
-                        .toEqual(jasmine.any(errors.EmailUsedError));
+                        .toEqual(jasmine.any(errors.EmailInUseError));
                     done();
                 });
 
@@ -487,7 +487,7 @@ describe('Users', function() {
                 function(done) {
                     callback.and.callFake(function(err) {
                         expect(err)
-                            .toEqual(jasmine.any(errors.SecretNotFoundError));
+                            .toEqual(jasmine.any(errors.EmailTokenNotFoundError));
                         done();
                     });
 

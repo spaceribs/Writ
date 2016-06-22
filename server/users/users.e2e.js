@@ -85,7 +85,7 @@ describe('Users Endpoint', function() {
                 .post('/user/')
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'INVALID_JSON_SCHEME',
+                        status: 'SCHEMA_INVALID',
                         errors: jasmine.any(Object)
                     });
                     expect(res.body.errors.body.length).toBe(3);
@@ -104,7 +104,7 @@ describe('Users Endpoint', function() {
                 .expect(400)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'INVALID_JSON_SCHEME',
+                        status: 'SCHEMA_INVALID',
                         errors: jasmine.any(Object)
                     });
                     expect(res.body.errors.body.length).toBe(3);
@@ -356,8 +356,8 @@ describe('Users Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'FORBIDDEN',
-                        message: 'Your account is not allowed ' +
-                        'to access this endpoint.'
+                        message: 'Your account is not allowed to ' +
+                        'access this endpoint.'
                     });
                 })
                 .end(util.handleSupertest(done));
@@ -466,8 +466,8 @@ describe('Users Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'FORBIDDEN',
-                        message: 'Your account is not allowed ' +
-                        'to access this endpoint.'
+                        message: 'Your account is not allowed to ' +
+                        'access this endpoint.'
                     });
                 })
                 .end(function(err) {
@@ -592,8 +592,8 @@ describe('Users Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'FORBIDDEN',
-                        message: 'Your account is not allowed ' +
-                        'to access this endpoint.'
+                        message: 'Your account is not allowed to ' +
+                        'access this endpoint.'
                     });
                 })
                 .end(function(err) {

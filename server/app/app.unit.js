@@ -168,17 +168,17 @@ describe('App Unit Tests', function() {
 
         var errors = require('./app.errors');
 
-        describe('EmailUsedError', function() {
+        describe('EmailInUseError', function() {
 
-            var error = new errors.EmailUsedError('test', 'test@test.com');
-            var error2 = new errors.EmailUsedError(null, 'test@test.com');
+            var error = new errors.EmailInUseError('test', 'test@test.com');
+            var error2 = new errors.EmailInUseError(null, 'test@test.com');
 
             it('returns a name.', function() {
-                expect(error.name).toBe('EmailUsedError');
+                expect(error.name).toBe('EmailInUseError');
             });
 
             it('returns a 409 status message.', function() {
-                expect(error.status).toBe(409);
+                expect(error.code).toBe(409);
             });
 
             it('returns the email that conflicts.', function() {
@@ -188,24 +188,19 @@ describe('App Unit Tests', function() {
             it('returns a custom message.', function() {
                 expect(error.message).toBe('test');
             });
-
-            it('returns a default message if no message specified.',
-            function() {
-                expect(error2.message).toBe('Invalid email.');
-            });
         });
 
-        describe('SecretNotFoundError', function() {
+        describe('EmailTokenNotFoundError', function() {
 
-            var error = new errors.SecretNotFoundError('test', '1234567890');
-            var error2 = new errors.SecretNotFoundError(null, '1234567890');
+            var error = new errors.EmailTokenNotFoundError('test', '1234567890');
+            var error2 = new errors.EmailTokenNotFoundError(null, '1234567890');
 
             it('returns a name.', function() {
-                expect(error.name).toBe('SecretNotFoundError');
+                expect(error.name).toBe('EmailTokenNotFoundError');
             });
 
             it('returns a 404 status message.', function() {
-                expect(error.status).toBe(404);
+                expect(error.code).toBe(404);
             });
 
             it('returns the token that wasn\'t found.', function() {
@@ -214,11 +209,6 @@ describe('App Unit Tests', function() {
 
             it('returns a custom message.', function() {
                 expect(error.message).toBe('test');
-            });
-
-            it('returns a default message if no message specified.',
-            function() {
-                expect(error2.message).toBe('Invalid email token.');
             });
         });
 
@@ -232,16 +222,11 @@ describe('App Unit Tests', function() {
             });
 
             it('returns a 404 status message.', function() {
-                expect(error.status).toBe(401);
+                expect(error.code).toBe(401);
             });
 
             it('returns a custom message.', function() {
                 expect(error.message).toBe('test');
-            });
-
-            it('returns a default message if no message specified.',
-            function() {
-                expect(error2.message).toBe('Invalid login.');
             });
         });
     });

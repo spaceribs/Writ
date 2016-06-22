@@ -1,5 +1,91 @@
 'use strict';
 
+/*************************
+ * Base Error Constructors
+ *************************/
+
+/**
+ * A base error for all expected errors.
+ *
+ * @constructor
+ */
+function WritError() {
+    this.code = 500;
+    this.name = 'WritError';
+    this.status = 'ERROR';
+    this.message = 'An error has occurred.';
+}
+WritError.prototype = Object.create(Error.prototype);
+
+/**
+ * An error for all bad requests.
+ *
+ * @constructor
+ */
+function BadRequestError() {
+    this.code = 400;
+    this.name = 'BadRequestError';
+    this.status = 'BAD_REQUEST';
+    this.message = 'Your request is invalid.';
+}
+BadRequestError.prototype = new WritError();
+
+/**
+ * An error for when a resource cannot be found.
+ *
+ * @constructor
+ */
+function NotFoundError() {
+    this.code = 404;
+    this.name = 'NotFoundError';
+    this.status = 'NOT_FOUND';
+    this.message = 'Your requested resource cannot be found.';
+}
+NotFoundError.prototype = new WritError();
+
+/**
+ * An error for all unauthorized requests.
+ *
+ * @constructor
+ */
+function UnauthorizedError() {
+    this.code = 401;
+    this.name = 'UnauthorizedError';
+    this.status = 'UNAUTHORIZED';
+    this.message = 'Your credentials are invalid.';
+}
+UnauthorizedError.prototype = new WritError();
+
+/**
+ * An error for all permissions issues.
+ *
+ * @constructor
+ */
+function ForbiddenError(message) {
+    this.code = 403;
+    this.name = 'ForbiddenError';
+    this.status = 'FORBIDDEN';
+    this.message = (message || 'You do not have permission to complete this request.');
+}
+ForbiddenError.prototype = new WritError();
+
+/**
+ * An error for all bad requests.
+ *
+ * @constructor
+ */
+function ConflictError() {
+    this.code = 409;
+    this.name = 'ConflictError';
+    this.status = 'CONFLICT';
+    this.message = 'Your request conflicts with another resource.';
+}
+ConflictError.prototype = new WritError();
+
+/***************************
+ * Custom Error Constructors
+ ***************************/
+
 /**
  * A custom error for JsonSchema validation issues.
  *
@@ -15,13 +101,17 @@ function JsonSchemaValidationError(errors, missing) {
         delete errors[i].stack;
     }
 
-    this.status = 400;
     this.errors = errors;
     this.missing = missing;
     this.name = 'JsonSchemaValidationError';
-    this.message = 'One or more request parameters failed validation.';
+    this.status = 'SCHEMA_INVALID';
+    if (errors.length === 1) {
+        this.message = 'Request parameter failed validation.';
+    } else {
+        this.message = 'Multiple request parameters failed validation.';
+    }
 }
-JsonSchemaValidationError.prototype = Object.create(Error.prototype);
+JsonSchemaValidationError.prototype = new BadRequestError();
 
 /**
  * A custom error to handle duplicate email errors
@@ -30,13 +120,13 @@ JsonSchemaValidationError.prototype = Object.create(Error.prototype);
  * @param {string} email - The email which already exists.
  * @constructor
  */
-function EmailUsedError(message, email) {
-    this.status = 409;
+function EmailInUseError(message, email) {
     this.email = email;
-    this.name = 'EmailUsedError';
+    this.name = 'EmailInUseError';
+    this.status = 'EMAIL_IN_USE';
     this.message = (message || 'Invalid email.');
 }
-EmailUsedError.prototype = Object.create(Error.prototype);
+EmailInUseError.prototype = new ConflictError();
 
 /**
  * A custom error to handle any tokens which cannot be found.
@@ -45,13 +135,15 @@ EmailUsedError.prototype = Object.create(Error.prototype);
  * @param {string} token - Token that was searched.
  * @constructor
  */
-function SecretNotFoundError(message, token) {
-    this.status = 404;
+function EmailTokenNotFoundError(message, token) {
     this.token = token;
-    this.name = 'SecretNotFoundError';
-    this.message = (message || 'Invalid email token.');
+    this.name = 'EmailTokenNotFoundError';
+    this.status = 'EMAIL_TOKEN_NOT_FOUND';
+    if (message) {
+        this.message = message;
+    }
 }
-SecretNotFoundError.prototype = Object.create(Error.prototype);
+EmailTokenNotFoundError.prototype = new NotFoundError();
 
 /**
  * A custom error to handle if a user cannot be found.
@@ -61,11 +153,13 @@ SecretNotFoundError.prototype = Object.create(Error.prototype);
  * @constructor
  */
 function UserNotFoundError(message) {
-    this.status = 404;
     this.name = 'UserNotFoundError';
-    this.message = (message || 'No user found.');
+    this.status = 'USER_NOT_FOUND';
+    if (message) {
+        this.message = message;
+    }
 }
-UserNotFoundError.prototype = Object.create(Error.prototype);
+UserNotFoundError.prototype = new NotFoundError();
 
 /**
  * A custom error to handle login issues.
@@ -74,24 +168,13 @@ UserNotFoundError.prototype = Object.create(Error.prototype);
  * @constructor
  */
 function LoginError(message) {
-    this.status = 401;
     this.name = 'LoginError';
-    this.message = (message || 'Invalid login.');
+    this.status = 'UNAUTHORIZED_LOGIN';
+    if (message) {
+        this.message = message;
+    }
 }
-LoginError.prototype = Object.create(Error.prototype);
-
-/**
- * A custom error to handle unauthorized actions.
- *
- * @param {string} message - Custom login error message.
- * @constructor
- */
-function ForbiddenError(message) {
-    this.status = 403;
-    this.name = 'ForbiddenError';
-    this.message = message;
-}
-ForbiddenError.prototype = Object.create(Error.prototype);
+LoginError.prototype = new UnauthorizedError();
 
 /**
  * A custom error to handle any places which cannot be found.
@@ -100,11 +183,13 @@ ForbiddenError.prototype = Object.create(Error.prototype);
  * @constructor
  */
 function PlacesNotFoundError(message) {
-    this.status = 404;
     this.name = 'PlacesNotFoundError';
-    this.message = message;
+    this.status = 'PLACES_NOT_FOUND';
+    if (message) {
+        this.message = message;
+    }
 }
-PlacesNotFoundError.prototype = Object.create(Error.prototype);
+PlacesNotFoundError.prototype = new NotFoundError();
 
 /**
  * A custom error to handle any places which cannot be found.
@@ -113,11 +198,13 @@ PlacesNotFoundError.prototype = Object.create(Error.prototype);
  * @constructor
  */
 function PassagesNotFoundError(message) {
-    this.status = 404;
     this.name = 'PassagesNotFoundError';
-    this.message = message;
+    this.status = 'PASSAGES_NOT_FOUND';
+    if (message) {
+        this.message = message;
+    }
 }
-PassagesNotFoundError.prototype = Object.create(Error.prototype);
+PassagesNotFoundError.prototype = new NotFoundError();
 
 /**
  * A custom error to handle any place which cannot be found.
@@ -126,11 +213,13 @@ PassagesNotFoundError.prototype = Object.create(Error.prototype);
  * @constructor
  */
 function PlaceNotFoundError(message) {
-    this.status = 404;
     this.name = 'PlaceNotFoundError';
-    this.message = (message || 'No place found at this address.');
+    this.status = 'PLACE_NOT_FOUND';
+    if (message) {
+        this.message = message;
+    }
 }
-PlaceNotFoundError.prototype = Object.create(Error.prototype);
+PlaceNotFoundError.prototype = new NotFoundError();
 
 /**
  * A custom error to handle any passage which cannot be found.
@@ -139,11 +228,13 @@ PlaceNotFoundError.prototype = Object.create(Error.prototype);
  * @constructor
  */
 function PassageNotFoundError(message) {
-    this.status = 404;
     this.name = 'PassageNotFoundError';
-    this.message = (message || 'No passage found at this address.');
+    this.status = 'PASSAGE_NOT_FOUND';
+    if (message) {
+        this.message = message;
+    }
 }
-PlaceNotFoundError.prototype = Object.create(Error.prototype);
+PassageNotFoundError.prototype = new NotFoundError();
 
 /**
  * A custom error to handle when a new place is invalid
@@ -152,11 +243,13 @@ PlaceNotFoundError.prototype = Object.create(Error.prototype);
  * @constructor
  */
 function PlaceInvalidError(message) {
-    this.status = 400;
     this.name = 'PlaceInvalidError';
-    this.message = message;
+    this.status = 'PLACE_INVALID';
+    if (message) {
+        this.message = message;
+    }
 }
-PlaceInvalidError.prototype = Object.create(Error.prototype);
+PlaceInvalidError.prototype = new BadRequestError();
 
 /**
  * A custom error to handle when a new place is invalid
@@ -165,24 +258,33 @@ PlaceInvalidError.prototype = Object.create(Error.prototype);
  * @constructor
  */
 function PassageInvalidError(message) {
-    this.status = 400;
     this.name = 'PassageInvalidError';
-    this.message = message;
+    this.status = 'PASSAGE_INVALID';
+    if (message) {
+        this.message = message;
+    }
 }
-PassageInvalidError.prototype = Object.create(Error.prototype);
+PassageInvalidError.prototype = new BadRequestError();
 
 module.exports = {
     SyntaxError              : SyntaxError,
+    WritError                : WritError,
+
+    BadRequestError          : BadRequestError,
+    NotFoundError            : NotFoundError,
+    UnauthorizedError        : UnauthorizedError,
+    ForbiddenError           : ForbiddenError,
+    ConflictError            : ConflictError,
+
     JsonSchemaValidationError: JsonSchemaValidationError,
-    EmailUsedError           : EmailUsedError,
-    SecretNotFoundError      : SecretNotFoundError,
+    EmailInUseError          : EmailInUseError,
+    EmailTokenNotFoundError  : EmailTokenNotFoundError,
     UserNotFoundError        : UserNotFoundError,
     PlacesNotFoundError      : PlacesNotFoundError,
     PassagesNotFoundError    : PassagesNotFoundError,
     PlaceNotFoundError       : PlaceNotFoundError,
     PassageNotFoundError     : PassageNotFoundError,
     LoginError               : LoginError,
-    ForbiddenError           : ForbiddenError,
     PlaceInvalidError        : PlaceInvalidError,
     PassageInvalidError      : PassageInvalidError
 };

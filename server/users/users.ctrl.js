@@ -124,7 +124,7 @@ function createUser(userData, res, next) {
             limit: 1
         }).then(function(result) {
             if (result.docs.length) {
-                throw new errors.EmailUsedError(
+                throw new errors.EmailInUseError(
                     'This email address is already in use ' +
                     'by another account.',
                     userData.email
@@ -266,7 +266,7 @@ function updateUser(editor, userId, userData, res, next) {
                 limit: 1
             }).then(function(result) {
                 if (result.docs.length && result.docs[0].id !== userId) {
-                    throw new errors.EmailUsedError(
+                    throw new errors.EmailInUseError(
                         'This email address is already ' +
                         'in use by another account.',
                         userData.email
@@ -400,7 +400,7 @@ function userVerify(req, res, next) {
 
     }).then(function(results) {
         if (!results.docs.length) {
-            throw new errors.SecretNotFoundError(
+            throw new errors.EmailTokenNotFoundError(
                 'This token was not found.',
                 req.params.token
             );

@@ -185,7 +185,7 @@ describe('Places Endpoint', function() {
                 )
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'INVALID_JSON_SCHEME',
+                        status: 'SCHEMA_INVALID',
                         errors: jasmine.any(Object)
                     });
                     expect(res.body.errors.body.length).toBe(5);
@@ -208,7 +208,7 @@ describe('Places Endpoint', function() {
                 .expect(400)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'INVALID_JSON_SCHEME',
+                        status: 'SCHEMA_INVALID',
                         errors: jasmine.any(Object)
                     });
                     expect(res.body.errors.body.length).toBe(5);
@@ -339,8 +339,8 @@ describe('Places Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'FORBIDDEN',
-                        message: 'Your account is not allowed ' +
-                        'to access this endpoint.'
+                        message: 'Your account is not allowed to ' +
+                        'access this endpoint.'
                     });
                 })
                 .end(util.handleSupertest(done));
@@ -492,8 +492,8 @@ describe('Places Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'FORBIDDEN',
-                        message: 'You are not allowed to make ' +
-                        'these updates to the room.'
+                        message: 'You are not allowed to make these ' +
+                        'updates to the room.'
                     });
                 })
                 .end(function(err) {
@@ -584,8 +584,8 @@ describe('Places Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'FORBIDDEN',
-                        message: 'Your account is not allowed ' +
-                        'to access this endpoint.'
+                        message: 'Your account is not allowed to ' +
+                        'access this endpoint.'
                     });
                 })
                 .end(function(err) {

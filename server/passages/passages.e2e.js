@@ -224,7 +224,7 @@ describe('Passages Endpoint', function() {
                 )
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'INVALID_JSON_SCHEME',
+                        status: 'SCHEMA_INVALID',
                         errors: jasmine.any(Object)
                     });
                     expect(res.body.errors.body.length).toBe(4);
@@ -247,7 +247,7 @@ describe('Passages Endpoint', function() {
                 .expect(400)
                 .expect(function(res) {
                     expect(res.body).toEqual({
-                        status: 'INVALID_JSON_SCHEME',
+                        status: 'SCHEMA_INVALID',
                         errors: jasmine.any(Object)
                     });
                     expect(res.body.errors.body.length).toBe(6);
@@ -407,8 +407,8 @@ describe('Passages Endpoint', function() {
                 .expect(function(res) {
                     expect(res.body).toEqual({
                         status : 'FORBIDDEN',
-                        message: 'Your account is not allowed ' +
-                        'to access this endpoint.'
+                        message: 'Your account is not allowed to ' +
+                        'access this endpoint.'
                     });
                 })
                 .end(util.handleSupertest(done));
