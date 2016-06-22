@@ -115,6 +115,12 @@ function passagesPost(req, res, next) {
         }
     }).then(function() {
 
+        if (passageData.from === passageData.to) {
+            throw new errors.PassageInvalidError(
+                'You cannot connect a place to itself.'
+            );
+        }
+
         return Promise.all([Passages.find({
             selector: {
                 'from': passageData.from,
@@ -137,7 +143,7 @@ function passagesPost(req, res, next) {
 
         if (passageExists) {
             throw new errors.PassageInvalidError(
-                'A passage between these 2 places already exists.'
+                'A passage already exists between these places.'
             );
         }
 
@@ -489,7 +495,7 @@ function passagePost(req, res, next) {
             req.user.permission, 'passage', newPassageData, false,
             newPassageData.owner === req.user._id);
 
-        res.json(new SuccessMessage('Updated passage.', filtered));
+        res.json(new SuccessMessage('Passage has been successfully updated.', filtered));
 
     }).catch(function(err) {
         if (err.status === 404) {
