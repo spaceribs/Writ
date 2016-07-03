@@ -565,22 +565,22 @@ describe('Passages', function() {
 
             it('doesn\'t allow normal users to change ' +
                 'passage owners.', function(done) {
-                    req.user = users.verifiedUser;
-                    req.params = {
-                        passageId: passages.farNorthDoor.id
-                    };
-                    req.body = {
-                        owner: users.unverifiedUser._id
-                    };
+                req.user = users.verifiedUser;
+                req.params = {
+                    passageId: passages.farNorthDoor.id
+                };
+                req.body = {
+                    owner: users.unverifiedUser._id
+                };
 
-                    callback.and.callFake(function(err) {
-                        expect(err)
-                            .toEqual(jasmine.any(errors.ForbiddenError));
-                        done();
-                    });
-
-                    ctrl.passage.post(req, res, callback);
+                callback.and.callFake(function(err) {
+                    expect(err)
+                        .toEqual(jasmine.any(errors.ForbiddenError));
+                    done();
                 });
+
+                ctrl.passage.post(req, res, callback);
+            });
 
             it('doesn\'t update anything if the passage doesn\'t ' +
                 'exist.', function(done) {
@@ -788,8 +788,6 @@ describe('Passages', function() {
 
                     ctrl.passage.post(req, res, callback);
                 });
-
-
 
             it('doesn\'t allow an invalid passage to be updated.',
                 function(done) {
