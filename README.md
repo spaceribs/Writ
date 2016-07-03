@@ -16,7 +16,7 @@
 ## Currently Under Construction:
 - [x] Users Endpoint
 - [x] Places Endpoint
-- [ ] Passages Endpoint
+- [x] Passages Endpoint
 - [ ] Items Endpoint
 
 ## Technologies Used

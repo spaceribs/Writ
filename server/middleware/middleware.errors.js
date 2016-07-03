@@ -19,15 +19,6 @@ function errorHandler(err, req, res, next) {
         res.set('Content-Type', 'text/plain')
             .status(406).send('Only JSON Content type is accepted.');
 
-    } else if (err instanceof errors.JsonSchemaValidationError) {
-        responseData = {
-            status: 'INVALID_JSON_SCHEME',
-            errors: {
-                'body': err.errors
-            }
-        };
-        res.status(err.status).json(responseData);
-
     } else if (err instanceof errors.SyntaxError) {
         responseData = {
             status: 'INVALID_JSON',
@@ -35,47 +26,21 @@ function errorHandler(err, req, res, next) {
         };
         res.status(400).json(responseData);
 
-    } else if (err instanceof errors.EmailUsedError) {
+    } else if (err instanceof errors.JsonSchemaValidationError) {
         responseData = {
-            status: 'EMAIL_USED',
-            message: err.message
+            status: err.status,
+            errors: {
+                'body': err.errors
+            }
         };
-        res.status(err.status).json(responseData);
+        res.status(err.code).json(responseData);
 
-    } else if (err instanceof errors.SecretNotFoundError) {
+    } else if (err instanceof errors.WritError) {
         responseData = {
-            status: 'EMAIL_TOKEN_NOT_FOUND',
+            status: err.status,
             message: err.message
         };
-        res.status(err.status).json(responseData);
-
-    } else if (err instanceof errors.ForbiddenError) {
-        responseData = {
-            status: 'FORBIDDEN',
-            message: err.message
-        };
-        res.status(err.status).json(responseData);
-
-    } else if (err instanceof errors.PlaceInvalidError) {
-        responseData = {
-            status: 'PLACE_INVALID',
-            message: err.message
-        };
-        res.status(err.status).json(responseData);
-
-    } else if (err instanceof errors.PlaceNotFoundError) {
-        responseData = {
-            status: 'PLACE_NOT_FOUND',
-            message: err.message
-        };
-        res.status(err.status).json(responseData);
-
-    } else if (err instanceof errors.PlacesNotFoundError) {
-        responseData = {
-            status: 'PLACES_NOT_FOUND',
-            message: err.message
-        };
-        res.status(err.status).json(responseData);
+        res.status(err.code).json(responseData);
 
     } else {
         next(err);

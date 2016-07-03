@@ -7,10 +7,14 @@ var _ = require('lodash');
 describe('App Unit Tests', function() {
 
     var util;
+    var database;
+    var errors;
     var newUser;
 
     beforeAll(function() {
         util = require('./app.util');
+        database = require('./app.database');
+        errors = require('./app.errors');
     });
 
     beforeEach(
@@ -22,6 +26,24 @@ describe('App Unit Tests', function() {
             newUser = jsf(models.io.user, models.refs);
         }
     );
+
+    describe('Database Error Handler', function() {
+
+        it('maps an error from the database to a handled Writ error.',
+            function() {
+                expect(function() {
+                    database('place')({status: 404});
+                }).toThrowError(errors.PlaceNotFoundError);
+            });
+
+        it('throws an unhandled or unknown error upward.',
+            function() {
+                expect(function() {
+                    database('place')({status: 502});
+                }).toThrow();
+            });
+
+    });
 
     describe('Utilities', function() {
 
@@ -166,83 +188,81 @@ describe('App Unit Tests', function() {
 
     describe('Errors', function() {
 
-        var errors = require('./app.errors');
-
-        describe('EmailUsedError', function() {
-
-            var error = new errors.EmailUsedError('test', 'test@test.com');
-            var error2 = new errors.EmailUsedError(null, 'test@test.com');
-
-            it('returns a name.', function() {
-                expect(error.name).toBe('EmailUsedError');
-            });
-
-            it('returns a 409 status message.', function() {
-                expect(error.status).toBe(409);
-            });
-
-            it('returns the email that conflicts.', function() {
-                expect(error.email).toBe('test@test.com');
-            });
-
-            it('returns a custom message.', function() {
-                expect(error.message).toBe('test');
-            });
-
-            it('returns a default message if no message specified.',
-            function() {
-                expect(error2.message).toBe('Invalid email.');
-            });
+        beforeEach(function() {
+            errors = require('./app.errors');
         });
 
-        describe('SecretNotFoundError', function() {
+        describe('ForbiddenError', function() {
 
-            var error = new errors.SecretNotFoundError('test', '1234567890');
-            var error2 = new errors.SecretNotFoundError(null, '1234567890');
+            it('returns generic messaging if no message is provided.',
+                function() {
+                    var error = new errors.ForbiddenError();
+                    expect(error.message).toEqual(jasmine.any(String));
+                });
 
-            it('returns a name.', function() {
-                expect(error.name).toBe('SecretNotFoundError');
-            });
-
-            it('returns a 404 status message.', function() {
-                expect(error.status).toBe(404);
-            });
-
-            it('returns the token that wasn\'t found.', function() {
-                expect(error.token).toBe('1234567890');
-            });
-
-            it('returns a custom message.', function() {
-                expect(error.message).toBe('test');
-            });
-
-            it('returns a default message if no message specified.',
-            function() {
-                expect(error2.message).toBe('Invalid email token.');
-            });
         });
 
-        describe('LoginError', function() {
+        describe('EmailInUseError', function() {
 
-            var error = new errors.LoginError('test');
-            var error2 = new errors.LoginError();
+            it('returns generic messaging if no message is provided',
+                function() {
+                    var error = new errors.EmailInUseError();
+                    expect(error.message).toEqual(jasmine.any(String));
+                });
 
-            it('returns a name.', function() {
-                expect(error.name).toBe('LoginError');
-            });
+        });
 
-            it('returns a 404 status message.', function() {
-                expect(error.status).toBe(401);
-            });
+        describe('EmailTokenNotFoundError', function() {
 
-            it('returns a custom message.', function() {
-                expect(error.message).toBe('test');
-            });
+            it('returns generic messaging if no message is provided',
+                function() {
+                    var error = new errors.EmailTokenNotFoundError(
+                        null, '1234'
+                    );
+                    expect(error.message).toEqual(jasmine.any(String));
+                    expect(error.token).toBe('1234');
+                });
 
-            it('returns a default message if no message specified.',
-            function() {
-                expect(error2.message).toBe('Invalid login.');
-            });
+        });
+
+        describe('PlacesNotFoundError', function() {
+
+            it('returns generic messaging if no message is provided',
+                function() {
+                    var error = new errors.PlacesNotFoundError();
+                    expect(error.message).toEqual(jasmine.any(String));
+                });
+
+        });
+
+        describe('PassagesNotFoundError', function() {
+
+            it('returns generic messaging if no message is provided',
+                function() {
+                    var error = new errors.PassagesNotFoundError();
+                    expect(error.message).toEqual(jasmine.any(String));
+                });
+
+        });
+
+        describe('PlaceInvalidError', function() {
+
+            it('returns generic messaging if no message is provided',
+                function() {
+                    var error = new errors.PlaceInvalidError();
+                    expect(error.message).toEqual(jasmine.any(String));
+                });
+
+        });
+
+        describe('PassageInvalidError', function() {
+
+            it('returns generic messaging if no message is provided',
+                function() {
+                    var error = new errors.PassageInvalidError();
+                    expect(error.message).toEqual(jasmine.any(String));
+                });
+
         });
     });
 

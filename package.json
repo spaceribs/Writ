@@ -7,7 +7,7 @@
   "scripts": {
     "test": "istanbul cover test -x='**/*.unit.js, **/*.e2e.js'"
   },
-  "author": "",
+  "author": "spaceribs <spaceribs@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "crypto-js": "^3.1.5",

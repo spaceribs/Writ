@@ -284,7 +284,7 @@ describe('Middleware', function() {
                          */
                         return {json: function(responseData) {
                             expect(responseData).toEqual({
-                                'status': 'INVALID_JSON_SCHEME',
+                                'status': 'SCHEMA_INVALID',
                                 'errors': {
                                     body: []
                                 }
@@ -342,7 +342,7 @@ describe('Middleware', function() {
                      */
                     req.accepts = function() { return true; };
 
-                    err = new errors.EmailUsedError(
+                    err = new errors.EmailInUseError(
                             'test message.', 'test@test.com');
 
                     /**
@@ -361,7 +361,7 @@ describe('Middleware', function() {
                          */
                         return {json: function(responseData) {
                             expect(responseData).toEqual({
-                                status: 'EMAIL_USED',
+                                status: 'EMAIL_IN_USE',
                                 message: 'test message.'
                             });
                             done();
@@ -380,7 +380,7 @@ describe('Middleware', function() {
                      */
                     req.accepts = function() { return true; };
 
-                    err = new errors.SecretNotFoundError(
+                    err = new errors.EmailTokenNotFoundError(
                             'test message.', '12345');
 
                     /**
