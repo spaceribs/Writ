@@ -18,22 +18,6 @@ function WritError() {
 WritError.prototype = Object.create(Error.prototype);
 
 /**
- * An error with the database.
- *
- * @param {object} payload - Response from the database.
- * @param {string} type - Document type this error relates to.
- * @constructor
- */
-function DatabaseError(payload, type) {
-    this.code = payload.status;
-    this.type = type;
-    this.name = 'DatabaseError';
-    this.status = 'DATABASE_ERROR';
-    this.message = 'A database error has occurred.';
-}
-DatabaseError.prototype = new WritError();
-
-/**
  * An error for all bad requests.
  *
  * @constructor
@@ -75,6 +59,7 @@ UnauthorizedError.prototype = new WritError();
 /**
  * An error for all permissions issues.
  *
+ * @param {string} [message] - Custom message for permission issues.
  * @constructor
  */
 function ForbiddenError(message) {
@@ -171,33 +156,24 @@ EmailTokenNotFoundError.prototype = new NotFoundError();
 /**
  * A custom error to handle if a user cannot be found.
  *
- * @param {?string} [message] - Custom user error message.
- * @param {string} token - Token that was searched.
  * @constructor
  */
-function UserNotFoundError(message) {
+function UserNotFoundError() {
     this.name = 'UserNotFoundError';
     this.status = 'USER_NOT_FOUND';
     this.message = 'The requested user was not found.';
-    if (message) {
-        this.message = message;
-    }
 }
 UserNotFoundError.prototype = new NotFoundError();
 
 /**
  * A custom error to handle login issues.
  *
- * @param {string} [message] - Custom login error message.
  * @constructor
  */
-function LoginError(message) {
+function LoginError() {
     this.name = 'LoginError';
     this.status = 'UNAUTHORIZED_LOGIN';
     this.message = 'Your credentials were invalid.';
-    if (message) {
-        this.message = message;
-    }
 }
 LoginError.prototype = new UnauthorizedError();
 
@@ -236,32 +212,24 @@ PassagesNotFoundError.prototype = new NotFoundError();
 /**
  * A custom error to handle any place which cannot be found.
  *
- * @param {?string} [message] - Custom user error message.
  * @constructor
  */
-function PlaceNotFoundError(message) {
+function PlaceNotFoundError() {
     this.name = 'PlaceNotFoundError';
     this.status = 'PLACE_NOT_FOUND';
     this.message = 'The requested place was not found.';
-    if (message) {
-        this.message = message;
-    }
 }
 PlaceNotFoundError.prototype = new NotFoundError();
 
 /**
  * A custom error to handle any passage which cannot be found.
  *
- * @param {?string} [message] - Custom user error message.
  * @constructor
  */
-function PassageNotFoundError(message) {
+function PassageNotFoundError() {
     this.name = 'PassageNotFoundError';
     this.status = 'PASSAGE_NOT_FOUND';
     this.message = 'The requested passage was not found.';
-    if (message) {
-        this.message = message;
-    }
 }
 PassageNotFoundError.prototype = new NotFoundError();
 
@@ -300,7 +268,6 @@ PassageInvalidError.prototype = new BadRequestError();
 module.exports = {
     SyntaxError              : SyntaxError,
     WritError                : WritError,
-    DatabaseError            : DatabaseError,
 
     BadRequestError          : BadRequestError,
     NotFoundError            : NotFoundError,

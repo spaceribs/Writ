@@ -205,19 +205,13 @@ function passagesPost(req, res, next) {
             }, {});
 
         // Get the distance between the connecting places
-        var vicinity = _.reduce(offsets, function(distance, offset) {
-            if (distance !== false && Math.abs(offset) <= 1) {
-                return Math.abs(offset) + distance;
-            } else {
-                return false;
-            }
+        var distance = _.reduce(offsets, function(memo, offset) {
+            return memo + Math.abs(offset);
         }, 0);
 
         // Make sure that the passage is only connecting places which
-        // are directly adjacent to each other by checking the vicinity.
-        var adjacent = (vicinity <= 1);
-
-        if (!vicinity || !adjacent) {
+        // are directly adjacent to each other by checking the distance.
+        if (distance > 1) {
             throw new errors.PassageInvalidError(
                 'A passage cannot connect two non-adjacent places.'
             );
@@ -241,6 +235,7 @@ function passagesPost(req, res, next) {
         var validate = tv4.validateMultiple(
             passageData, models.db.passage);
 
+        /* istanbul ignore if  */
         if (!validate.valid) {
             throw new errors.JsonSchemaValidationError(
                 validate.errors, validate.missing);
@@ -349,8 +344,8 @@ function passagePost(req, res, next) {
     }).then(function() {
         return Passages.get('passage/' + passageId)
             .catch(databaseErrorHandler('passage'));
-    })
-    .then(function(result) {
+
+    }).then(function(result) {
         var passageUpdates = util.ioFilter(
             req.user.permission, 'passage', req.body, true,
             result.owner === req.user._id);
@@ -459,19 +454,13 @@ function passagePost(req, res, next) {
             }, {});
 
         // Get the distance between the connecting places
-        var vicinity = _.reduce(offsets, function(distance, offset) {
-            if (distance !== false && Math.abs(offset) <= 1) {
-                return Math.abs(offset) + distance;
-            } else {
-                return false;
-            }
+        var distance = _.reduce(offsets, function(memo, offset) {
+            return memo + Math.abs(offset);
         }, 0);
 
         // Make sure that the passage is only connecting places which
-        // are directly adjacent to each other by checking the vicinity.
-        var adjacent = (vicinity <= 1);
-
-        if (!vicinity || !adjacent) {
+        // are directly adjacent to each other by checking the distance.
+        if (distance > 1) {
             throw new errors.PassageInvalidError(
                 'A passage cannot connect two non-adjacent places.'
             );
@@ -491,6 +480,7 @@ function passagePost(req, res, next) {
         var validate = tv4.validateMultiple(
             newPassageData, models.db.passage);
 
+        /* istanbul ignore if  */
         if (!validate.valid) {
             throw new errors.JsonSchemaValidationError(
                 validate.errors, validate.missing);

@@ -259,6 +259,24 @@ describe('Passages', function() {
             });
 
             it('doesn\'t allow a passage to be created ' +
+                'if the originating place is the same as ' +
+                'the destination.',
+                function(done) {
+                    req.user = users.adminUser;
+                    req.body = newPassage;
+                    req.body.from = places.lobby._id;
+                    req.body.to = places.lobby._id;
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PassageInvalidError));
+                        done();
+                    });
+
+                    ctrl.passages.post(req, res, callback);
+                });
+
+            it('doesn\'t allow a passage to be created ' +
                 'if the originating place doesn\'t exist.',
                 function(done) {
                     req.user = users.adminUser;
@@ -331,8 +349,8 @@ describe('Passages', function() {
                 function(done) {
                     req.user = users.unverifiedUser;
                     req.body = newPassage;
-                    req.body.from = places.northRoom._id;
-                    req.body.to = places.northWestRoom._id;
+                    req.body.from = places.farNorthEastRoom._id;
+                    req.body.to = places.northEastRoom._id;
 
                     callback.and.callFake(function(err) {
                         expect(err)
@@ -348,8 +366,8 @@ describe('Passages', function() {
                 function(done) {
                     req.user = users.unverifiedUser;
                     req.body = newPassage;
-                    req.body.from = places.northWestRoom._id;
-                    req.body.to = places.northRoom._id;
+                    req.body.from = places.northEastRoom._id;
+                    req.body.to = places.farNorthEastRoom._id;
 
                     callback.and.callFake(function(err) {
                         expect(err)
@@ -601,6 +619,199 @@ describe('Passages', function() {
 
                 ctrl.passage.post(req, res, callback);
             });
+
+            it('doesn\'t allow a passage to be updated ' +
+                'if the originating place is the same as ' +
+                'the destination.',
+                function(done) {
+                    req.user = users.adminUser;
+                    req.params = {
+                        passageId: passages.northDoor.id
+                    };
+                    req.body = {
+                        from: places.lobby._id,
+                        to: places.lobby._id
+                    };
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PassageInvalidError));
+                        done();
+                    });
+
+                    ctrl.passage.post(req, res, callback);
+                });
+
+            it('doesn\'t allow a passage to be updated ' +
+                'if the originating place doesn\'t exist.',
+                function(done) {
+                    req.user = users.adminUser;
+                    req.params = {
+                        passageId: passages.northDoor.id
+                    };
+                    req.body = {
+                        from: 'places/' + uuid.v4(),
+                        to: places.northWestRoom._id
+                    };
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PlaceNotFoundError));
+                        done();
+                    });
+
+                    ctrl.passage.post(req, res, callback);
+                });
+
+            it('doesn\'t allow a passage to be updated ' +
+                'if the destination place doesn\'t exist.',
+                function(done) {
+                    req.user = users.adminUser;
+                    req.params = {
+                        passageId: passages.northDoor.id
+                    };
+                    req.body = {
+                        to: 'places/' + uuid.v4(),
+                        from: places.northWestRoom._id
+                    };
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PlaceNotFoundError));
+                        done();
+                    });
+
+                    ctrl.passage.post(req, res, callback);
+                });
+
+            it('doesn\'t allow a passage to be updated ' +
+                'if you do not own the originating place.',
+                function(done) {
+                    req.user = users.verifiedUser;
+                    req.params = {
+                        passageId: passages.farNorthDoor.id
+                    };
+                    req.body = {
+                        from: places.northEastRoom._id,
+                        to: places.farNorthEastRoom._id
+                    };
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.ForbiddenError));
+                        done();
+                    });
+
+                    ctrl.passage.post(req, res, callback);
+                });
+
+            it('doesn\'t allow a passage to be updated ' +
+                'if you do not own the destination place.',
+                function(done) {
+                    req.user = users.verifiedUser;
+                    req.params = {
+                        passageId: passages.farNorthDoor.id
+                    };
+                    req.body = {
+                        from: places.farNorthEastRoom._id,
+                        to: places.northEastRoom._id
+                    };
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.ForbiddenError));
+                        done();
+                    });
+
+                    ctrl.passage.post(req, res, callback);
+                });
+
+            it('doesn\'t allow a passage to be updated ' +
+                'between places which aren\'t immediately adjacent.',
+                function(done) {
+                    req.user = users.adminUser;
+                    req.params = {
+                        passageId: passages.northDoor.id
+                    };
+                    req.body = {
+                        from: places.lobby._id,
+                        to: places.southWestRoom._id
+                    };
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PassageInvalidError));
+                        done();
+                    });
+
+                    ctrl.passage.post(req, res, callback);
+                });
+
+            it('doesn\'t allow a passage to be updated ' +
+                'where one already exists.',
+                function(done) {
+                    req.user = users.verifiedUser;
+                    req.params = {
+                        passageId: passages.northEastDoor.id
+                    };
+                    req.body = {
+                        from: places.northRoom._id,
+                        to: places.farNorthRoom._id
+                    };
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PassageInvalidError));
+                        done();
+                    });
+
+                    ctrl.passage.post(req, res, callback);
+                });
+
+            it('doesn\'t allow a passage to be updated ' +
+                'where a passage exists, but is reversed.',
+                function(done) {
+                    req.user = users.verifiedUser;
+                    req.params = {
+                        passageId: passages.northEastDoor.id
+                    };
+                    req.body = {
+                        from: places.farNorthRoom._id,
+                        to: places.northRoom._id
+                    };
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PassageInvalidError));
+                        done();
+                    });
+
+                    ctrl.passage.post(req, res, callback);
+                });
+
+
+
+            it('doesn\'t allow an invalid passage to be updated.',
+                function(done) {
+                    req.user = users.adminUser;
+                    req.params = {
+                        passageId: passages.invalidPassage.id
+                    };
+                    req.body = {
+                        name: 'blah'
+                    };
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(
+                                jasmine.any(errors.JsonSchemaValidationError)
+                            );
+                        done();
+                    });
+
+                    ctrl.passage.post(req, res, callback);
+                });
+
         });
 
         describe('passageDelete()', function() {

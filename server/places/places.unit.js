@@ -156,7 +156,7 @@ describe('Places', function() {
                 ctrl.places.get(req, res, callback);
 
                 res.json.and.callFake(function(response) {
-                    expect(response.data.length).toBe(5);
+                    expect(response.data.length).toBe(6);
                     done();
                 });
 
@@ -314,11 +314,11 @@ describe('Places', function() {
                 res.json.and.callFake(function(response) {
                     expect(response)
                         .toEqual({
-                            total_rows: 8,
+                            total_rows: 9,
                             offset: 0,
                             rows: jasmine.any(Array)
                         });
-                    expect(response.rows.length).toEqual(8);
+                    expect(response.rows.length).toEqual(9);
                     done();
                 });
             });
