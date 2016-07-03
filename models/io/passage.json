@@ -2,6 +2,7 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "id": "/writ/io/passage",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
         "name": {
             "type": "string",
@@ -40,13 +41,19 @@
                 "write": 10,
                 "owner": true
             }
+        },
+        "owner": {
+            "$ref": "/writ/db/user/id",
+            "permission": {
+                "read": 100,
+                "write": 10
+            }
         }
     },
     "required": [
-        "id",
+        "name",
+        "desc",
         "from",
-        "to",
-        "title",
-        "desc"
+        "to"
     ]
 }

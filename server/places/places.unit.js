@@ -34,9 +34,15 @@ describe('Places', function() {
         });
 
         mockery.registerSubstitute(
-            './users.db', './users.db.mock');
+            './passages.db', '../passages/passages.db.mock');
         mockery.registerSubstitute(
-            './places.db', './places.db.mock');
+            '../places/places.db', '../places/places.db.mock');
+        mockery.registerSubstitute(
+            './places.db', '../places/places.db.mock');
+        mockery.registerSubstitute(
+            './users.db', '../users/users.db.mock');
+        mockery.registerSubstitute(
+            '../mail/mail.ctrl', '../mail/mail.ctrl.mock');
 
         ctrl = require('./places.ctrl');
     });
@@ -150,7 +156,7 @@ describe('Places', function() {
                 ctrl.places.get(req, res, callback);
 
                 res.json.and.callFake(function(response) {
-                    expect(response.data.length).toBe(3);
+                    expect(response.data.length).toBe(6);
                     done();
                 });
 
@@ -158,7 +164,7 @@ describe('Places', function() {
 
             it('returns a 404 error if there are no places found.',
                 function(done) {
-                    req.user = users.unverifiedUser;
+                    req.user = users.newUser;
                     ctrl.places.get(req, res, callback);
 
                     callback.and.callFake(function(err) {
@@ -308,11 +314,11 @@ describe('Places', function() {
                 res.json.and.callFake(function(response) {
                     expect(response)
                         .toEqual({
-                            total_rows: 5,
+                            total_rows: 9,
                             offset: 0,
                             rows: jasmine.any(Array)
                         });
-                    expect(response.rows.length).toEqual(5);
+                    expect(response.rows.length).toEqual(9);
                     done();
                 });
             });

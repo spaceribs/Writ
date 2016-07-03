@@ -3,6 +3,7 @@
     "id": "/writ/db/user",
     "type": "object",
     "description": "A writ user",
+    "additionalProperties": false,
     "properties": {
         "_id": {
             "id": "/writ/db/user/id",
@@ -109,7 +110,6 @@
             }
         }
     },
-    "additionalProperties": false,
     "required": [
         "_id",
         "email",

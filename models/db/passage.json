@@ -2,11 +2,12 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "id": "/writ/db/passage",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
         "_id": {
             "id": "/writ/db/passage/id",
             "type": "string",
-            "pattern": "^place\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "pattern": "^passage\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             "permission": {
                 "read": 0,
                 "write": 0
@@ -40,7 +41,7 @@
             "pattern": "^([\\+-]?\\d{4}(?!\\d{2}\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?$",
             "faker": "date.past",
             "permission": {
-                "read": 0,
+                "read": 10,
                 "write": 0
             }
         },
@@ -49,7 +50,7 @@
             "pattern": "^([\\+-]?\\d{4}(?!\\d{2}\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?$",
             "faker": "date.recent",
             "permission": {
-                "read": 0,
+                "read": 10,
                 "write": 0
             }
         },
@@ -57,19 +58,65 @@
             "type": "string",
             "minLength": 3,
             "maxLength": 128,
-            "faker": "lorem.sentence"
+            "faker": "lorem.sentence",
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
         },
         "desc": {
             "type": "string",
             "minLength": 3,
             "maxLength": 2048,
-            "faker": "lorem.paragraph"
+            "faker": "lorem.paragraph",
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
         },
         "from": {
-            "$ref": "/writ/db/place/id"
+            "$ref": "/writ/db/place/id",
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
         },
         "to": {
-            "$ref": "/writ/db/place/id"
+            "$ref": "/writ/db/place/id",
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
+        },
+        "pos": {
+            "id": "/writ/db/passage/pos",
+            "description": "Position of the passage in the world.",
+            "type": "object",
+            "properties": {
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "z": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ],
+            "permission": {
+                "read": 100,
+                "write": 10,
+                "owner": true
+            }
         }
     },
     "required": [
@@ -80,7 +127,8 @@
         "updated",
         "from",
         "to",
-        "title",
+        "pos",
+        "name",
         "desc"
     ]
 }
