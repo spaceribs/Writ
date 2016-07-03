@@ -18,6 +18,22 @@ function WritError() {
 WritError.prototype = Object.create(Error.prototype);
 
 /**
+ * An error with the database.
+ *
+ * @param {object} payload - Response from the database.
+ * @param {string} type - Document type this error relates to.
+ * @constructor
+ */
+function DatabaseError(payload, type) {
+    this.code = payload.status;
+    this.type = type;
+    this.name = 'DatabaseError';
+    this.status = 'DATABASE_ERROR';
+    this.message = 'A database error has occurred.';
+}
+DatabaseError.prototype = new WritError();
+
+/**
  * An error for all bad requests.
  *
  * @constructor
@@ -65,7 +81,10 @@ function ForbiddenError(message) {
     this.code = 403;
     this.name = 'ForbiddenError';
     this.status = 'FORBIDDEN';
-    this.message = (message || 'You do not have permission to complete this request.');
+    this.message = 'You do not have permission to complete this request.';
+    if (message) {
+        this.message = message;
+    }
 }
 ForbiddenError.prototype = new WritError();
 
@@ -124,7 +143,10 @@ function EmailInUseError(message, email) {
     this.email = email;
     this.name = 'EmailInUseError';
     this.status = 'EMAIL_IN_USE';
-    this.message = (message || 'Invalid email.');
+    this.message = 'This email is already in use.';
+    if (message) {
+        this.message = message;
+    }
 }
 EmailInUseError.prototype = new ConflictError();
 
@@ -139,6 +161,7 @@ function EmailTokenNotFoundError(message, token) {
     this.token = token;
     this.name = 'EmailTokenNotFoundError';
     this.status = 'EMAIL_TOKEN_NOT_FOUND';
+    this.message = 'The requested email token was not found.';
     if (message) {
         this.message = message;
     }
@@ -155,6 +178,7 @@ EmailTokenNotFoundError.prototype = new NotFoundError();
 function UserNotFoundError(message) {
     this.name = 'UserNotFoundError';
     this.status = 'USER_NOT_FOUND';
+    this.message = 'The requested user was not found.';
     if (message) {
         this.message = message;
     }
@@ -170,6 +194,7 @@ UserNotFoundError.prototype = new NotFoundError();
 function LoginError(message) {
     this.name = 'LoginError';
     this.status = 'UNAUTHORIZED_LOGIN';
+    this.message = 'Your credentials were invalid.';
     if (message) {
         this.message = message;
     }
@@ -185,6 +210,7 @@ LoginError.prototype = new UnauthorizedError();
 function PlacesNotFoundError(message) {
     this.name = 'PlacesNotFoundError';
     this.status = 'PLACES_NOT_FOUND';
+    this.message = 'The requested places were not found.';
     if (message) {
         this.message = message;
     }
@@ -200,6 +226,7 @@ PlacesNotFoundError.prototype = new NotFoundError();
 function PassagesNotFoundError(message) {
     this.name = 'PassagesNotFoundError';
     this.status = 'PASSAGES_NOT_FOUND';
+    this.message = 'The requested passages were not found.';
     if (message) {
         this.message = message;
     }
@@ -215,6 +242,7 @@ PassagesNotFoundError.prototype = new NotFoundError();
 function PlaceNotFoundError(message) {
     this.name = 'PlaceNotFoundError';
     this.status = 'PLACE_NOT_FOUND';
+    this.message = 'The requested place was not found.';
     if (message) {
         this.message = message;
     }
@@ -230,6 +258,7 @@ PlaceNotFoundError.prototype = new NotFoundError();
 function PassageNotFoundError(message) {
     this.name = 'PassageNotFoundError';
     this.status = 'PASSAGE_NOT_FOUND';
+    this.message = 'The requested passage was not found.';
     if (message) {
         this.message = message;
     }
@@ -245,6 +274,7 @@ PassageNotFoundError.prototype = new NotFoundError();
 function PlaceInvalidError(message) {
     this.name = 'PlaceInvalidError';
     this.status = 'PLACE_INVALID';
+    this.message = 'Your place request is invalid.';
     if (message) {
         this.message = message;
     }
@@ -252,7 +282,7 @@ function PlaceInvalidError(message) {
 PlaceInvalidError.prototype = new BadRequestError();
 
 /**
- * A custom error to handle when a new place is invalid
+ * A custom error to handle when a new passage is invalid
  *
  * @param {string} [message] - Custom user error message.
  * @constructor
@@ -260,6 +290,7 @@ PlaceInvalidError.prototype = new BadRequestError();
 function PassageInvalidError(message) {
     this.name = 'PassageInvalidError';
     this.status = 'PASSAGE_INVALID';
+    this.message = 'Your passage request is invalid.';
     if (message) {
         this.message = message;
     }
@@ -269,6 +300,7 @@ PassageInvalidError.prototype = new BadRequestError();
 module.exports = {
     SyntaxError              : SyntaxError,
     WritError                : WritError,
+    DatabaseError            : DatabaseError,
 
     BadRequestError          : BadRequestError,
     NotFoundError            : NotFoundError,

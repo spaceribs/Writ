@@ -97,6 +97,7 @@ describe('Passages', function() {
 
             newPassage = jsf(models.io.passage, models.refs);
 
+            /* istanbul ignore next */
             Users.mockUsers()
                 .then(function(mockUsers) {
                     users = mockUsers;
@@ -111,7 +112,6 @@ describe('Passages', function() {
                 })
                 .then(done)
             /*eslint-disable */
-            /* istanbul ignore next */
                 .catch(function(err) {
                     console.error(err.stack);
                 });
@@ -122,6 +122,7 @@ describe('Passages', function() {
 
     afterEach(function(done) {
 
+        /* istanbul ignore next */
         Users.erase()
             .then(function() {
                 return Places.erase();
@@ -131,7 +132,6 @@ describe('Passages', function() {
             })
             .then(done)
         /*eslint-disable */
-        /* istanbul ignore next */
             .catch(function(err) {
                 console.error(err);
             });
@@ -259,22 +259,63 @@ describe('Passages', function() {
             });
 
             it('doesn\'t allow a passage to be created ' +
+                'if the originating place doesn\'t exist.',
+                function(done) {
+                    req.user = users.adminUser;
+                    req.body = newPassage;
+                    req.body.from = uuid.v4();
+                    req.body.to = places.northWestRoom._id;
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PlaceNotFoundError));
+                        done();
+                    });
+
+                    ctrl.passages.post(req, res, callback);
+                });
+
+            it('doesn\'t allow a passage to be created ' +
+                'if the destination place doesn\'t exist.',
+                function(done) {
+                    req.user = users.adminUser;
+                    req.body = newPassage;
+                    req.body.from = places.northRoom._id;
+                    req.body.to = uuid.v4();
+
+                    callback.and.callFake(function(err) {
+                        expect(err)
+                            .toEqual(jasmine.any(errors.PlaceNotFoundError));
+                        done();
+                    });
+
+                    ctrl.passages.post(req, res, callback);
+                });
+
+            it('doesn\'t allow a passage to be created ' +
                 'where one already exists.',
                 function(done) {
                     req.user = users.verifiedUser;
                     req.body = newPassage;
-                    req.body.from = places.northRoom._id;
-                    req.body.to = places.lobby._id;
+                    req.body.to = places.northRoom._id;
+                    req.body.from = places.lobby._id;
 
                     callback.and.callFake(function(err) {
                         expect(err)
                             .toEqual(jasmine.any(errors.PassageInvalidError));
+                        done();
                     });
 
                     ctrl.passages.post(req, res, callback);
+                });
 
-                    req.body.to = places.northRoom._id;
-                    req.body.from = places.lobby._id;
+            it('doesn\'t allow a passage to be created ' +
+                'where a passage exists, but is reversed.',
+                function(done) {
+                    req.user = users.adminUser;
+                    req.body = newPassage;
+                    req.body.to = places.lobby._id;
+                    req.body.from = places.northRoom._id;
 
                     callback.and.callFake(function(err) {
                         expect(err)

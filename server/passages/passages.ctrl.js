@@ -10,6 +10,7 @@ var roles = require('../roles.json');
 var Passages = require('./passages.db');
 var Places = require('../places/places.db');
 var errors = require('../app/app.errors');
+var databaseErrorHandler = require('../app/app.database');
 var SuccessMessage = require('../app/app.successes').SuccessMessage;
 var util = require('../app/app.util');
 
@@ -43,16 +44,19 @@ function passagesOptions(req, res, next) {
  */
 function passagesGet(req, res, next) {
 
-    Passages.createIndex({
-        'index': {
-            'fields': ['owner']
-        }
+    Promise.resolve().then(function() {
+        return Passages.createIndex({
+            'index': {
+                'fields': ['owner']
+            }
+        }).catch(databaseErrorHandler('passages'));
+        
     }).then(function() {
         return Passages.find({
             selector: {
                 owner: req.user._id
             }
-        });
+        }).catch(databaseErrorHandler('passages'));
 
     }).then(function(results) {
         if (!results.docs || results.docs.length === 0) {
@@ -109,10 +113,13 @@ function passagesPost(req, res, next) {
     var passageFrom;
     var passageTo;
 
-    Passages.createIndex({
-        'index': {
-            'fields': ['from', 'to']
-        }
+    Promise.resolve().then(function() {
+        return Passages.createIndex({
+            'index': {
+                'fields': ['from', 'to']
+            }
+        }).catch(databaseErrorHandler('passages'));
+
     }).then(function() {
 
         if (passageData.from === passageData.to) {
@@ -121,19 +128,26 @@ function passagesPost(req, res, next) {
             );
         }
 
-        return Promise.all([Passages.find({
+        var findDuplicatePassage = Passages.find({
             selector: {
                 'from': passageData.from,
                 'to'  : passageData.to
             },
             limit: 1
-        }), Passages.find({
+        }).catch(databaseErrorHandler('passage'));
+
+        var findReversePassage = Passages.find({
             selector: {
                 'from': passageData.to,
                 'to'  : passageData.from
             },
             limit: 1
-        })]);
+        }).catch(databaseErrorHandler('passage'));
+
+        return Promise.all([
+            findDuplicatePassage,
+            findReversePassage
+        ]);
 
     }).then(function(passagesExist) {
 
@@ -148,15 +162,7 @@ function passagesPost(req, res, next) {
         }
 
         return Places.get(passageData.from)
-            .catch(function(err) {
-                if (err.status === 404) {
-                    throw new errors.PlaceNotFoundError(
-                        'The originating place was not found.'
-                    );
-                } else {
-                    return err;
-                }
-            });
+            .catch(databaseErrorHandler('place'));
 
     }).then(function(fromResult) {
 
@@ -174,15 +180,7 @@ function passagesPost(req, res, next) {
         }
 
         return Places.get(passageData.to)
-            .catch(function(err) {
-                if (err.status === 404) {
-                    throw new errors.PlaceNotFoundError(
-                        'The destination place was not found.'
-                    );
-                } else {
-                    return err;
-                }
-            });
+            .catch(databaseErrorHandler('place'));
 
     }).then(function(toResult) {
 
@@ -248,7 +246,8 @@ function passagesPost(req, res, next) {
                 validate.errors, validate.missing);
         }
 
-        return Passages.put(passageData);
+        return Passages.put(passageData)
+            .catch(databaseErrorHandler('passage'));
 
     }).then(function(result) {
         var filtered = util.dbFilter(
@@ -274,10 +273,13 @@ function passagesPost(req, res, next) {
  */
 function passagesList(req, res) {
 
-    Passages.allDocs({
-        startkey    : 'passage/',
-        endkey      : 'passage/\uffff',
-        include_docs: true
+    Promise.resolve().then(function() {
+        return Passages.allDocs({
+            startkey    : 'passage/',
+            endkey      : 'passage/\uffff',
+            include_docs: true
+        }).catch(databaseErrorHandler('passages'));
+
     }).then(function(results) {
         for (var i = 0; i < results.rows.length; i++) {
             var row = results.rows[i];
@@ -304,16 +306,21 @@ function passagesList(req, res) {
 function passageGet(req, res, next) {
 
     var passageId = req.params.passageId;
-    Passages.get('passage/' + passageId)
-        .then(function(result) {
-            var filtered = util.dbFilter(
-                req.user.permission, 'passage', result, false, false);
-            res.json(new SuccessMessage(
-                'Passage found.', filtered));
 
-        }).catch(function() {
-            next(new errors.PassageNotFoundError());
-        });
+    Promise.resolve().then(function() {
+        return Passages.get('passage/' + passageId)
+            .catch(databaseErrorHandler('passage'));
+
+    }).then(function(result) {
+        var filtered = util.dbFilter(
+            req.user.permission, 'passage', result, false, false);
+        res.json(new SuccessMessage(
+            'Passage found.', filtered));
+
+    }).catch(function(err) {
+        next(err);
+
+    });
 
 }
 
@@ -332,12 +339,16 @@ function passagePost(req, res, next) {
     var passageFrom;
     var passageTo;
 
-    Passages.createIndex({
-        'index': {
-            'fields': ['from', 'to']
-        }
+    Promise.resolve().then(function() {
+        return Passages.createIndex({
+            'index': {
+                'fields': ['from', 'to']
+            }
+        }).catch(databaseErrorHandler('passages'));
+
     }).then(function() {
-        return Passages.get('passage/' + passageId);
+        return Passages.get('passage/' + passageId)
+            .catch(databaseErrorHandler('passage'));
     })
     .then(function(result) {
         var passageUpdates = util.ioFilter(
@@ -361,19 +372,32 @@ function passagePost(req, res, next) {
             );
         }
 
-        return Promise.all([Passages.find({
+        if (newPassageData.from === newPassageData.to) {
+            throw new errors.PassageInvalidError(
+                'You cannot connect a place to itself.'
+            );
+        }
+
+        var findDuplicatePassage = Passages.find({
             selector: {
                 'from': newPassageData.from,
                 'to'  : newPassageData.to
             },
             limit: 1
-        }), Passages.find({
+        }).catch(databaseErrorHandler('passage'));
+
+        var findReversePassage = Passages.find({
             selector: {
                 'from': newPassageData.to,
                 'to'  : newPassageData.from
             },
             limit: 1
-        })]);
+        }).catch(databaseErrorHandler('passage'));
+
+        return Promise.all([
+            findDuplicatePassage,
+            findReversePassage
+        ]);
 
     }).then(function(passagesExist) {
 
@@ -392,15 +416,7 @@ function passagePost(req, res, next) {
         }
 
         return Places.get(newPassageData.from)
-            .catch(function(err) {
-                if (err.status === 404) {
-                    throw new errors.PlaceNotFoundError(
-                        'The originating place was not found.'
-                    );
-                } else {
-                    return err;
-                }
-            });
+            .catch(databaseErrorHandler('place'));
 
     }).then(function(fromResult) {
 
@@ -418,15 +434,7 @@ function passagePost(req, res, next) {
         }
 
         return Places.get(newPassageData.to)
-            .catch(function(err) {
-                if (err.status === 404) {
-                    throw new errors.PlaceNotFoundError(
-                        'The destination place was not found.'
-                    );
-                } else {
-                    return err;
-                }
-            });
+            .catch(databaseErrorHandler('place'));
 
     }).then(function(toResult) {
 
@@ -488,21 +496,19 @@ function passagePost(req, res, next) {
                 validate.errors, validate.missing);
         }
 
-        return Passages.put(newPassageData);
+        return Passages.put(newPassageData)
+            .catch(databaseErrorHandler('passage'));
 
     }).then(function() {
         var filtered = util.dbFilter(
             req.user.permission, 'passage', newPassageData, false,
             newPassageData.owner === req.user._id);
 
-        res.json(new SuccessMessage('Passage has been successfully updated.', filtered));
+        res.json(new SuccessMessage(
+            'Passage has been successfully updated.', filtered));
 
     }).catch(function(err) {
-        if (err.status === 404) {
-            next(new errors.PassageNotFoundError());
-        } else {
-            next(err);
-        }
+        next(err);
 
     });
 }
@@ -519,14 +525,20 @@ function passageDelete(req, res, next) {
 
     var passageId = req.params.passageId;
 
-    Passages.get('passage/' + passageId).then(function(doc) {
-        return Passages.remove(doc);
+    Promise.resolve()
+    .then(function() {
+        return Passages.get('passage/' + passageId)
+            .catch(databaseErrorHandler('passage'));
+
+    }).then(function(doc) {
+        return Passages.remove(doc)
+            .catch(databaseErrorHandler('passage'));
 
     }).then(function() {
         res.json(new SuccessMessage('Passage has been deleted.'));
 
-    }).catch(function() {
-        next(new errors.PassageNotFoundError());
+    }).catch(function(err) {
+        next(err);
 
     });
 

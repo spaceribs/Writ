@@ -289,8 +289,8 @@ describe('Passages Endpoint', function() {
             supertest(app)
                 .post('/passage/')
                 .auth(
-                    users.verifiedUser.email,
-                    users.verifiedUser.password
+                    users.adminUser.email,
+                    users.adminUser.password
                 )
                 .send(newPassage)
                 .expect('Content-Type', /json/)
