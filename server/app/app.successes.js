@@ -8,13 +8,18 @@
  * @param {object=} data - Optional Data Payload.
  * @param {string=} status - Status message constant
  *  for switches, defaults to 'SUCCESS'.
+ * @param {object=} links - HATEOAS compliant links to additional
+ * actions for this success
  * @constructor
  */
-function SuccessMessage(message, data, status) {
+function SuccessMessage(message, data, status, links) {
     this.message = message;
     this.status = status || 'SUCCESS';
     if (data) {
         this.data = data;
+    }
+    if (links) {
+        this.links = links;
     }
 }
 

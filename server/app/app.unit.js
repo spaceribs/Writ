@@ -13,7 +13,7 @@ describe('App Unit Tests', function() {
 
     beforeAll(function() {
         util = require('./app.util');
-        database = require('./app.database');
+        database = require('./app.db.handler.js');
         errors = require('./app.errors');
     });
 

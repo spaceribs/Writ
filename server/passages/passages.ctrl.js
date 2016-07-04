@@ -10,7 +10,7 @@ var roles = require('../roles.json');
 var Passages = require('./passages.db');
 var Places = require('../places/places.db');
 var errors = require('../app/app.errors');
-var databaseErrorHandler = require('../app/app.database');
+var databaseErrorHandler = require('../app/app.db.handler.js');
 var SuccessMessage = require('../app/app.successes').SuccessMessage;
 var util = require('../app/app.util');
 

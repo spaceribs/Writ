@@ -1,7 +1,0 @@
-{
-    "service" : "Gmail",
-    "auth"    : {
-        "user" : "test",
-        "pass" : "test"
-    }
-}

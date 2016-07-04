@@ -1,8 +1,6 @@
 'use strict';
 
 var nodemailer = require('nodemailer');
-var emailConfig = require('../email');
-var transporter = nodemailer.createTransport(emailConfig);
 var Promise = require('lie');
 
 /**
@@ -13,6 +11,9 @@ var Promise = require('lie');
  * @returns {Promise}
  */
 function send(message) {
+    var config = require('../config.json');
+    var transporter = nodemailer.createTransport(config.email);
+
     return new Promise(function(resolve, reject) {
         transporter.sendMail(message,
             function(err) {

@@ -5,7 +5,6 @@ var _ = require('lodash');
 var tv4 = require('tv4');
 
 var models = require('../../models');
-var config = require('../config');
 var roles = require('../roles');
 var errors = require('../app/app.errors');
 var util = require('../app/app.util');
@@ -146,8 +145,9 @@ function createUser(userData, res, next) {
 
     }).then(function() {
 
+        var config = require('../config');
         var verifyUrl = config.hostname + '/verify/' + userData.secret;
-        var message = util.tokenEmail(config.sysop, userData.email, verifyUrl);
+        var message = util.tokenEmail(config.from, userData.email, verifyUrl);
 
         return mail.send(message);
 
@@ -295,9 +295,10 @@ function updateUser(editor, userId, userData, res, next) {
     }).then(function() {
         if (userData.email) {
 
+            var config = require('../config');
             var verifyUrl = config.hostname + '/verify/' + userData.secret;
             var message = util.tokenEmail(
-                config.sysop, userData.email, verifyUrl);
+                config.from, userData.email, verifyUrl);
 
             return mail.send(message);
 
