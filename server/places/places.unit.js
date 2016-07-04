@@ -2,7 +2,7 @@
 
 var jsf = require('json-schema-faker');
 var models = require('../../models');
-var mockery = require('mockery');
+var mocks = require('../app/app.mock');
 var uuid = require('node-uuid');
 var errors = require('../app/app.errors');
 var SuccessMessage = require('../app/app.successes').SuccessMessage;
@@ -28,29 +28,11 @@ describe('Places', function() {
     };
 
     beforeAll(function() {
-        mockery.enable({
-            warnOnReplace     : false,
-            warnOnUnregistered: false
-        });
-
-        mockery.registerSubstitute(
-            './passages.db', '../passages/passages.db.mock');
-        mockery.registerSubstitute(
-            '../places/places.db', '../places/places.db.mock');
-        mockery.registerSubstitute(
-            './places.db', '../places/places.db.mock');
-        mockery.registerSubstitute(
-            './users.db', '../users/users.db.mock');
-        mockery.registerSubstitute(
-            '../mail/mail.ctrl', '../mail/mail.ctrl.mock');
-
+        mocks.enable();
         ctrl = require('./places.ctrl');
     });
 
-    afterAll(function() {
-        mockery.deregisterAll();
-        mockery.disable();
-    });
+    afterAll(mocks.disable);
 
     beforeEach(
         /**

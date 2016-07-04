@@ -6,7 +6,7 @@ var _ = require('lodash');
 var tv4 = require('tv4');
 
 var models = require('../../models');
-var Places = require('./places.db');
+var Places = require('../places/places.db');
 var errors = require('../app/app.errors');
 var SuccessMessage = require('../app/app.successes').SuccessMessage;
 var util = require('../app/app.util');

@@ -46,7 +46,8 @@ module.exports = new Promise(function(resolve, reject) {
     }).then(function(banner) {
         process.stdout.write('\x1B[2J\x1B[0f');
         process.stdout.write(banner);
-        process.stdout.write('\nStarting Writ Server at ' + config.hostname + '\n\n');
+        process.stdout.write('\nStarting Writ Server at ' +
+            config.hostname + '\n\n');
 
         app.listen(config.port);
         return app;

@@ -1,0 +1,14 @@
+{
+    "lobby": "place/0e7d0638-967e-4d6b-82ec-81652cffeb26",
+    "admin": "user/adbf2a41-7591-4743-927e-352a5e22c21a",
+    "from": "test@test.com",
+    "port": 8000,
+    "hostname": "http://localhost:8000",
+    "email": {
+        "service": "Gmail",
+        "auth": {
+            "user": "test@test.com",
+            "pass": "test123"
+        }
+    }
+}

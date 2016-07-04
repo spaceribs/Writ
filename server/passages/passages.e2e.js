@@ -2,8 +2,8 @@
 
 var jsf = require('json-schema-faker');
 var models = require('../../models');
+var mocks = require('../app/app.mock');
 var supertest = require('supertest');
-var mockery = require('mockery');
 var util = require('../../test/util');
 
 var Users = require('../users/users.db.mock');
@@ -19,29 +19,11 @@ describe('Passages Endpoint', function() {
     var passages;
 
     beforeAll(function() {
-        mockery.enable({
-            warnOnReplace     : false,
-            warnOnUnregistered: false
-        });
-
-        mockery.registerSubstitute(
-            './passages.db', './passages.db.mock');
-        mockery.registerSubstitute(
-            '../places/places.db', '../places/places.db.mock');
-        mockery.registerSubstitute(
-            './places.db', '../places/places.db.mock');
-        mockery.registerSubstitute(
-            './users.db', '../users/users.db.mock');
-        mockery.registerSubstitute(
-            '../mail/mail.ctrl', '../mail/mail.ctrl.mock');
-
+        mocks.enable();
         app = require('../app/app');
     });
 
-    afterAll(function() {
-        mockery.deregisterAll();
-        mockery.disable();
-    });
+    afterAll(mocks.disable);
 
     beforeEach(
         /**

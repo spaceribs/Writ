@@ -9,7 +9,7 @@ var roles = require('../roles');
 var errors = require('../app/app.errors');
 var util = require('../app/app.util');
 var SuccessMessage = require('../app/app.successes').SuccessMessage;
-var Users = require('./users.db');
+var Users = require('../users/users.db');
 var mail = require('../mail/mail.ctrl');
 
 for (var i = 0; i < models.refs.length; i++) {
@@ -145,7 +145,7 @@ function createUser(userData, res, next) {
 
     }).then(function() {
 
-        var config = require('../config');
+        var config = require('../config.json');
         var verifyUrl = config.hostname + '/verify/' + userData.secret;
         var message = util.tokenEmail(config.from, userData.email, verifyUrl);
 
@@ -295,7 +295,7 @@ function updateUser(editor, userId, userData, res, next) {
     }).then(function() {
         if (userData.email) {
 
-            var config = require('../config');
+            var config = require('../config.json');
             var verifyUrl = config.hostname + '/verify/' + userData.secret;
             var message = util.tokenEmail(
                 config.from, userData.email, verifyUrl);
