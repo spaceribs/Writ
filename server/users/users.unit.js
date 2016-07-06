@@ -27,13 +27,13 @@ describe('Users', function() {
         anonymous: true
     };
 
+    beforeAll(mocks.enable);
+    afterAll(mocks.disable);
+
     beforeAll(function() {
-        mocks.enable();
         mail = require('../mail/mail.ctrl');
         ctrl = require('./users.ctrl');
     });
-
-    afterAll(mocks.disable);
 
     beforeEach(
         /**

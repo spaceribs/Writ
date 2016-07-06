@@ -27,12 +27,12 @@ describe('Places', function() {
         anonymous: true
     };
 
+    beforeAll(mocks.enable);
+    afterAll(mocks.disable);
+
     beforeAll(function() {
-        mocks.enable();
         ctrl = require('./places.ctrl');
     });
-
-    afterAll(mocks.disable);
 
     beforeEach(
         /**

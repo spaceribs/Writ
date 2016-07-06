@@ -16,12 +16,12 @@ describe('Places Endpoint', function() {
     var places;
     var users;
 
+    beforeAll(mocks.enable);
+    afterAll(mocks.disable);
+
     beforeAll(function() {
-        mocks.enable();
         app = require('../app/app');
     });
-
-    afterAll(mocks.disable);
 
     beforeEach(
         /**

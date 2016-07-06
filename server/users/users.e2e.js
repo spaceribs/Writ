@@ -19,13 +19,13 @@ describe('Users Endpoint', function() {
     var app;
     var mail;
 
+    beforeAll(mocks.enable);
+    afterAll(mocks.disable);
+
     beforeAll(function() {
-        mocks.enable();
         mail = require('../mail/mail.ctrl');
         app = require('../app/app');
     });
-
-    afterAll(mocks.disable);
 
     beforeEach(
         /**

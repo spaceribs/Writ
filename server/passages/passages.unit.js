@@ -29,12 +29,12 @@ describe('Passages', function() {
         anonymous: true
     };
 
+    beforeAll(mocks.enable);
+    afterAll(mocks.disable);
+
     beforeAll(function() {
-        mocks.enable();
         ctrl = require('./passages.ctrl');
     });
-
-    afterAll(mocks.disable);
 
     beforeEach(
         /**
