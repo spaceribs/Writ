@@ -1,12 +1,15 @@
 {
-  "name": "writ.game",
-  "version": "0.0.2",
-  "description": "The main package for the writ application.",
-  "repository": "https://github.com/spaceribs/Writ",
-  "main": "index.js",
-  "scripts": {
-    "test": "istanbul cover test -x='**/*.unit.js, **/*.e2e.js'"
-  },
-  "author": "spaceribs <spaceribs@gmail.com>",
-  "license": "MIT"
+    "name": "writ.game",
+    "version": "0.0.2",
+    "description": "The main package for the writ application.",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/spaceribs/Writ"
+    },
+    "main": "index.js",
+    "scripts": {
+        "test": "istanbul cover test -x='**/*.unit.js, **/*.e2e.js'"
+    },
+    "author": "spaceribs <spaceribs@gmail.com>",
+    "license": "MIT"
 }
