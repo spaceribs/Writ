@@ -1,38 +1,15 @@
 {
-  "name": "writ.game",
-  "version": "0.0.2",
-  "description": "The main package for the writ application.",
-  "repository": "https://github.com/spaceribs/Writ",
-  "main": "index.js",
-  "scripts": {
-    "test": "istanbul cover test -x='**/*.unit.js, **/*.e2e.js'"
-  },
-  "author": "spaceribs <spaceribs@gmail.com>",
-  "license": "ISC",
-  "dependencies": {
-    "crypto-js": "^3.1.5",
-    "jsonschema": "^1.0.2",
-    "lie": "^3.0.2",
-    "pouchdb": "^5.3.1",
-    "pouchdb-erase": "^1.0.2",
-    "pouchdb-find": "^0.9.0"
-  },
-  "devDependencies": {
-    "debug": "^2.2.0",
-    "istanbul": "^0.4.1",
-    "jasmine": "^2.4.1",
-    "jasmine-core": "^2.4.1",
-    "jasmine-reporters": "^2.0.7",
-    "jasmine-spec-reporter": "^2.4.0",
-    "jscs": "^2.6.0",
-    "jscs-jsdoc": "^1.2.0",
-    "json-schema-faker": "^0.2.16",
-    "karma": "^0.13.22",
-    "karma-coverage": "^0.5.5",
-    "karma-jasmine": "^0.3.8",
-    "mockery": "^1.6.2",
-    "nodemailer-mock-transport": "^1.2.0",
-    "prettyjson": "^1.1.3",
-    "supertest": "^1.2.0"
-  }
+    "name": "writ.game",
+    "version": "0.0.3",
+    "description": "The main package for the writ application.",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/spaceribs/Writ"
+    },
+    "main": "index.js",
+    "scripts": {
+        "test": "istanbul cover test -x='**/*.unit.js, **/*.e2e.js'"
+    },
+    "author": "spaceribs <spaceribs@gmail.com>",
+    "license": "MIT"
 }

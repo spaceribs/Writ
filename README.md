@@ -1,4 +1,4 @@
-![Writ](http://i.imgur.com/zYZx0j5.png)
+![Writ](http://i.imgur.com/cUts8Pn.png)
 
 ### Master Branch
 [![Build Status](https://travis-ci.org/spaceribs/Writ.svg?branch=master)](https://travis-ci.org/spaceribs/Writ)

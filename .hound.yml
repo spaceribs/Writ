@@ -1,7 +1,0 @@
-jscs:
-  enabled: true
-  config_file: ".jscsrc"
-javascript:
-  enabled: true
-  config_file: ".jshintrc"
-fail_on_violations: true

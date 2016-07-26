@@ -1,9 +1,0 @@
-{
-    "none"       : -1,
-    "system"     : 0,
-    "admin"      : 10,
-    "user"       : 20,
-    "unverified" : 30,
-    "anonymous"  : 100,
-    "banned"     : 101
-}
