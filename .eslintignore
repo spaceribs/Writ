@@ -1,6 +1,0 @@
-node_modules
-bower_components
-.idea
-db/*
-!db/index.js
-coverage
