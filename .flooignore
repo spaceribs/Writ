@@ -2,7 +2,6 @@ node_modules
 .idea/workspace.xml
 .idea/misc.xml
 server/config.json
-server/email.json
 db/*
 !db/index.js
 coverage
