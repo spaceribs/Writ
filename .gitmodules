@@ -4,3 +4,6 @@
 [submodule "server"]
 	path = server
 	url = https://spaceribs@github.com/spaceribs/writ-server.git
+[submodule "client"]
+	path = client
+	url = https://spaceribs@github.com/spaceribs/writ-client.git
